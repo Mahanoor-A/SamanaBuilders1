@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Customers - Samana Builders ERP{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>Samana Builders</h2>
+            <p>Real Estate ERP</p>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link">
+                    <span class="nav-icon">📊</span>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'customers' %}" class="nav-link active">
+                    <span class="nav-icon">👥</span>
+                    Customers
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'properties' %}" class="nav-link">
+                    <span class="nav-icon">🏗️</span>
+                    Properties
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'bookings' %}" class="nav-link">
+                    <span class="nav-icon">📋</span>
+                    Bookings
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'payments' %}" class="nav-link">
+                    <span class="nav-icon">💰</span>
+                    Payments
+                </a>
+            </li>
+            <div class="nav-divider"></div>
+            <li class="nav-item">
+                <a href="{% url 'users' %}" class="nav-link">
+                    <span class="nav-icon">👤</span>
+                    Users
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'audit_logs' %}" class="nav-link">
+                    <span class="nav-icon">📝</span>
+                    Audit Logs
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/" class="nav-link">
+                    <span class="nav-icon">⚙️</span>
+                    Admin Panel
+                </a>
+            </li>
+        </ul>
+        <div style="margin-top: auto; padding: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <a href="{% url 'logout' %}" class="nav-link">
+                <span class="nav-icon">🚪</span>
+                Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Customers</h1>
+            <div class="user-info">
+                <a href="{% url 'customer_create' %}" class="btn btn-primary btn-sm">+ Add Customer</a>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue">👥</div>
+                <div class="stat-value">{{ total_count }}</div>
+                <div class="stat-label">Total Customers</div>
+            </div>
+        </div>
+
+        <!-- Search -->
+        <div class="card">
+            <form method="get" class="filters">
+                <div class="search-box">
+                    <input type="text" name="search" value="{{ search }}" class="form-control" placeholder="Search by ID, name, phone, or CNIC...">
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">Search</button>
+                {% if search %}
+                <a href="{% url 'customers' %}" class="btn btn-secondary btn-sm">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Customer List -->
+        <div class="card">
+            <div class="card-header">
+                <h3>All Customers</h3>
+            </div>
+            <div class="table-container">
+                {% if customers %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Customer ID</th>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>CNIC</th>
+                            <th>City</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            <td><strong>{{ customer.customer_id }}</strong></td>
+                            <td>{{ customer.full_name }}</td>
+                            <td>{{ customer.phone }}</td>
+                            <td>{{ customer.cnic }}</td>
+                            <td>{{ customer.city|default:"-" }}</td>
+                            <td>
+                                <span class="badge badge-{% if customer.is_active %}success{% else %}danger{% endif %}">
+                                    {% if customer.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ customer.created_at|date:"d M Y" }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'customer_edit' customer.pk %}" class="btn btn-secondary btn-sm">Edit</a>
+                                    <a href="{% url 'customer_delete' customer.pk %}" class="btn btn-danger btn-sm">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <p>No customers found</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

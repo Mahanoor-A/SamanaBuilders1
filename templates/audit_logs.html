@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block title %}Audit Logs - Samana Builders ERP{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>Samana Builders</h2>
+            <p>Real Estate ERP</p>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link">
+                    <span class="nav-icon">📊</span>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'customers' %}" class="nav-link">
+                    <span class="nav-icon">👥</span>
+                    Customers
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'properties' %}" class="nav-link">
+                    <span class="nav-icon">🏗️</span>
+                    Properties
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'bookings' %}" class="nav-link">
+                    <span class="nav-icon">📋</span>
+                    Bookings
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'payments' %}" class="nav-link">
+                    <span class="nav-icon">💰</span>
+                    Payments
+                </a>
+            </li>
+            <div class="nav-divider"></div>
+            <li class="nav-item">
+                <a href="{% url 'users' %}" class="nav-link">
+                    <span class="nav-icon">👤</span>
+                    Users
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'audit_logs' %}" class="nav-link active">
+                    <span class="nav-icon">📝</span>
+                    Audit Logs
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/" class="nav-link">
+                    <span class="nav-icon">⚙️</span>
+                    Admin Panel
+                </a>
+            </li>
+        </ul>
+        <div style="margin-top: auto; padding: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <a href="{% url 'logout' %}" class="nav-link">
+                <span class="nav-icon">🚪</span>
+                Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Audit Logs</h1>
+            <div class="user-info">
+                <span>Welcome, {{ request.user.get_full_name|default:request.user.username }}</span>
+                <div class="user-avatar">{{ request.user.first_name.0|default:request.user.username.0 }}</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Model</th>
+                            <th>Object ID</th>
+                            <th>Description</th>
+                            <th>IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td>{{ log.timestamp|date:"d M Y H:i:s" }}</td>
+                            <td>{{ log.user.username|default:"System" }}</td>
+                            <td>
+                                <span class="badge badge-{% if log.action == 'create' %}success{% elif log.action == 'update' %}info{% elif log.action == 'delete' %}danger{% elif log.action == 'login' %}secondary{% else %}warning{% endif %}">
+                                    {{ log.get_action_display }}
+                                </span>
+                            </td>
+                            <td>{{ log.model_name }}</td>
+                            <td>{{ log.object_id|default:"-" }}</td>
+                            <td>{{ log.description|default:"-" }}</td>
+                            <td>{{ log.ip_address|default:"-" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted">No audit logs found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

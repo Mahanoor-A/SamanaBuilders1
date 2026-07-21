@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Payments - Samana Builders ERP{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>Samana Builders</h2>
+            <p>Real Estate ERP</p>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link">
+                    <span class="nav-icon">📊</span>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'customers' %}" class="nav-link">
+                    <span class="nav-icon">👥</span>
+                    Customers
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'properties' %}" class="nav-link">
+                    <span class="nav-icon">🏗️</span>
+                    Properties
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'bookings' %}" class="nav-link">
+                    <span class="nav-icon">📋</span>
+                    Bookings
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'payments' %}" class="nav-link active">
+                    <span class="nav-icon">💰</span>
+                    Payments
+                </a>
+            </li>
+            <div class="nav-divider"></div>
+            <li class="nav-item">
+                <a href="{% url 'users' %}" class="nav-link">
+                    <span class="nav-icon">👤</span>
+                    Users
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'audit_logs' %}" class="nav-link">
+                    <span class="nav-icon">📝</span>
+                    Audit Logs
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/" class="nav-link">
+                    <span class="nav-icon">⚙️</span>
+                    Admin Panel
+                </a>
+            </li>
+        </ul>
+        <div style="margin-top: auto; padding: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <a href="{% url 'logout' %}" class="nav-link">
+                <span class="nav-icon">🚪</span>
+                Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Payments</h1>
+            <div class="user-info">
+                <a href="{% url 'payment_create' %}" class="btn btn-primary btn-sm">+ Record Payment</a>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue">💰</div>
+                <div class="stat-value">{{ payments|length }}</div>
+                <div class="stat-label">Total Payments</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="card">
+            <form method="get" class="filters">
+                <select name="status" class="form-control">
+                    <option value="">All Status</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending Verification</option>
+                    <option value="verified" {% if status_filter == 'verified' %}selected{% endif %}>Verified</option>
+                    <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+                {% if status_filter %}
+                <a href="{% url 'payments' %}" class="btn btn-secondary btn-sm">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Payments List -->
+        <div class="card">
+            <div class="card-header">
+                <h3>All Payments</h3>
+            </div>
+            <div class="table-container">
+                {% if payments %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Payment ID</th>
+                            <th>Booking</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td><strong>{{ payment.payment_id }}</strong></td>
+                            <td>{{ payment.booking.booking_id }}</td>
+                            <td>{{ payment.booking.customer.full_name }}</td>
+                            <td>Rs. {{ payment.amount|floatformat:0 }}</td>
+                            <td>{{ payment.get_payment_method_display }}</td>
+                            <td>{{ payment.payment_date }}</td>
+                            <td>
+                                <span class="badge badge-{% if payment.status == 'verified' %}success{% elif payment.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                    {{ payment.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    {% if payment.status == 'pending' %}
+                                    <a href="{% url 'payment_verify' payment.pk %}" class="btn btn-success btn-sm">Verify</a>
+                                    {% endif %}
+                                    <a href="{% url 'payment_delete' payment.pk %}" class="btn btn-danger btn-sm">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="empty-state">
+                    <p>No payments found</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

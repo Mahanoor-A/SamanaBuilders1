@@ -1,0 +1,16 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]: SB
+    - heading "Samana Builders" [level=2] [ref=e6]
+    - paragraph [ref=e7]: Real Estate Management System
+  - generic [ref=e9]:
+    - generic [ref=e10]:
+      - generic [ref=e11]: Username
+      - textbox "Username" [ref=e12]:
+        - /placeholder: Enter your username
+    - generic [ref=e13]:
+      - generic [ref=e14]: Password
+      - textbox "Password" [ref=e15]:
+        - /placeholder: Enter your password
+    - button "Sign In" [ref=e16] [cursor=pointer]
+    - button "Forgot Password?" [ref=e17] [cursor=pointer]

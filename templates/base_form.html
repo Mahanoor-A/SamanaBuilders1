@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Samana Builders ERP{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h2>Samana Builders</h2>
+            <p>Real Estate ERP</p>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="{% url 'dashboard' %}" class="nav-link">
+                    <span class="nav-icon">📊</span>
+                    Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'customers' %}" class="nav-link {% if request.path|slice:':12' == '/customers/' %}active{% endif %}">
+                    <span class="nav-icon">👥</span>
+                    Customers
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'properties' %}" class="nav-link {% if request.path|slice:':13' == '/properties/' %}active{% endif %}">
+                    <span class="nav-icon">🏗️</span>
+                    Properties
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'bookings' %}" class="nav-link {% if request.path|slice:':10' == '/bookings/' %}active{% endif %}">
+                    <span class="nav-icon">📋</span>
+                    Bookings
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'payments' %}" class="nav-link {% if request.path|slice:':9' == '/payments/' %}active{% endif %}">
+                    <span class="nav-icon">💰</span>
+                    Payments
+                </a>
+            </li>
+            <div class="nav-divider"></div>
+            <li class="nav-item">
+                <a href="{% url 'users' %}" class="nav-link">
+                    <span class="nav-icon">👤</span>
+                    Users
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'audit_logs' %}" class="nav-link">
+                    <span class="nav-icon">📝</span>
+                    Audit Logs
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin/" class="nav-link">
+                    <span class="nav-icon">⚙️</span>
+                    Admin Panel
+                </a>
+            </li>
+        </ul>
+        <div style="margin-top: auto; padding: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <a href="{% url 'logout' %}" class="nav-link">
+                <span class="nav-icon">🚪</span>
+                Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1>{{ title }}</h1>
+            <div class="user-info">
+                <span>Welcome, {{ request.user.get_full_name|default:request.user.username }}</span>
+                <div class="user-avatar">{{ request.user.first_name.0|default:request.user.username.0 }}</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                    <div class="form-error">
+                        {% for error in field.errors %}
+                        {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <div class="form-hint">{{ field.help_text }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                
+                <div class="btn-group mt-2">
+                    <button type="submit" class="btn btn-primary">
+                        {% if "Edit" in title %}Update{% elif "Delete" in title %}Delete{% else %}Create{% endif %}
+                    </button>
+                    <a href="{% if cancel_url %}{% url cancel_url %}{% else %}javascript:history.back(){% endif %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+{% endblock %}

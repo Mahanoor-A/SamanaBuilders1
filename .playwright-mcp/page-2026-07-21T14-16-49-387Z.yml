@@ -1,0 +1,104 @@
+- generic [active] [ref=f11e1]:
+  - generic [ref=f11e2]:
+    - complementary [ref=f11e3]:
+      - generic [ref=f11e4]:
+        - heading "Samana Builders" [level=2] [ref=f11e5]
+        - paragraph [ref=f11e6]: Real Estate ERP
+      - list [ref=f11e7]:
+        - listitem [ref=f11e8]:
+          - link "📊 Dashboard" [ref=f11e9] [cursor=pointer]:
+            - /url: /dashboard/
+            - generic [ref=f11e10]: 📊
+            - text: Dashboard
+        - listitem [ref=f11e11]:
+          - link "👥 Customers" [ref=f11e12] [cursor=pointer]:
+            - /url: /customers/
+            - generic [ref=f11e13]: 👥
+            - text: Customers
+        - listitem [ref=f11e14]:
+          - link "🏗️ Properties" [ref=f11e15] [cursor=pointer]:
+            - /url: /properties/
+            - generic [ref=f11e16]: 🏗️
+            - text: Properties
+        - listitem [ref=f11e17]:
+          - link "📋 Bookings" [ref=f11e18] [cursor=pointer]:
+            - /url: /bookings/
+            - generic [ref=f11e19]: 📋
+            - text: Bookings
+        - listitem [ref=f11e20]:
+          - link "💰 Payments" [ref=f11e21] [cursor=pointer]:
+            - /url: /payments/
+            - generic [ref=f11e22]: 💰
+            - text: Payments
+        - listitem [ref=f11e24]:
+          - link "👤 Users" [ref=f11e25] [cursor=pointer]:
+            - /url: /users/
+            - generic [ref=f11e26]: 👤
+            - text: Users
+        - listitem [ref=f11e27]:
+          - link "📝 Audit Logs" [ref=f11e28] [cursor=pointer]:
+            - /url: /audit-logs/
+            - generic [ref=f11e29]: 📝
+            - text: Audit Logs
+        - listitem [ref=f11e30]:
+          - link "⚙️ Admin Panel" [ref=f11e31] [cursor=pointer]:
+            - /url: /admin/
+            - generic [ref=f11e32]: ⚙️
+            - text: Admin Panel
+      - link "🚪 Logout" [ref=f11e34] [cursor=pointer]:
+        - /url: /logout/
+        - generic [ref=f11e35]: 🚪
+        - text: Logout
+    - main [ref=f11e36]:
+      - generic [ref=f11e37]:
+        - heading "Bookings" [level=1] [ref=f11e38]
+        - link "+ New Booking" [ref=f11e40] [cursor=pointer]:
+          - /url: /bookings/create/
+      - generic [ref=f11e42]:
+        - generic [ref=f11e43]: 📋
+        - generic [ref=f11e44]: "1"
+        - generic [ref=f11e45]: Total Bookings
+      - generic [ref=f11e47]:
+        - combobox [ref=f11e48] [cursor=pointer]:
+          - option "All Status" [selected]
+          - option "Pending"
+          - option "Confirmed"
+          - option "Cancelled"
+          - option "Completed"
+        - button "Filter" [ref=f11e49] [cursor=pointer]
+      - generic [ref=f11e50]:
+        - heading "All Bookings" [level=3] [ref=f11e52]
+        - table [ref=f11e54]:
+          - rowgroup [ref=f11e55]:
+            - row [ref=f11e56]:
+              - columnheader "Booking ID" [ref=f11e57]
+              - columnheader "Customer" [ref=f11e58]
+              - columnheader "Plot" [ref=f11e59]
+              - columnheader "Total Amount" [ref=f11e60]
+              - columnheader "Advance Paid" [ref=f11e61]
+              - columnheader "Balance" [ref=f11e62]
+              - columnheader "Status" [ref=f11e63]
+              - columnheader "Date" [ref=f11e64]
+              - columnheader "Actions" [ref=f11e65]
+          - rowgroup [ref=f11e66]:
+            - row [ref=f11e67]:
+              - cell [ref=f11e68]:
+                - strong [ref=f11e69]:
+                  - link "BKG-00001" [ref=f11e70] [cursor=pointer]:
+                    - /url: /bookings/1/
+              - cell "Ahmed Khan" [ref=f11e71]
+              - cell "A-101" [ref=f11e72]
+              - cell "Rs. 15000000" [ref=f11e73]
+              - cell "Rs. 2000000" [ref=f11e74]
+              - cell "Rs. 13000000" [ref=f11e75]
+              - cell "Pending" [ref=f11e76]
+              - cell "July 21, 2026" [ref=f11e78]
+              - cell [ref=f11e79]:
+                - generic [ref=f11e80]:
+                  - link "View" [ref=f11e81] [cursor=pointer]:
+                    - /url: /bookings/1/
+                  - link "Edit" [ref=f11e82] [cursor=pointer]:
+                    - /url: /bookings/1/edit/
+                  - link "Delete" [ref=f11e83] [cursor=pointer]:
+                    - /url: /bookings/1/delete/
+  - generic [ref=f11e84]: Booking BKG-00001 created successfully!

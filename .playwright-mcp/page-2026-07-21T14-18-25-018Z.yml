@@ -1,0 +1,123 @@
+- generic [ref=f18e2]:
+  - complementary [ref=f18e3]:
+    - generic [ref=f18e4]:
+      - heading "Samana Builders" [level=2] [ref=f18e5]
+      - paragraph [ref=f18e6]: Real Estate ERP
+    - list [ref=f18e7]:
+      - listitem [ref=f18e8]:
+        - link "📊 Dashboard" [ref=f18e9] [cursor=pointer]:
+          - /url: /dashboard/
+          - generic [ref=f18e10]: 📊
+          - text: Dashboard
+      - listitem [ref=f18e11]:
+        - link "👥 Customers" [ref=f18e12] [cursor=pointer]:
+          - /url: /customers/
+          - generic [ref=f18e13]: 👥
+          - text: Customers
+      - listitem [ref=f18e14]:
+        - link "🏗️ Properties" [ref=f18e15] [cursor=pointer]:
+          - /url: /properties/
+          - generic [ref=f18e16]: 🏗️
+          - text: Properties
+      - listitem [ref=f18e17]:
+        - link "📋 Bookings" [ref=f18e18] [cursor=pointer]:
+          - /url: /bookings/
+          - generic [ref=f18e19]: 📋
+          - text: Bookings
+      - listitem [ref=f18e20]:
+        - link "💰 Payments" [ref=f18e21] [cursor=pointer]:
+          - /url: /payments/
+          - generic [ref=f18e22]: 💰
+          - text: Payments
+      - listitem [ref=f18e24]:
+        - link "👤 Users" [ref=f18e25] [cursor=pointer]:
+          - /url: /users/
+          - generic [ref=f18e26]: 👤
+          - text: Users
+      - listitem [ref=f18e27]:
+        - link "📝 Audit Logs" [ref=f18e28] [cursor=pointer]:
+          - /url: /audit-logs/
+          - generic [ref=f18e29]: 📝
+          - text: Audit Logs
+      - listitem [ref=f18e30]:
+        - link "⚙️ Admin Panel" [ref=f18e31] [cursor=pointer]:
+          - /url: /admin/
+          - generic [ref=f18e32]: ⚙️
+          - text: Admin Panel
+    - link "🚪 Logout" [ref=f18e34] [cursor=pointer]:
+      - /url: /logout/
+      - generic [ref=f18e35]: 🚪
+      - text: Logout
+  - main [ref=f18e36]:
+    - generic [ref=f18e37]:
+      - heading "Audit Logs" [level=1] [ref=f18e38]
+      - generic [ref=f18e39]:
+        - generic [ref=f18e40]: Welcome, admin
+        - generic [ref=f18e41]: a
+    - table [ref=f18e44]:
+      - rowgroup [ref=f18e45]:
+        - row [ref=f18e46]:
+          - columnheader "Timestamp" [ref=f18e47]
+          - columnheader "User" [ref=f18e48]
+          - columnheader "Action" [ref=f18e49]
+          - columnheader "Model" [ref=f18e50]
+          - columnheader "Object ID" [ref=f18e51]
+          - columnheader "Description" [ref=f18e52]
+          - columnheader "IP Address" [ref=f18e53]
+      - rowgroup [ref=f18e54]:
+        - row [ref=f18e55]:
+          - cell "21 Jul 2026 14:17:58" [ref=f18e56]
+          - cell "admin" [ref=f18e57]
+          - cell "Update" [ref=f18e58]
+          - cell "Payment" [ref=f18e60]
+          - cell "PAY-00001" [ref=f18e61]
+          - cell "Verify payment PAY-00001" [ref=f18e62]
+          - cell "-" [ref=f18e63]
+        - row [ref=f18e64]:
+          - cell "21 Jul 2026 14:17:32" [ref=f18e65]
+          - cell "admin" [ref=f18e66]
+          - cell "Create" [ref=f18e67]
+          - cell "Payment" [ref=f18e69]
+          - cell "PAY-00001" [ref=f18e70]
+          - cell "Created payment PAY-00001 for booking BKG-00001" [ref=f18e71]
+          - cell "-" [ref=f18e72]
+        - row [ref=f18e73]:
+          - cell "21 Jul 2026 14:16:48" [ref=f18e74]
+          - cell "admin" [ref=f18e75]
+          - cell "Create" [ref=f18e76]
+          - cell "Booking" [ref=f18e78]
+          - cell "BKG-00001" [ref=f18e79]
+          - cell "Created booking BKG-00001 for Ahmed Khan" [ref=f18e80]
+          - cell "-" [ref=f18e81]
+        - row [ref=f18e82]:
+          - cell "21 Jul 2026 14:16:14" [ref=f18e83]
+          - cell "admin" [ref=f18e84]
+          - cell "Create" [ref=f18e85]
+          - cell "Plot" [ref=f18e87]
+          - cell "1" [ref=f18e88]
+          - cell "Created plot A-101 in Samana Residency" [ref=f18e89]
+          - cell "-" [ref=f18e90]
+        - row [ref=f18e91]:
+          - cell "21 Jul 2026 14:15:40" [ref=f18e92]
+          - cell "admin" [ref=f18e93]
+          - cell "Create" [ref=f18e94]
+          - cell "Project" [ref=f18e96]
+          - cell "1" [ref=f18e97]
+          - cell "Created project Samana Residency" [ref=f18e98]
+          - cell "-" [ref=f18e99]
+        - row [ref=f18e100]:
+          - cell "21 Jul 2026 14:14:50" [ref=f18e101]
+          - cell "admin" [ref=f18e102]
+          - cell "Create" [ref=f18e103]
+          - cell "Customer" [ref=f18e105]
+          - cell "CUS-00001" [ref=f18e106]
+          - cell "Created customer Ahmed Khan" [ref=f18e107]
+          - cell "-" [ref=f18e108]
+        - row [ref=f18e109]:
+          - cell "21 Jul 2026 14:14:00" [ref=f18e110]
+          - cell "admin" [ref=f18e111]
+          - cell "Login" [ref=f18e112]
+          - cell "User" [ref=f18e114]
+          - cell "-" [ref=f18e115]
+          - cell "admin logged in" [ref=f18e116]
+          - cell "127.0.0.1" [ref=f18e117]

@@ -1,0 +1,97 @@
+- generic [active] [ref=f14e1]:
+  - generic [ref=f14e2]:
+    - complementary [ref=f14e3]:
+      - generic [ref=f14e4]:
+        - heading "Samana Builders" [level=2] [ref=f14e5]
+        - paragraph [ref=f14e6]: Real Estate ERP
+      - list [ref=f14e7]:
+        - listitem [ref=f14e8]:
+          - link "📊 Dashboard" [ref=f14e9] [cursor=pointer]:
+            - /url: /dashboard/
+            - generic [ref=f14e10]: 📊
+            - text: Dashboard
+        - listitem [ref=f14e11]:
+          - link "👥 Customers" [ref=f14e12] [cursor=pointer]:
+            - /url: /customers/
+            - generic [ref=f14e13]: 👥
+            - text: Customers
+        - listitem [ref=f14e14]:
+          - link "🏗️ Properties" [ref=f14e15] [cursor=pointer]:
+            - /url: /properties/
+            - generic [ref=f14e16]: 🏗️
+            - text: Properties
+        - listitem [ref=f14e17]:
+          - link "📋 Bookings" [ref=f14e18] [cursor=pointer]:
+            - /url: /bookings/
+            - generic [ref=f14e19]: 📋
+            - text: Bookings
+        - listitem [ref=f14e20]:
+          - link "💰 Payments" [ref=f14e21] [cursor=pointer]:
+            - /url: /payments/
+            - generic [ref=f14e22]: 💰
+            - text: Payments
+        - listitem [ref=f14e24]:
+          - link "👤 Users" [ref=f14e25] [cursor=pointer]:
+            - /url: /users/
+            - generic [ref=f14e26]: 👤
+            - text: Users
+        - listitem [ref=f14e27]:
+          - link "📝 Audit Logs" [ref=f14e28] [cursor=pointer]:
+            - /url: /audit-logs/
+            - generic [ref=f14e29]: 📝
+            - text: Audit Logs
+        - listitem [ref=f14e30]:
+          - link "⚙️ Admin Panel" [ref=f14e31] [cursor=pointer]:
+            - /url: /admin/
+            - generic [ref=f14e32]: ⚙️
+            - text: Admin Panel
+      - link "🚪 Logout" [ref=f14e34] [cursor=pointer]:
+        - /url: /logout/
+        - generic [ref=f14e35]: 🚪
+        - text: Logout
+    - main [ref=f14e36]:
+      - generic [ref=f14e37]:
+        - heading "Payments" [level=1] [ref=f14e38]
+        - link "+ Record Payment" [ref=f14e40] [cursor=pointer]:
+          - /url: /payments/create/
+      - generic [ref=f14e42]:
+        - generic [ref=f14e43]: 💰
+        - generic [ref=f14e44]: "1"
+        - generic [ref=f14e45]: Total Payments
+      - generic [ref=f14e47]:
+        - combobox [ref=f14e48] [cursor=pointer]:
+          - option "All Status" [selected]
+          - option "Pending Verification"
+          - option "Verified"
+          - option "Rejected"
+        - button "Filter" [ref=f14e49] [cursor=pointer]
+      - generic [ref=f14e50]:
+        - heading "All Payments" [level=3] [ref=f14e52]
+        - table [ref=f14e54]:
+          - rowgroup [ref=f14e55]:
+            - row [ref=f14e56]:
+              - columnheader "Payment ID" [ref=f14e57]
+              - columnheader "Booking" [ref=f14e58]
+              - columnheader "Customer" [ref=f14e59]
+              - columnheader "Amount" [ref=f14e60]
+              - columnheader "Method" [ref=f14e61]
+              - columnheader "Date" [ref=f14e62]
+              - columnheader "Status" [ref=f14e63]
+              - columnheader "Actions" [ref=f14e64]
+          - rowgroup [ref=f14e65]:
+            - row [ref=f14e66]:
+              - cell [ref=f14e67]:
+                - strong [ref=f14e68]: PAY-00001
+              - cell "BKG-00001" [ref=f14e69]
+              - cell "Ahmed Khan" [ref=f14e70]
+              - cell "Rs. 500000" [ref=f14e71]
+              - cell "Bank Transfer" [ref=f14e72]
+              - cell "July 21, 2026" [ref=f14e73]
+              - cell "Pending Verification" [ref=f14e74]
+              - cell [ref=f14e76]:
+                - generic [ref=f14e77]:
+                  - link "Verify" [ref=f14e78] [cursor=pointer]:
+                    - /url: /payments/1/verify/
+                  - link "Delete" [ref=f14e79] [cursor=pointer]:
+                    - /url: /payments/1/delete/
+  - generic [ref=f14e80]: Payment PAY-00001 created successfully!

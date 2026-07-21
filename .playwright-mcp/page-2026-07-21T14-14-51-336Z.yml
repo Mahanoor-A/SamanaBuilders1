@@ -1,0 +1,95 @@
+- generic [active] [ref=f3e1]:
+  - generic [ref=f3e2]:
+    - complementary [ref=f3e3]:
+      - generic [ref=f3e4]:
+        - heading "Samana Builders" [level=2] [ref=f3e5]
+        - paragraph [ref=f3e6]: Real Estate ERP
+      - list [ref=f3e7]:
+        - listitem [ref=f3e8]:
+          - link "📊 Dashboard" [ref=f3e9] [cursor=pointer]:
+            - /url: /dashboard/
+            - generic [ref=f3e10]: 📊
+            - text: Dashboard
+        - listitem [ref=f3e11]:
+          - link "👥 Customers" [ref=f3e12] [cursor=pointer]:
+            - /url: /customers/
+            - generic [ref=f3e13]: 👥
+            - text: Customers
+        - listitem [ref=f3e14]:
+          - link "🏗️ Properties" [ref=f3e15] [cursor=pointer]:
+            - /url: /properties/
+            - generic [ref=f3e16]: 🏗️
+            - text: Properties
+        - listitem [ref=f3e17]:
+          - link "📋 Bookings" [ref=f3e18] [cursor=pointer]:
+            - /url: /bookings/
+            - generic [ref=f3e19]: 📋
+            - text: Bookings
+        - listitem [ref=f3e20]:
+          - link "💰 Payments" [ref=f3e21] [cursor=pointer]:
+            - /url: /payments/
+            - generic [ref=f3e22]: 💰
+            - text: Payments
+        - listitem [ref=f3e24]:
+          - link "👤 Users" [ref=f3e25] [cursor=pointer]:
+            - /url: /users/
+            - generic [ref=f3e26]: 👤
+            - text: Users
+        - listitem [ref=f3e27]:
+          - link "📝 Audit Logs" [ref=f3e28] [cursor=pointer]:
+            - /url: /audit-logs/
+            - generic [ref=f3e29]: 📝
+            - text: Audit Logs
+        - listitem [ref=f3e30]:
+          - link "⚙️ Admin Panel" [ref=f3e31] [cursor=pointer]:
+            - /url: /admin/
+            - generic [ref=f3e32]: ⚙️
+            - text: Admin Panel
+      - link "🚪 Logout" [ref=f3e34] [cursor=pointer]:
+        - /url: /logout/
+        - generic [ref=f3e35]: 🚪
+        - text: Logout
+    - main [ref=f3e36]:
+      - generic [ref=f3e37]:
+        - heading "Customers" [level=1] [ref=f3e38]
+        - link "+ Add Customer" [ref=f3e40] [cursor=pointer]:
+          - /url: /customers/create/
+      - generic [ref=f3e42]:
+        - generic [ref=f3e43]: 👥
+        - generic [ref=f3e44]: "1"
+        - generic [ref=f3e45]: Total Customers
+      - generic [ref=f3e47]:
+        - generic [ref=f3e48]:
+          - text: 🔍
+          - textbox "Search by ID, name, phone, or CNIC..." [ref=f3e49]
+        - button "Search" [ref=f3e50] [cursor=pointer]
+      - generic [ref=f3e51]:
+        - heading "All Customers" [level=3] [ref=f3e53]
+        - table [ref=f3e55]:
+          - rowgroup [ref=f3e56]:
+            - row [ref=f3e57]:
+              - columnheader "Customer ID" [ref=f3e58]
+              - columnheader "Name" [ref=f3e59]
+              - columnheader "Phone" [ref=f3e60]
+              - columnheader "CNIC" [ref=f3e61]
+              - columnheader "City" [ref=f3e62]
+              - columnheader "Status" [ref=f3e63]
+              - columnheader "Created" [ref=f3e64]
+              - columnheader "Actions" [ref=f3e65]
+          - rowgroup [ref=f3e66]:
+            - row [ref=f3e67]:
+              - cell [ref=f3e68]:
+                - strong [ref=f3e69]: CUS-00001
+              - cell "Ahmed Khan" [ref=f3e70]
+              - cell "+92-300-1234567" [ref=f3e71]
+              - cell "35202-1234567-1" [ref=f3e72]
+              - cell "Lahore" [ref=f3e73]
+              - cell "Active" [ref=f3e74]
+              - cell "21 Jul 2026" [ref=f3e76]
+              - cell [ref=f3e77]:
+                - generic [ref=f3e78]:
+                  - link "Edit" [ref=f3e79] [cursor=pointer]:
+                    - /url: /customers/1/edit/
+                  - link "Delete" [ref=f3e80] [cursor=pointer]:
+                    - /url: /customers/1/delete/
+  - generic [ref=f3e81]: Customer CUS-00001 created successfully!

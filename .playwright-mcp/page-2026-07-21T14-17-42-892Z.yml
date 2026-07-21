@@ -1,0 +1,104 @@
+- generic [ref=f15e2]:
+  - complementary [ref=f15e3]:
+    - generic [ref=f15e4]:
+      - heading "Samana Builders" [level=2] [ref=f15e5]
+      - paragraph [ref=f15e6]: Real Estate ERP
+    - list [ref=f15e7]:
+      - listitem [ref=f15e8]:
+        - link "📊 Dashboard" [ref=f15e9] [cursor=pointer]:
+          - /url: /dashboard/
+          - generic [ref=f15e10]: 📊
+          - text: Dashboard
+      - listitem [ref=f15e11]:
+        - link "👥 Customers" [ref=f15e12] [cursor=pointer]:
+          - /url: /customers/
+          - generic [ref=f15e13]: 👥
+          - text: Customers
+      - listitem [ref=f15e14]:
+        - link "🏗️ Properties" [ref=f15e15] [cursor=pointer]:
+          - /url: /properties/
+          - generic [ref=f15e16]: 🏗️
+          - text: Properties
+      - listitem [ref=f15e17]:
+        - link "📋 Bookings" [ref=f15e18] [cursor=pointer]:
+          - /url: /bookings/
+          - generic [ref=f15e19]: 📋
+          - text: Bookings
+      - listitem [ref=f15e20]:
+        - link "💰 Payments" [ref=f15e21] [cursor=pointer]:
+          - /url: /payments/
+          - generic [ref=f15e22]: 💰
+          - text: Payments
+      - listitem [ref=f15e24]:
+        - link "👤 Users" [ref=f15e25] [cursor=pointer]:
+          - /url: /users/
+          - generic [ref=f15e26]: 👤
+          - text: Users
+      - listitem [ref=f15e27]:
+        - link "📝 Audit Logs" [ref=f15e28] [cursor=pointer]:
+          - /url: /audit-logs/
+          - generic [ref=f15e29]: 📝
+          - text: Audit Logs
+      - listitem [ref=f15e30]:
+        - link "⚙️ Admin Panel" [ref=f15e31] [cursor=pointer]:
+          - /url: /admin/
+          - generic [ref=f15e32]: ⚙️
+          - text: Admin Panel
+    - link "🚪 Logout" [ref=f15e34] [cursor=pointer]:
+      - /url: /logout/
+      - generic [ref=f15e35]: 🚪
+      - text: Logout
+  - main [ref=f15e36]:
+    - generic [ref=f15e37]:
+      - heading "Verify Payment PAY-00001" [level=1] [ref=f15e38]
+      - generic [ref=f15e39]:
+        - generic [ref=f15e40]: Welcome, admin
+        - generic [ref=f15e41]: a
+    - generic [ref=f15e42]:
+      - heading "Payment Details" [level=3] [ref=f15e43]
+      - generic [ref=f15e44]:
+        - generic [ref=f15e45]:
+          - strong [ref=f15e46]: Payment ID
+          - paragraph [ref=f15e47]: PAY-00001
+        - generic [ref=f15e48]:
+          - strong [ref=f15e49]: Booking
+          - paragraph [ref=f15e50]: BKG-00001
+        - generic [ref=f15e51]:
+          - strong [ref=f15e52]: Amount
+          - paragraph [ref=f15e53]: Rs. 500000
+        - generic [ref=f15e54]:
+          - strong [ref=f15e55]: Payment Method
+          - paragraph [ref=f15e56]: Bank Transfer
+        - generic [ref=f15e57]:
+          - strong [ref=f15e58]: Payment Date
+          - paragraph [ref=f15e59]: July 21, 2026
+        - generic [ref=f15e60]:
+          - strong [ref=f15e61]: Status
+          - paragraph [ref=f15e62]:
+            - generic [ref=f15e63]: Pending Verification
+        - generic [ref=f15e64]:
+          - strong [ref=f15e65]: Reference Number
+          - paragraph [ref=f15e66]: TXN-2026-001
+        - generic [ref=f15e67]:
+          - strong [ref=f15e68]: Notes
+          - paragraph [ref=f15e69]: First installment payment
+    - generic [ref=f15e70]:
+      - heading "Verification Action" [level=3] [ref=f15e71]
+      - generic [ref=f15e72]:
+        - generic [ref=f15e73]:
+          - generic [ref=f15e74]: Action
+          - generic [ref=f15e75]:
+            - generic [ref=f15e76]:
+              - radio "✓ Verify Payment" [ref=f15e77] [cursor=pointer]
+              - text: ✓ Verify Payment
+            - generic [ref=f15e78]:
+              - radio "✗ Reject Payment" [ref=f15e79] [cursor=pointer]
+              - text: ✗ Reject Payment
+        - generic [ref=f15e80]:
+          - generic [ref=f15e81]: Notes (Optional)
+          - textbox "Notes (Optional)" [ref=f15e82]:
+            - /placeholder: Add verification notes...
+        - generic [ref=f15e83]:
+          - button "Submit Verification" [ref=f15e84] [cursor=pointer]
+          - link "Cancel" [ref=f15e85] [cursor=pointer]:
+            - /url: /payments/
