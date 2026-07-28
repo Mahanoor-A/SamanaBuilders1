@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Palette, Check, ChevronDown } from 'lucide-react';
 import useTheme from '../../hooks/useTheme';
 
-export default function ThemeSwitcher() {
+export default function ThemeSwitcher({ light = false, iconOnly = false }) {
   const { theme, setTheme, themes } = useTheme();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -15,19 +15,31 @@ export default function ThemeSwitcher() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  const btnClass = iconOnly
+    ? (light
+      ? 'flex items-center justify-center w-9 h-9 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300'
+      : 'flex items-center justify-center w-9 h-9 rounded-lg text-text-muted hover:text-text-main hover:bg-primary/10 transition-all duration-300')
+    : (light
+      ? 'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300'
+      : 'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-text-muted hover:text-text-main hover:bg-primary/10 transition-all duration-300');
+
   return (
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-text-muted hover:text-text-main hover:bg-primary/10 transition-all duration-300"
+        className={btnClass}
         title="Change theme"
       >
         <div
           className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
           style={{ background: theme.colors.primary.DEFAULT }}
         />
-        <span className="hidden lg:inline whitespace-nowrap">{theme.name}</span>
-        <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+        {!iconOnly && (
+          <>
+            <span className="hidden lg:inline whitespace-nowrap">{theme.name}</span>
+            <ChevronDown className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+          </>
+        )}
       </button>
 
       {open && (
