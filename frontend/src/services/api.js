@@ -20,22 +20,7 @@ export const projectService = {
 };
 
 export const customerService = {
-  create: (data) => {
-    if (data instanceof FormData) {
-      return api.post('/customers/', data, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-    }
-    return api.post('/customers/', data);
-  },
-  update: (id, data) => {
-    if (data instanceof FormData) {
-      return api.put(`/customers/${id}/`, data, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-    }
-    return api.put(`/customers/${id}/`, data);
-  },
+  create: (data) => api.post('/customers/', data),
 };
 
 export const plotService = {
