@@ -52,7 +52,7 @@ export default function Navbar() {
       'px-4 py-2 text-sm font-medium transition-colors duration-200 border-b-2',
       isActive ? 'border-gold' : 'border-transparent',
       scrolled
-        ? 'text-gray-600 hover:text-gray-900'
+        ? 'text-text-muted hover:text-text-main'
         : 'text-white/80 hover:text-white',
     ].join(' ');
   };
@@ -70,7 +70,7 @@ export default function Navbar() {
           <div className="flex items-center justify-between h-16 md:h-20">
             <button onClick={() => scrollTo('#home')} className="flex items-center gap-2 group">
               <span className="font-serif font-bold text-xl tracking-tight">
-                <span className={scrolled ? 'text-gray-900' : 'text-white'}>Samana</span>{' '}
+                <span className={scrolled ? 'text-text-main' : 'text-white'}>Samana</span>{' '}
                 <span className="text-gold">Builders</span>
               </span>
             </button>
@@ -92,7 +92,7 @@ export default function Navbar() {
               <a
                 href="tel:+923001234567"
                 className={`flex items-center gap-2 text-sm font-medium transition-colors ${
-                  scrolled ? 'text-gray-600 hover:text-gray-900' : 'text-white/80 hover:text-white'
+                  scrolled ? 'text-text-muted hover:text-text-main' : 'text-white/80 hover:text-white'
                 }`}
               >
                 <Phone className="w-4 h-4" />
@@ -133,8 +133,8 @@ export default function Navbar() {
                 onClick={() => scrollTo(link.href)}
                 className={`text-2xl font-medium transition-colors border-b-2 ${
                   activeSection === link.href.slice(1)
-                    ? 'border-gold text-gray-900'
-                    : 'border-transparent text-gray-600 hover:text-gray-900'
+                    ? 'border-gold text-text-main'
+                    : 'border-transparent text-text-muted hover:text-text-main'
                 }`}
               >
                 {link.name}

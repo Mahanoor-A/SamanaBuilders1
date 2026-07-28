@@ -16,16 +16,16 @@ export default function Testimonials() {
   }, []);
 
   return (
-    <section id="testimonials" className="py-16 bg-gray-50">
+    <section id="testimonials" className="py-16 bg-bg">
       <div className="max-w-3xl mx-auto px-4 text-center">
-        <h2 className="font-serif text-3xl font-semibold text-[#0c1f33] mb-10">What Our Clients Say</h2>
+        <h2 className="font-serif text-3xl font-semibold text-primary mb-10">What Our Clients Say</h2>
         <div className="min-h-[200px] flex flex-col justify-center">
-          <p className="font-serif italic text-2xl text-gray-700 mb-8 leading-relaxed">
+          <p className="font-serif italic text-2xl text-text-main mb-8 leading-relaxed">
             &ldquo;{testimonials[active].quote}&rdquo;
           </p>
           <div>
-            <p className="font-semibold text-[#0c1f33]">{testimonials[active].name}</p>
-            <p className="text-gray-500 text-sm">{testimonials[active].location}</p>
+            <p className="font-semibold text-primary">{testimonials[active].name}</p>
+            <p className="text-text-muted text-sm">{testimonials[active].location}</p>
           </div>
         </div>
         <div className="flex justify-center gap-2 mt-8">

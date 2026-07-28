@@ -57,9 +57,9 @@ function ProjectCard({ project }) {
 
 export default function FeaturedProjects() {
   return (
-    <section id="projects" className="py-16 bg-white">
+    <section id="projects" className="py-16 bg-surface">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="font-serif text-3xl md:text-4xl font-semibold text-[#0c1f33] text-center mb-12">
+        <h2 className="font-serif text-3xl md:text-4xl font-semibold text-primary text-center mb-12">
           Our Developments
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

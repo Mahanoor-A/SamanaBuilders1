@@ -21,14 +21,14 @@ export default function About() {
           <span className="text-gold text-sm font-semibold tracking-[0.2em] uppercase">
             Our Story
           </span>
-          <h2 className="font-serif text-4xl md:text-5xl leading-tight font-medium text-[#0c1f33] mt-4 mb-6">
+          <h2 className="font-serif text-4xl md:text-5xl leading-tight font-medium text-primary mt-4 mb-6">
             Crafting Pakistan&apos;s finest living spaces
           </h2>
           <div className="space-y-4 mb-10">
-            <p className="text-gray-500 leading-relaxed">
+            <p className="text-text-muted leading-relaxed">
               Since 2011, Samana Builders &amp; Developers has been at the forefront of Pakistan&apos;s real estate transformation. What began as a vision to create spaces where families thrive has grown into one of the country&apos;s most trusted development groups.
             </p>
-            <p className="text-gray-500 leading-relaxed">
+            <p className="text-text-muted leading-relaxed">
               Over the years, we&apos;ve proudly delivered quality homes and commercial spaces to more than 2,000 families. Our commitment to quality construction, transparent dealings, and customer satisfaction has earned us a reputation built on trust. Today, with over 10 million square feet under development and 150+ completed projects, we continue to set new benchmarks in design, quality, and innovation.
             </p>
           </div>
@@ -36,8 +36,8 @@ export default function About() {
             {values.map(({ icon: Icon, label, desc }) => (
               <div key={label} className="border-l-2 border-gold pl-4">
                 <Icon className="w-5 h-5 text-gold mb-2" />
-                <div className="font-semibold text-[#0c1f33]">{label}</div>
-                <div className="text-gray-500 text-sm mt-1">{desc}</div>
+                <div className="font-semibold text-primary">{label}</div>
+                <div className="text-text-muted text-sm mt-1">{desc}</div>
               </div>
             ))}
           </div>

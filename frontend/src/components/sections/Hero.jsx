@@ -43,7 +43,7 @@ export default function Hero() {
             </p>
             <button
               onClick={() => scrollTo('#projects')}
-              className="bg-[#0c1f33] text-white px-8 py-4 rounded-full font-semibold text-base transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(201,168,76,0.4)]"
+              className="bg-primary text-white px-8 py-4 rounded-full font-semibold text-base transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(201,168,76,0.4)]"
             >
               Explore Properties
             </button>

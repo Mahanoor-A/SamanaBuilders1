@@ -49,7 +49,7 @@ export default function LatestLaunches() {
     <section id="launches" className="py-16" ref={sectionRef}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="animate-on-scroll visible text-center mb-12">
-          <h2 className="font-serif text-3xl md:text-4xl font-bold text-gray-900">
+          <h2 className="font-serif text-3xl md:text-4xl font-bold text-text-main">
             Latest Launches
           </h2>
         </div>
@@ -57,7 +57,7 @@ export default function LatestLaunches() {
         {launches.map((item, i) => (
           <div
             key={item.id}
-            className={`flex flex-col md:flex-row ${i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}
+            className={`flex flex-col md:flex-row ${i % 2 === 0 ? 'bg-surface' : 'bg-bg'}`}
           >
             <div className="md:w-2/5">
               <img
@@ -68,13 +68,13 @@ export default function LatestLaunches() {
               />
             </div>
             <div className="md:w-3/5 p-8 md:p-12 flex flex-col justify-center">
-              <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">
+              <p className="text-xs uppercase tracking-widest text-text-muted mb-2">
                 {item.community}
               </p>
-              <h3 className="font-serif text-2xl md:text-3xl font-semibold text-gray-900 mb-2">
+              <h3 className="font-serif text-2xl md:text-3xl font-semibold text-text-main mb-2">
                 {item.name}
               </h3>
-              <p className="font-serif italic text-gray-500 text-lg mb-6">
+              <p className="font-serif italic text-text-muted text-lg mb-6">
                 {item.tagline}
               </p>
               <a
