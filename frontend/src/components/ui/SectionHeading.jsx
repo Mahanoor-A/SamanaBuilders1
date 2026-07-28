@@ -1,5 +1,3 @@
-import React from 'react';
-
 export default function SectionHeading({
   title,
   subtitle,
@@ -11,9 +9,14 @@ export default function SectionHeading({
     <div
       className={`${centered ? 'mx-auto text-center' : ''} ${className}`}
     >
+      <div
+        className={`w-12 h-1 rounded-full mb-6 ${
+          centered ? 'mx-auto' : ''
+        } ${light ? 'bg-white/30' : 'bg-primary'}`}
+      />
       <h2
         className={`font-display text-3xl md:text-4xl font-bold ${
-          light ? 'text-white' : 'text-text-main'
+          light ? 'text-white' : 'text-gray-900'
         }`}
       >
         {title}
@@ -22,16 +25,11 @@ export default function SectionHeading({
         <p
           className={`text-lg mt-4 max-w-2xl ${
             centered ? 'mx-auto' : ''
-          } ${light ? 'text-white/80' : 'text-text-muted'}`}
+          } ${light ? 'text-white/60' : 'text-gray-500'}`}
         >
           {subtitle}
         </p>
       )}
-      <div
-        className={`bg-gradient-to-r from-primary to-primary-light h-1 w-16 rounded-full mt-4 ${
-          centered ? 'mx-auto' : ''
-        }`}
-      />
     </div>
   );
 }

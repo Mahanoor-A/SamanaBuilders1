@@ -1,4 +1,4 @@
-import { Building2, MapPin, Phone, Mail, Clock, ArrowUpRight } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, ArrowUpRight } from 'lucide-react';
 import { FaFacebookF, FaInstagram, FaTwitter, FaLinkedinIn } from 'react-icons/fa';
 
 const quickLinks = [
@@ -63,7 +63,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="font-display font-semibold text-white mb-5">Quick Links</h4>
+            <h4 className="font-serif font-semibold text-white mb-5">Quick Links</h4>
             <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.name}>
@@ -80,7 +80,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="font-display font-semibold text-white mb-5">Services</h4>
+            <h4 className="font-serif font-semibold text-white mb-5">Services</h4>
             <ul className="space-y-3">
               {services.map((service) => (
                 <li key={service}>
@@ -91,7 +91,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="font-display font-semibold text-white mb-5">Contact Info</h4>
+            <h4 className="font-serif font-semibold text-white mb-5">Contact Info</h4>
             <ul className="space-y-4">
               {contactItems.map(({ icon: Icon, text }) => (
                 <li key={text} className="flex items-start gap-3">

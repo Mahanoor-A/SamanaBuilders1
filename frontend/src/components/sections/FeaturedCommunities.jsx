@@ -38,7 +38,7 @@ export default function FeaturedCommunities() {
     <section id="communities" className="py-16 bg-white" ref={sectionRef}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="animate-on-scroll visible text-center mb-12">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-gray-900">
+          <h2 className="font-serif text-3xl md:text-4xl font-bold text-gray-900">
             Featured Communities
           </h2>
           <p className="text-gray-500 text-lg mt-4 max-w-2xl mx-auto">

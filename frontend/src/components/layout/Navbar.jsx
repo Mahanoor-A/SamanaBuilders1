@@ -100,7 +100,7 @@ export default function Navbar() {
               </a>
               <button
                 onClick={() => scrollTo('#contact')}
-                className="px-5 py-2.5 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary-light transition-colors duration-200"
+                className="px-5 py-2.5 rounded-full bg-[#0c1f33] text-white text-sm font-semibold hover:bg-gold transition-colors duration-200"
               >
                 Book Now
               </button>
