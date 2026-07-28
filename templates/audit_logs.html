@@ -1,87 +1,104 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Audit Logs - Samana Builders ERP{% endblock %}
 
 {% block content %}
 <div class="app-layout">
-    <!-- Sidebar -->
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+    <div class="top-bar">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <span class="top-bar-title">Audit Logs</span>
+        <div class="top-bar-actions">
+            <div class="theme-switcher">
+                <button class="theme-btn" data-theme="professional-blue"></button>
+                <button class="theme-btn" data-theme="modern-green"></button>
+                <button class="theme-btn" data-theme="elegant-dark"></button>
+                <button class="theme-btn" data-theme="warm-earth"></button>
+                <button class="theme-btn" data-theme="minimalist-purple"></button>
+            </div>
+        </div>
+    </div>
+
     <aside class="sidebar">
-        <div class="sidebar-brand">
-            <h2>Samana Builders</h2>
-            <p>Real Estate ERP</p>
-        </div>
-        <ul class="nav-menu">
-            <li class="nav-item">
-                <a href="{% url 'dashboard' %}" class="nav-link">
-                    <span class="nav-icon">📊</span>
-                    Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'customers' %}" class="nav-link">
-                    <span class="nav-icon">👥</span>
-                    Customers
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'properties' %}" class="nav-link">
-                    <span class="nav-icon">🏗️</span>
-                    Properties
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'bookings' %}" class="nav-link">
-                    <span class="nav-icon">📋</span>
-                    Bookings
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'payments' %}" class="nav-link">
-                    <span class="nav-icon">💰</span>
-                    Payments
-                </a>
-            </li>
+        <div class="sidebar-brand"><div class="brand-icon">SB</div><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Main Menu</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a></li>
+                <li class="nav-item"><a href="{% url 'customers' %}" class="nav-link"><span class="nav-icon">👥</span> Customers</a></li>
+                <li class="nav-item"><a href="{% url 'properties' %}" class="nav-link"><span class="nav-icon">🏗️</span> Properties</a></li>
+                <li class="nav-item"><a href="{% url 'bookings' %}" class="nav-link"><span class="nav-icon">📋</span> Bookings</a></li>
+                <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link"><span class="nav-icon">💰</span> Payments</a></li>
+            </ul>
             <div class="nav-divider"></div>
-            <li class="nav-item">
-                <a href="{% url 'users' %}" class="nav-link">
-                    <span class="nav-icon">👤</span>
-                    Users
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'audit_logs' %}" class="nav-link active">
-                    <span class="nav-icon">📝</span>
-                    Audit Logs
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/admin/" class="nav-link">
-                    <span class="nav-icon">⚙️</span>
-                    Admin Panel
-                </a>
-            </li>
-        </ul>
-        <div style="margin-top: auto; padding: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <a href="{% url 'logout' %}" class="nav-link">
-                <span class="nav-icon">🚪</span>
-                Logout
-            </a>
-        </div>
+            <div class="nav-section">Administration</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'users' %}" class="nav-link"><span class="nav-icon">👤</span> Users</a></li>
+                <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link active"><span class="nav-icon">📝</span> Audit Logs</a></li>
+                <li class="nav-item"><a href="/admin/" class="nav-link"><span class="nav-icon">⚙️</span> Admin Panel</a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer"><a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a></div>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content">
         <div class="page-header">
             <h1>Audit Logs</h1>
-            <div class="user-info">
-                <span>Welcome, {{ request.user.get_full_name|default:request.user.username }}</span>
-                <div class="user-avatar">{{ request.user.first_name.0|default:request.user.username.0 }}</div>
+            <div class="page-actions">
+                <div class="theme-switcher" style="display:flex;">
+                    <button class="theme-btn" data-theme="professional-blue"></button>
+                    <button class="theme-btn" data-theme="modern-green"></button>
+                    <button class="theme-btn" data-theme="elegant-dark"></button>
+                    <button class="theme-btn" data-theme="warm-earth"></button>
+                    <button class="theme-btn" data-theme="minimalist-purple"></button>
+                </div>
+                <span class="badge badge-info">{{ logs|length|default:0 }} entries</span>
             </div>
         </div>
 
-        <div class="card">
+        <!-- Search & Filters -->
+        <div class="card animate-fade-up">
+            <form method="get">
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <div style="position:relative; flex:1; min-width:250px;">
+                        <span style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-secondary); font-size:15px; pointer-events:none; z-index:1;">🔍</span>
+                        <input type="text" name="search" id="auditSearch" value="{{ search }}"
+                            style="width:100%; padding:11px 14px 11px 42px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-family:'Inter',sans-serif; background:var(--bg-input); color:var(--text-primary); outline:none; transition:all 0.3s ease; box-sizing:border-box;"
+                            placeholder="Search logs by user, action, model..."
+                            onfocus="this.style.borderColor='var(--border-focus)'; this.style.boxShadow='0 0 0 3px var(--primary-bg)';"
+                            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';"
+                        >
+                    </div>
+                    <select name="action" style="min-width:150px; height:42px; padding:0 36px 0 14px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-family:'Inter',sans-serif; background:var(--bg-input); color:var(--text-primary); appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 12px center; cursor:pointer; outline:none;">
+                        <option value="">All Actions</option>
+                        <option value="create" {% if action_filter == 'create' %}selected{% endif %}>Create</option>
+                        <option value="update" {% if action_filter == 'update' %}selected{% endif %}>Update</option>
+                        <option value="delete" {% if action_filter == 'delete' %}selected{% endif %}>Delete</option>
+                        <option value="login" {% if action_filter == 'login' %}selected{% endif %}>Login</option>
+                    </select>
+                    <select name="model" style="min-width:150px; height:42px; padding:0 36px 0 14px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-family:'Inter',sans-serif; background:var(--bg-input); color:var(--text-primary); appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 12px center; cursor:pointer; outline:none;">
+                        <option value="">All Models</option>
+                        <option value="Customer" {% if model_filter == 'Customer' %}selected{% endif %}>Customer</option>
+                        <option value="Booking" {% if model_filter == 'Booking' %}selected{% endif %}>Booking</option>
+                        <option value="Payment" {% if model_filter == 'Payment' %}selected{% endif %}>Payment</option>
+                        <option value="Plot" {% if model_filter == 'Plot' %}selected{% endif %}>Plot</option>
+                        <option value="Project" {% if model_filter == 'Project' %}selected{% endif %}>Project</option>
+                        <option value="User" {% if model_filter == 'User' %}selected{% endif %}>User</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary btn-sm" style="height:42px; padding:0 20px; white-space:nowrap;">Filter</button>
+                    {% if search or action_filter or model_filter %}
+                    <a href="{% url 'audit_logs' %}" class="btn btn-secondary btn-sm" style="height:42px; padding:0 16px; white-space:nowrap;">Clear</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <!-- Logs Table -->
+        <div class="card animate-fade-up stagger-1">
             <div class="table-container">
-                <table>
+                {% if logs %}
+                <table class="sortable" id="auditTable">
                     <thead>
                         <tr>
                             <th>Timestamp</th>
@@ -96,8 +113,8 @@
                     <tbody>
                         {% for log in logs %}
                         <tr>
-                            <td>{{ log.timestamp|date:"d M Y H:i:s" }}</td>
-                            <td>{{ log.user.username|default:"System" }}</td>
+                            <td style="white-space:nowrap;">{{ log.timestamp|date:"d M Y H:i:s" }}</td>
+                            <td><strong>{{ log.user.username|default:"System" }}</strong></td>
                             <td>
                                 <span class="badge badge-{% if log.action == 'create' %}success{% elif log.action == 'update' %}info{% elif log.action == 'delete' %}danger{% elif log.action == 'login' %}secondary{% else %}warning{% endif %}">
                                     {{ log.get_action_display }}
@@ -105,16 +122,23 @@
                             </td>
                             <td>{{ log.model_name }}</td>
                             <td>{{ log.object_id|default:"-" }}</td>
-                            <td>{{ log.description|default:"-" }}</td>
-                            <td>{{ log.ip_address|default:"-" }}</td>
+                            <td style="max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="{{ log.description }}">{{ log.description|default:"-" }}</td>
+                            <td style="font-size:12px; font-family:monospace;">{{ log.ip_address|default:"-" }}</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="text-center text-muted">No audit logs found</td>
+                            <td colspan="7" class="text-center text-muted" style="padding:40px; text-align:center; color:var(--text-secondary);">No audit logs found</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">📝</div>
+                    <h3>No Audit Logs</h3>
+                    <p>{% if search or action_filter or model_filter %}No logs match the current filters.{% else %}Activity logs will appear here as actions are performed.{% endif %}</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </main>

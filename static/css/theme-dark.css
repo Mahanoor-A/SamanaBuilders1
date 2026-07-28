@@ -1,0 +1,99 @@
+/* ==========================================================================
+   Theme: Elegant Dark
+   Primary: #1e293b | Dark: #0f172a | Light: #334155
+   ========================================================================== */
+
+[data-theme="dark"] {
+  --primary: #38bdf8;
+  --primary-dark: #0ea5e9;
+  --primary-light: #1e3a5f;
+  --bg: #0f172a;
+  --bg-card: #1e293b;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --sidebar-bg: #0f172a;
+  --sidebar-text: #94a3b8;
+  --sidebar-active: #38bdf8;
+  --header-bg: #1e293b;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #fbbf24;
+  --info: #38bdf8;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.2);
+  --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.4), 0 4px 6px rgba(0,0,0,0.2);
+}
+
+/* Dark theme overrides — darker cards, border adjustments */
+[data-theme="dark"] .stat-card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+[data-theme="dark"] table tbody tr:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+[data-theme="dark"] .form-input,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .form-textarea {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .card-footer {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .shimmer {
+  background: linear-gradient(
+    90deg,
+    #334155 0%,
+    #1e293b 40%,
+    #334155 80%
+  );
+  background-size: 200% 100%;
+}
+
+[data-theme="dark"] .header-search input {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .dropdown-menu {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .modal-overlay {
+  background: rgba(0,0,0,0.7);
+}
+
+[data-theme="dark"] .toast {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+[data-theme="dark"] .badge-neutral {
+  background: #0f172a;
+}
+
+[data-theme="dark"] .alert-success {
+  background: rgba(16,185,129,0.12);
+  border-color: rgba(16,185,129,0.25);
+}
+[data-theme="dark"] .alert-danger {
+  background: rgba(239,68,68,0.12);
+  border-color: rgba(239,68,68,0.25);
+}
+[data-theme="dark"] .alert-warning {
+  background: rgba(245,158,11,0.12);
+  border-color: rgba(245,158,11,0.25);
+}
+[data-theme="dark"] .alert-info {
+  background: rgba(56,189,248,0.12);
+  border-color: rgba(56,189,248,0.25);
+}

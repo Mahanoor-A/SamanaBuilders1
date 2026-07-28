@@ -57,6 +57,7 @@ urlpatterns = [
     
     # Profile
     path('profile/', core_views.profile_view, name='profile'),
+    path('api/save-theme/', core_views.save_theme_view, name='save_theme'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

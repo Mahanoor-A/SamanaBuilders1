@@ -7,30 +7,46 @@ class PaymentForm(forms.ModelForm):
     class Meta:
         model = Payment
         fields = ['booking', 'installment', 'amount', 'payment_date', 'payment_method',
-                  'reference_number', 'notes']
+                  'reference_number', 'bank_name', 'cheque_number', 'cheque_date', 'notes']
         widgets = {
             'booking': forms.Select(attrs={'class': 'form-control'}),
             'installment': forms.Select(attrs={'class': 'form-control'}),
-            'amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Amount', 'step': '0.01'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': ' ', 'step': '0.01'}),
             'payment_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'payment_method': forms.Select(attrs={'class': 'form-control'}),
-            'reference_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Reference/Cheque Number'}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Payment notes...'}),
+            'reference_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+            'bank_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+            'cheque_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+            'cheque_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': ' '}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['booking'].queryset = Booking.objects.filter(status__in=['pending', 'confirmed'])
+        self.fields['booking'].queryset = Booking.objects.filter(status__in=['pending', 'confirmed', 'active'])
         self.fields['installment'].queryset = Installment.objects.filter(status__in=['pending', 'overdue', 'partial'])
         self.fields['installment'].required = False
         self.fields['reference_number'].required = False
         self.fields['notes'].required = False
+        self.fields['bank_name'].required = False
+        self.fields['cheque_number'].required = False
+        self.fields['cheque_date'].required = False
 
     def clean_amount(self):
         amount = self.cleaned_data.get('amount')
         if amount and amount <= 0:
             raise forms.ValidationError('Amount must be greater than 0')
         return amount
+
+    def clean(self):
+        cleaned = super().clean()
+        method = cleaned.get('payment_method')
+        if method == 'cheque':
+            if not cleaned.get('cheque_number'):
+                raise forms.ValidationError('Cheque number is required for cheque payments')
+            if not cleaned.get('bank_name'):
+                raise forms.ValidationError('Bank name is required for cheque payments')
+        return cleaned
 
 
 class PaymentVerificationForm(forms.Form):
@@ -47,3 +63,26 @@ class PaymentVerificationForm(forms.Form):
         required=False,
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Verification notes...'})
     )
+
+
+class PaymentFilterForm(forms.Form):
+    STATUS_CHOICES = [
+        ('', 'All Statuses'),
+        ('pending', 'Pending'),
+        ('verified', 'Verified'),
+        ('rejected', 'Rejected'),
+        ('draft', 'Draft'),
+        ('bounced', 'Bounced'),
+    ]
+    
+    status = forms.ChoiceField(choices=STATUS_CHOICES, required=False,
+                               widget=forms.Select(attrs={'class': 'form-control'}))
+    method = forms.ChoiceField(
+        choices=[('', 'All Methods')] + list(Payment.METHOD_CHOICES),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    date_from = forms.DateField(required=False,
+                                widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}))
+    date_to = forms.DateField(required=False,
+                              widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}))

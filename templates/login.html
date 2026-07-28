@@ -1,36 +1,90 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Login - Samana Builders ERP{% endblock %}
 
+{% block body_start %}
+<div class="theme-switcher-fixed" style="position:fixed; top:20px; right:20px; z-index:9999; display:flex; gap:4px; background:var(--bg-card); padding:6px; border-radius:24px; box-shadow:var(--shadow-md); border:1px solid var(--border);">
+    <button class="theme-btn" data-theme="professional-blue" title="Professional Blue"></button>
+    <button class="theme-btn" data-theme="modern-green" title="Modern Green"></button>
+    <button class="theme-btn" data-theme="elegant-dark" title="Elegant Dark"></button>
+    <button class="theme-btn" data-theme="warm-earth" title="Warm Earth"></button>
+    <button class="theme-btn" data-theme="minimalist-purple" title="Minimalist Purple"></button>
+</div>
+{% endblock %}
+
 {% block content %}
-<div class="login-container">
-    <div class="login-card">
-        <div class="login-header">
-            <div class="logo">SB</div>
-            <h2>Samana Builders</h2>
-            <p>Real Estate Management System</p>
+<div class="login-container" style="display:flex; justify-content:center; align-items:center; min-height:100vh; padding:20px; background:var(--bg-page);">
+    <div class="login-card" style="background:var(--bg-card); border-radius:var(--radius-lg); box-shadow:var(--shadow-lg); width:100%; max-width:440px; overflow:hidden; animation:scaleIn 0.5s ease; border:1px solid var(--border);">
+        <!-- Header with decorative animation -->
+        <div class="login-header" style="background:var(--gradient-header); padding:40px 40px 32px; text-align:center; color:white; position:relative; overflow:hidden;">
+            <div style="position:absolute; top:-20px; right:-20px; width:120px; height:120px; background:rgba(255,255,255,0.05); border-radius:50%; animation:float 6s ease-in-out infinite;"></div>
+            <div style="position:absolute; bottom:-30px; left:-30px; width:160px; height:160px; background:rgba(255,255,255,0.03); border-radius:50%; animation:float 8s ease-in-out infinite reverse;"></div>
+            <div class="logo" style="width:80px; height:80px; background:rgba(255,255,255,0.15); backdrop-filter:blur(8px); border-radius:20px; margin:0 auto 20px; display:flex; align-items:center; justify-content:center; font-size:32px; color:white; font-weight:800; animation:bounceIn 0.8s ease; border:2px solid rgba(255,255,255,0.2);">SB</div>
+            <h2 style="font-size:24px; margin-bottom:4px; font-weight:700; animation:fadeInUp 0.6s ease 0.2s both;">Samana Builders</h2>
+            <p style="font-size:14px; opacity:0.8; animation:fadeInUp 0.6s ease 0.3s both;">Real Estate Management System</p>
         </div>
-        <div class="login-body">
+
+        <div class="login-body" style="padding:40px;">
             {% if form.errors %}
-            <div class="alert alert-error">
-                Invalid username or password. Please try again.
+            <div class="alert alert-error" style="animation:slideDown 0.4s ease;">
+                <span>⚠️</span>
+                <span>Invalid username or password. Please try again.</span>
             </div>
             {% endif %}
-            
-            <form method="post">
+
+            {% if next %}
+            <div class="alert alert-info" style="animation:slideDown 0.4s ease;">
+                <span>ℹ️</span>
+                <span>Please login to access this page.</span>
+            </div>
+            {% endif %}
+
+            <form method="post" action="{% url 'login' %}" novalidate style="animation:fadeInUp 0.6s ease 0.4s both;">
                 {% csrf_token %}
-                <div class="form-group">
+                <input type="hidden" name="next" value="{{ next }}">
+
+                <div class="floating-group">
+                    <input type="text" name="username" id="id_username" class="form-control" placeholder=" " required autocomplete="username" autofocus>
                     <label for="id_username">Username</label>
-                    <input type="text" name="username" id="id_username" placeholder="Enter your username" required>
                 </div>
-                <div class="form-group">
+
+                <div class="floating-group">
+                    <input type="password" name="password" id="id_password" class="form-control" placeholder=" " required autocomplete="current-password">
                     <label for="id_password">Password</label>
-                    <input type="password" name="password" id="id_password" placeholder="Enter your password" required>
                 </div>
-                <button type="submit" class="btn btn-primary">Sign In</button>
-                <button type="button" class="btn btn-secondary" onclick="alert('Contact administrator')">Forgot Password?</button>
+
+                <div class="form-check" style="margin-bottom:24px;">
+                    <input type="checkbox" class="form-check-input" id="remember">
+                    <label class="form-check-label" for="remember">Remember me</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-bottom:16px;">
+                    <span class="spinner"></span>
+                    <span class="btn-text">Sign In</span>
+                </button>
+
+                <div style="text-align:center;">
+                    <button type="button" class="btn btn-ghost btn-block" onclick="alert('Please contact your administrator to reset your password.')" style="font-size:13px;">
+                        🔑 Forgot Password?
+                    </button>
+                </div>
             </form>
+        </div>
+
+        <div class="login-footer" style="padding:16px 40px; border-top:1px solid var(--border); text-align:center; font-size:12px; color:var(--text-secondary);">
+            &copy; {% now "Y" %} Samana Builders. All rights reserved.
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Focus on username field
+    document.addEventListener('DOMContentLoaded', function() {
+        const usernameField = document.getElementById('id_username');
+        if (usernameField) usernameField.focus();
+    });
+</script>
 {% endblock %}

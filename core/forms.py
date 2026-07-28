@@ -4,57 +4,67 @@ from .models import UserProfile
 
 
 class UserForm(forms.ModelForm):
+    """Form for editing User fields."""
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email']
+        fields = ['first_name', 'last_name', 'email', 'is_active']
         widgets = {
-            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'email@example.com'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
 
 class UserProfileForm(forms.ModelForm):
+    """Form for editing UserProfile fields."""
     class Meta:
         model = UserProfile
-        fields = ['role', 'phone', 'cnic']
+        fields = ['role', 'theme', 'phone', 'cnic', 'is_active']
         widgets = {
             'role': forms.Select(attrs={'class': 'form-control'}),
-            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+92-XXX-XXXXXXX'}),
-            'cnic': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'XXXXX-XXXXXXX-X'}),
+            'theme': forms.Select(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+            'cnic': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
 
 class CreateUserForm(forms.Form):
     username = forms.CharField(
         max_length=150,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Username'})
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '})
     )
     email = forms.EmailField(
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'email@example.com'})
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': ' '})
     )
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'})
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': ' '})
     )
     password_confirm = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm Password'})
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': ' '})
     )
     first_name = forms.CharField(
         max_length=30,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'})
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '})
     )
     last_name = forms.CharField(
         max_length=30,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'})
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '})
     )
     role = forms.ChoiceField(
-        choices=UserProfile.ROLE_CHOICES,
+        choices=[(k, v) for k, v in UserProfile.ROLE_CHOICES if k in ['super_admin', 'admin', 'staff']],
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     phone = forms.CharField(
         max_length=20,
         required=False,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+92-XXX-XXXXXXX'})
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '})
+    )
+    cnic = forms.CharField(
+        max_length=15,
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '})
     )
 
     def clean_password_confirm(self):
@@ -69,3 +79,45 @@ class CreateUserForm(forms.Form):
         if User.objects.filter(username=username).exists():
             raise forms.ValidationError('Username already exists')
         return username
+
+
+class UserEditForm(forms.ModelForm):
+    """Form for editing an existing user and profile together."""
+    role = forms.ChoiceField(
+        choices=[(k, v) for k, v in UserProfile.ROLE_CHOICES if k in ['super_admin', 'admin', 'staff']],
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    phone = forms.CharField(
+        max_length=20, required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '})
+    )
+    cnic = forms.CharField(
+        max_length=15, required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '})
+    )
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'is_active']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and hasattr(self.instance, 'profile'):
+            self.fields['role'].initial = self.instance.profile.role
+            self.fields['phone'].initial = self.instance.profile.phone
+            self.fields['cnic'].initial = self.instance.profile.cnic
+
+    def save(self, commit=True):
+        user = super().save(commit)
+        if commit and hasattr(user, 'profile'):
+            user.profile.role = self.cleaned_data['role']
+            user.profile.phone = self.cleaned_data['phone']
+            user.profile.cnic = self.cleaned_data['cnic']
+            user.profile.save()
+        return user

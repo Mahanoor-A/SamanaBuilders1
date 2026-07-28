@@ -1,79 +1,58 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Properties - Samana Builders ERP{% endblock %}
 
 {% block content %}
 <div class="app-layout">
-    <!-- Sidebar -->
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+    <div class="top-bar">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <span class="top-bar-title">Properties</span>
+        <div class="top-bar-actions">
+            <div class="theme-switcher">
+                <button class="theme-btn" data-theme="professional-blue"></button>
+                <button class="theme-btn" data-theme="modern-green"></button>
+                <button class="theme-btn" data-theme="elegant-dark"></button>
+                <button class="theme-btn" data-theme="warm-earth"></button>
+                <button class="theme-btn" data-theme="minimalist-purple"></button>
+            </div>
+        </div>
+    </div>
+
     <aside class="sidebar">
-        <div class="sidebar-brand">
-            <h2>Samana Builders</h2>
-            <p>Real Estate ERP</p>
-        </div>
-        <ul class="nav-menu">
-            <li class="nav-item">
-                <a href="{% url 'dashboard' %}" class="nav-link">
-                    <span class="nav-icon">📊</span>
-                    Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'customers' %}" class="nav-link">
-                    <span class="nav-icon">👥</span>
-                    Customers
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'properties' %}" class="nav-link active">
-                    <span class="nav-icon">🏗️</span>
-                    Properties
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'bookings' %}" class="nav-link">
-                    <span class="nav-icon">📋</span>
-                    Bookings
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'payments' %}" class="nav-link">
-                    <span class="nav-icon">💰</span>
-                    Payments
-                </a>
-            </li>
+        <div class="sidebar-brand"><div class="brand-icon">SB</div><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Main Menu</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a></li>
+                <li class="nav-item"><a href="{% url 'customers' %}" class="nav-link"><span class="nav-icon">👥</span> Customers</a></li>
+                <li class="nav-item"><a href="{% url 'properties' %}" class="nav-link active"><span class="nav-icon">🏗️</span> Properties</a></li>
+                <li class="nav-item"><a href="{% url 'bookings' %}" class="nav-link"><span class="nav-icon">📋</span> Bookings</a></li>
+                <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link"><span class="nav-icon">💰</span> Payments</a></li>
+            </ul>
             <div class="nav-divider"></div>
-            <li class="nav-item">
-                <a href="{% url 'users' %}" class="nav-link">
-                    <span class="nav-icon">👤</span>
-                    Users
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'audit_logs' %}" class="nav-link">
-                    <span class="nav-icon">📝</span>
-                    Audit Logs
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/admin/" class="nav-link">
-                    <span class="nav-icon">⚙️</span>
-                    Admin Panel
-                </a>
-            </li>
-        </ul>
-        <div style="margin-top: auto; padding: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <a href="{% url 'logout' %}" class="nav-link">
-                <span class="nav-icon">🚪</span>
-                Logout
-            </a>
-        </div>
+            <div class="nav-section">Administration</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'users' %}" class="nav-link"><span class="nav-icon">👤</span> Users</a></li>
+                <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link"><span class="nav-icon">📝</span> Audit Logs</a></li>
+                <li class="nav-item"><a href="/admin/" class="nav-link"><span class="nav-icon">⚙️</span> Admin Panel</a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer"><a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a></div>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content">
         <div class="page-header">
             <h1>Properties</h1>
-            <div class="user-info">
+            <div class="page-actions">
+                <div class="theme-switcher" style="display:flex;">
+                    <button class="theme-btn" data-theme="professional-blue"></button>
+                    <button class="theme-btn" data-theme="modern-green"></button>
+                    <button class="theme-btn" data-theme="elegant-dark"></button>
+                    <button class="theme-btn" data-theme="warm-earth"></button>
+                    <button class="theme-btn" data-theme="minimalist-purple"></button>
+                </div>
                 <a href="{% url 'project_create' %}" class="btn btn-primary btn-sm">+ Add Project</a>
                 <a href="{% url 'plot_create' %}" class="btn btn-success btn-sm">+ Add Plot</a>
             </div>
@@ -81,50 +60,67 @@
 
         <!-- Stats -->
         <div class="stats-grid">
-            <div class="stat-card">
+            <div class="stat-card animate-fade-up stagger-1">
                 <div class="stat-icon blue">🏗️</div>
-                <div class="stat-value">{{ projects|length }}</div>
+                <div class="stat-value" data-target="{{ projects|length|default:0 }}">{{ projects|length|default:0 }}</div>
                 <div class="stat-label">Projects</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card animate-fade-up stagger-2">
                 <div class="stat-icon green">📐</div>
-                <div class="stat-value">{{ plots|length }}</div>
+                <div class="stat-value" data-target="{{ plots|length|default:0 }}">{{ plots|length|default:0 }}</div>
                 <div class="stat-label">Total Plots</div>
+            </div>
+            <div class="stat-card animate-fade-up stagger-3">
+                <div class="stat-icon amber">🟢</div>
+                <div class="stat-value" data-target="{{ available_plots_count|default:0 }}">{{ available_plots_count|default:0 }}</div>
+                <div class="stat-label">Available Plots</div>
             </div>
         </div>
 
         <!-- Filters -->
-        <div class="card">
-            <form method="get" class="filters">
-                <select name="project" class="form-control">
-                    <option value="">All Projects</option>
-                    {% for project in projects %}
-                    <option value="{{ project.id }}" {% if project_filter == project.id|stringformat:"d" %}selected{% endif %}>{{ project.name }}</option>
-                    {% endfor %}
-                </select>
-                <select name="status" class="form-control">
-                    <option value="">All Status</option>
-                    <option value="available" {% if status_filter == 'available' %}selected{% endif %}>Available</option>
-                    <option value="reserved" {% if status_filter == 'reserved' %}selected{% endif %}>Reserved</option>
-                    <option value="booked" {% if status_filter == 'booked' %}selected{% endif %}>Booked</option>
-                    <option value="sold" {% if status_filter == 'sold' %}selected{% endif %}>Sold</option>
-                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
-                </select>
-                <button type="submit" class="btn btn-primary btn-sm">Filter</button>
-                {% if project_filter or status_filter %}
-                <a href="{% url 'properties' %}" class="btn btn-secondary btn-sm">Clear</a>
-                {% endif %}
+        <div class="card animate-fade-up stagger-2">
+            <form method="get">
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                    <select name="project" class="form-control" style="min-width:180px; height:42px; padding:0 36px 0 14px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-family:'Inter',sans-serif; background:var(--bg-input); color:var(--text-primary); appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 12px center; cursor:pointer; outline:none;">
+                        <option value="">All Projects</option>
+                        {% for project in projects %}
+                        <option value="{{ project.id }}" {% if project_filter == project.id|stringformat:"d" %}selected{% endif %}>{{ project.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="status" class="form-control" style="min-width:160px; height:42px; padding:0 36px 0 14px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-family:'Inter',sans-serif; background:var(--bg-input); color:var(--text-primary); appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 12px center; cursor:pointer; outline:none;">
+                        <option value="">All Status</option>
+                        <option value="available" {% if status_filter == 'available' %}selected{% endif %}>Available</option>
+                        <option value="reserved" {% if status_filter == 'reserved' %}selected{% endif %}>Reserved</option>
+                        <option value="booked" {% if status_filter == 'booked' %}selected{% endif %}>Booked</option>
+                        <option value="sold" {% if status_filter == 'sold' %}selected{% endif %}>Sold</option>
+                        <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                    <div style="position:relative; flex:1; min-width:200px;">
+                        <span style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-secondary); font-size:15px; pointer-events:none; z-index:1;">🔍</span>
+                        <input type="text" name="search" value="{{ search }}"
+                            style="width:100%; padding:11px 14px 11px 42px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-family:'Inter',sans-serif; background:var(--bg-input); color:var(--text-primary); outline:none; transition:all 0.3s ease; box-sizing:border-box;"
+                            placeholder="Search plots..."
+                            onfocus="this.style.borderColor='var(--border-focus)'; this.style.boxShadow='0 0 0 3px var(--primary-bg)';"
+                            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';"
+                        >
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm" style="height:42px; padding:0 20px; white-space:nowrap;">Filter</button>
+                    {% if project_filter or status_filter or search %}
+                    <a href="{% url 'properties' %}" class="btn btn-secondary btn-sm" style="height:42px; padding:0 16px; white-space:nowrap;">Clear</a>
+                    {% endif %}
+                </div>
             </form>
         </div>
 
-        <!-- Projects -->
-        <div class="card">
+        <!-- Projects Section -->
+        <div class="card animate-fade-up stagger-3">
             <div class="card-header">
-                <h3>Projects</h3>
+                <h3>🏗️ Projects</h3>
+                <span class="badge badge-info">{{ projects|length|default:0 }} projects</span>
             </div>
             <div class="table-container">
                 {% if projects %}
-                <table>
+                <table class="sortable">
                     <thead>
                         <tr>
                             <th>Project Name</th>
@@ -132,7 +128,7 @@
                             <th>Total Plots</th>
                             <th>Available</th>
                             <th>Status</th>
-                            <th>Actions</th>
+                            <th class="no-sort">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -141,14 +137,16 @@
                             <td><strong>{{ project.name }}</strong></td>
                             <td>{{ project.location }}</td>
                             <td>{{ project.total_plots }}</td>
-                            <td>{{ project.available_plots }}</td>
+                            <td>
+                                <span style="font-weight:600; color:var(--accent-green);">{{ project.available_plots }}</span>
+                            </td>
                             <td>
                                 <span class="badge badge-{% if project.is_active %}success{% else %}secondary{% endif %}">
                                     {% if project.is_active %}Active{% else %}Inactive{% endif %}
                                 </span>
                             </td>
                             <td>
-                                <div class="btn-group">
+                                <div class="table-actions">
                                     <a href="{% url 'project_edit' project.pk %}" class="btn btn-secondary btn-sm">Edit</a>
                                     <a href="{% url 'project_delete' project.pk %}" class="btn btn-danger btn-sm">Delete</a>
                                 </div>
@@ -159,20 +157,24 @@
                 </table>
                 {% else %}
                 <div class="empty-state">
-                    <p>No projects found</p>
+                    <div class="empty-icon">🏗️</div>
+                    <h3>No Projects</h3>
+                    <p>Create your first project to start adding plots.</p>
+                    <a href="{% url 'project_create' %}" class="btn btn-primary btn-sm">+ Add Project</a>
                 </div>
                 {% endif %}
             </div>
         </div>
 
-        <!-- Plots -->
-        <div class="card">
+        <!-- Plots Section -->
+        <div class="card animate-fade-up stagger-4">
             <div class="card-header">
-                <h3>Plots</h3>
+                <h3>📐 Plots</h3>
+                <span class="badge badge-info">{{ plots|length|default:0 }} plots</span>
             </div>
             <div class="table-container">
                 {% if plots %}
-                <table>
+                <table class="sortable">
                     <thead>
                         <tr>
                             <th>Plot Number</th>
@@ -181,7 +183,7 @@
                             <th>Size (Marla)</th>
                             <th>Price</th>
                             <th>Status</th>
-                            <th>Actions</th>
+                            <th class="no-sort">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -191,14 +193,14 @@
                             <td>{{ plot.project.name }}</td>
                             <td>{{ plot.get_plot_type_display }}</td>
                             <td>{{ plot.size_marla }}</td>
-                            <td>Rs. {{ plot.price|floatformat:0 }}</td>
+                            <td style="font-weight:600;">Rs. {{ plot.price|floatformat:0 }}</td>
                             <td>
                                 <span class="badge badge-{% if plot.status == 'available' %}success{% elif plot.status == 'booked' %}info{% elif plot.status == 'sold' %}secondary{% elif plot.status == 'reserved' %}warning{% else %}danger{% endif %}">
                                     {{ plot.get_status_display }}
                                 </span>
                             </td>
                             <td>
-                                <div class="btn-group">
+                                <div class="table-actions">
                                     <a href="{% url 'plot_edit' plot.pk %}" class="btn btn-secondary btn-sm">Edit</a>
                                     <a href="{% url 'plot_delete' plot.pk %}" class="btn btn-danger btn-sm">Delete</a>
                                 </div>
@@ -209,9 +211,24 @@
                 </table>
                 {% else %}
                 <div class="empty-state">
-                    <p>No plots found</p>
+                    <div class="empty-icon">📐</div>
+                    <h3>No Plots Found</h3>
+                    <p>{% if status_filter or project_filter %}No plots match the current filters.{% else %}Add plots to your projects.{% endif %}</p>
+                    <a href="{% url 'plot_create' %}" class="btn btn-primary btn-sm">+ Add Plot</a>
                 </div>
                 {% endif %}
+            </div>
+        </div>
+
+        <!-- Map Placeholder -->
+        <div class="card animate-fade-up stagger-5">
+            <div class="card-header">
+                <h3>📍 Property Map</h3>
+            </div>
+            <div class="map-placeholder">
+                <div class="map-icon">🗺️</div>
+                <p>Map integration coming soon</p>
+                <span style="font-size:12px; opacity:0.6;">View property locations on an interactive map</span>
             </div>
         </div>
     </main>

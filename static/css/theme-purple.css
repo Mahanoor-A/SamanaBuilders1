@@ -1,0 +1,27 @@
+/* ==========================================================================
+   Theme: Minimalist Purple
+   Primary: #7c3aed | Dark: #6d28d9 | Light: #f5f3ff
+   ========================================================================== */
+
+[data-theme="purple"] {
+  --primary: #7c3aed;
+  --primary-dark: #6d28d9;
+  --primary-light: #f5f3ff;
+  --bg: #f8f6ff;
+  --bg-card: #ffffff;
+  --text: #1e1430;
+  --text-muted: #7c6b9e;
+  --border: #ede9fe;
+  --sidebar-bg: #2e1065;
+  --sidebar-text: #c4b5fd;
+  --sidebar-active: #7c3aed;
+  --header-bg: #ffffff;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --info: #6366f1;
+  --shadow-sm: 0 1px 2px rgba(124,58,237,0.05);
+  --shadow: 0 1px 3px rgba(124,58,237,0.08), 0 1px 2px rgba(124,58,237,0.05);
+  --shadow-md: 0 4px 6px rgba(124,58,237,0.07), 0 2px 4px rgba(124,58,237,0.05);
+  --shadow-lg: 0 10px 15px rgba(124,58,237,0.08), 0 4px 6px rgba(124,58,237,0.05);
+}

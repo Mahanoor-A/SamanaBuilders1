@@ -1,161 +1,166 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Verify Payment {{ payment.payment_id }} - Samana Builders ERP{% endblock %}
 
 {% block content %}
 <div class="app-layout">
-    <!-- Sidebar -->
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+    <div class="top-bar">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <span class="top-bar-title">Verify Payment</span>
+        <div class="top-bar-actions">
+            <div class="theme-switcher">
+                <button class="theme-btn" data-theme="professional-blue"></button>
+                <button class="theme-btn" data-theme="modern-green"></button>
+                <button class="theme-btn" data-theme="elegant-dark"></button>
+                <button class="theme-btn" data-theme="warm-earth"></button>
+                <button class="theme-btn" data-theme="minimalist-purple"></button>
+            </div>
+        </div>
+    </div>
+
     <aside class="sidebar">
-        <div class="sidebar-brand">
-            <h2>Samana Builders</h2>
-            <p>Real Estate ERP</p>
-        </div>
-        <ul class="nav-menu">
-            <li class="nav-item">
-                <a href="{% url 'dashboard' %}" class="nav-link">
-                    <span class="nav-icon">📊</span>
-                    Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'customers' %}" class="nav-link">
-                    <span class="nav-icon">👥</span>
-                    Customers
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'properties' %}" class="nav-link">
-                    <span class="nav-icon">🏗️</span>
-                    Properties
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'bookings' %}" class="nav-link">
-                    <span class="nav-icon">📋</span>
-                    Bookings
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'payments' %}" class="nav-link active">
-                    <span class="nav-icon">💰</span>
-                    Payments
-                </a>
-            </li>
+        <div class="sidebar-brand"><div class="brand-icon">SB</div><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Main Menu</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a></li>
+                <li class="nav-item"><a href="{% url 'customers' %}" class="nav-link"><span class="nav-icon">👥</span> Customers</a></li>
+                <li class="nav-item"><a href="{% url 'properties' %}" class="nav-link"><span class="nav-icon">🏗️</span> Properties</a></li>
+                <li class="nav-item"><a href="{% url 'bookings' %}" class="nav-link"><span class="nav-icon">📋</span> Bookings</a></li>
+                <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link active"><span class="nav-icon">💰</span> Payments</a></li>
+            </ul>
             <div class="nav-divider"></div>
-            <li class="nav-item">
-                <a href="{% url 'users' %}" class="nav-link">
-                    <span class="nav-icon">👤</span>
-                    Users
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'audit_logs' %}" class="nav-link">
-                    <span class="nav-icon">📝</span>
-                    Audit Logs
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/admin/" class="nav-link">
-                    <span class="nav-icon">⚙️</span>
-                    Admin Panel
-                </a>
-            </li>
-        </ul>
-        <div style="margin-top: auto; padding: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <a href="{% url 'logout' %}" class="nav-link">
-                <span class="nav-icon">🚪</span>
-                Logout
-            </a>
-        </div>
+            <div class="nav-section">Administration</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'users' %}" class="nav-link"><span class="nav-icon">👤</span> Users</a></li>
+                <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link"><span class="nav-icon">📝</span> Audit Logs</a></li>
+                <li class="nav-item"><a href="/admin/" class="nav-link"><span class="nav-icon">⚙️</span> Admin Panel</a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer"><a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a></div>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content">
         <div class="page-header">
             <h1>Verify Payment {{ payment.payment_id }}</h1>
-            <div class="user-info">
-                <span>Welcome, {{ request.user.get_full_name|default:request.user.username }}</span>
-                <div class="user-avatar">{{ request.user.first_name.0|default:request.user.username.0 }}</div>
+            <div class="page-actions">
+                <div class="theme-switcher" style="display:flex;">
+                    <button class="theme-btn" data-theme="professional-blue"></button>
+                    <button class="theme-btn" data-theme="modern-green"></button>
+                    <button class="theme-btn" data-theme="elegant-dark"></button>
+                    <button class="theme-btn" data-theme="warm-earth"></button>
+                    <button class="theme-btn" data-theme="minimalist-purple"></button>
+                </div>
+                <a href="{% url 'payments' %}" class="btn btn-secondary btn-sm">← Back to Payments</a>
+            </div>
+        </div>
+
+        <!-- Status Banner -->
+        <div class="card animate-fade-up" style="padding:16px 24px; display:flex; align-items:center; gap:12px; border-left:4px solid var(--accent-amber);">
+            <span style="font-size:28px;">⏳</span>
+            <div>
+                <div style="font-size:15px; font-weight:600; color:var(--text-primary);">Payment Pending Verification</div>
+                <div style="font-size:13px; color:var(--text-secondary);">Review the payment details below and approve or reject.</div>
             </div>
         </div>
 
         <!-- Payment Details -->
-        <div class="card">
-            <h3 style="margin-bottom: 16px;">Payment Details</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-                <div>
-                    <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Payment ID</strong>
-                    <p style="font-size: 16px; font-weight: 600;">{{ payment.payment_id }}</p>
+        <div class="card animate-fade-up stagger-1">
+            <div class="card-header">
+                <h3>📄 Payment Details</h3>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Payment ID</div>
+                    <div class="detail-value">{{ payment.payment_id }}</div>
                 </div>
-                <div>
-                    <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Booking</strong>
-                    <p style="font-size: 16px; font-weight: 600;">{{ payment.booking.booking_id }}</p>
+                <div class="detail-item">
+                    <div class="detail-label">Booking</div>
+                    <div class="detail-value">{{ payment.booking.booking_id }}</div>
                 </div>
-                <div>
-                    <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Amount</strong>
-                    <p style="font-size: 16px; font-weight: 600; color: var(--accent-green);">Rs. {{ payment.amount|floatformat:0 }}</p>
+                <div class="detail-item">
+                    <div class="detail-label">Customer</div>
+                    <div class="detail-value">{{ payment.booking.customer.full_name }}</div>
                 </div>
-                <div>
-                    <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Payment Method</strong>
-                    <p style="font-size: 16px; font-weight: 600;">{{ payment.get_payment_method_display }}</p>
+                <div class="detail-item">
+                    <div class="detail-label">Amount</div>
+                    <div class="detail-value" style="color:var(--accent-green); font-size:20px;">Rs. {{ payment.amount|floatformat:0 }}</div>
                 </div>
-                <div>
-                    <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Payment Date</strong>
-                    <p style="font-size: 16px; font-weight: 600;">{{ payment.payment_date }}</p>
+                <div class="detail-item">
+                    <div class="detail-label">Payment Method</div>
+                    <div class="detail-value">{{ payment.get_payment_method_display }}</div>
                 </div>
-                <div>
-                    <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Status</strong>
-                    <p><span class="badge badge-warning">{{ payment.get_status_display }}</span></p>
+                <div class="detail-item">
+                    <div class="detail-label">Payment Date</div>
+                    <div class="detail-value">{{ payment.payment_date|date:"d M Y" }}</div>
                 </div>
                 {% if payment.reference_number %}
-                <div>
-                    <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Reference Number</strong>
-                    <p style="font-size: 16px; font-weight: 600;">{{ payment.reference_number }}</p>
+                <div class="detail-item">
+                    <div class="detail-label">Reference Number</div>
+                    <div class="detail-value">{{ payment.reference_number }}</div>
                 </div>
                 {% endif %}
-                {% if payment.notes %}
-                <div>
-                    <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Notes</strong>
-                    <p style="font-size: 14px;">{{ payment.notes }}</p>
+                <div class="detail-item">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value"><span class="badge badge-warning">{{ payment.get_status_display }}</span></div>
                 </div>
-                {% endif %}
             </div>
+            {% if payment.notes %}
+            <div style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+                <div class="detail-label" style="margin-bottom:4px;">Notes</div>
+                <p style="font-size:14px; color:var(--text-primary);">{{ payment.notes }}</p>
+            </div>
+            {% endif %}
         </div>
 
         <!-- Verification Form -->
-        <div class="card">
-            <h3 style="margin-bottom: 16px;">Verification Action</h3>
+        <div class="card animate-fade-up stagger-2">
+            <div class="card-header">
+                <h3>🔐 Verification Action</h3>
+            </div>
             <form method="post" novalidate>
                 {% csrf_token %}
-                
-                <div class="form-group">
-                    <label>Action</label>
-                    <div style="display: flex; gap: 24px; margin-top: 8px;">
-                        <label class="form-check">
-                            <input type="radio" name="action" value="verify" class="form-check-input" required>
-                            <span class="form-check-label" style="color: var(--accent-green); font-weight: 600;">✓ Verify Payment</span>
+
+                <div style="margin-bottom:24px;">
+                    <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:12px;">Choose Action</label>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                        <label class="card" style="cursor:pointer; margin:0; padding:20px; display:flex; align-items:center; gap:12px; border:2px solid var(--border); transition:all 0.3s ease;" onmouseover="this.style.borderColor='var(--accent-green)'" onmouseout="this.style.borderColor='var(--border)'">
+                            <input type="radio" name="action" value="verify" class="form-check-input" required style="width:20px;height:20px;accent-color:var(--accent-green);">
+                            <div>
+                                <div style="font-size:16px; font-weight:600; color:var(--accent-green);">✓ Verify Payment</div>
+                                <div style="font-size:12px; color:var(--text-secondary);">Mark this payment as verified</div>
+                            </div>
                         </label>
-                        <label class="form-check">
-                            <input type="radio" name="action" value="reject" class="form-check-input" required>
-                            <span class="form-check-label" style="color: var(--accent-red); font-weight: 600;">✗ Reject Payment</span>
+                        <label class="card" style="cursor:pointer; margin:0; padding:20px; display:flex; align-items:center; gap:12px; border:2px solid var(--border); transition:all 0.3s ease;" onmouseover="this.style.borderColor='var(--accent-red)'" onmouseout="this.style.borderColor='var(--border)'">
+                            <input type="radio" name="action" value="reject" class="form-check-input" required style="width:20px;height:20px;accent-color:var(--accent-red);">
+                            <div>
+                                <div style="font-size:16px; font-weight:600; color:var(--accent-red);">✗ Reject Payment</div>
+                                <div style="font-size:12px; color:var(--text-secondary);">Mark this payment as rejected</div>
+                            </div>
                         </label>
                     </div>
                     {% if form.action.errors %}
-                    <div class="form-error">
-                        {% for error in form.action.errors %}
-                        {{ error }}
-                        {% endfor %}
+                    <div class="form-error" style="margin-top:8px;">
+                        {% for error in form.action.errors %}{{ error }}{% endfor %}
                     </div>
                     {% endif %}
                 </div>
-                
-                <div class="form-group">
-                    <label for="id_notes">Notes (Optional)</label>
-                    <textarea name="notes" id="id_notes" class="form-control" rows="3" placeholder="Add verification notes...">{{ form.notes.value|default:"" }}</textarea>
+
+                <div class="floating-group">
+                    <textarea name="notes" id="id_notes" class="form-control" placeholder=" " rows="3">{{ form.notes.value|default:"" }}</textarea>
+                    <label for="id_notes">Verification Notes (Optional)</label>
+                    {% if form.notes.errors %}
+                    <div class="form-error">{% for error in form.notes.errors %}{{ error }}{% endfor %}</div>
+                    {% endif %}
                 </div>
-                
-                <div class="btn-group mt-2">
-                    <button type="submit" class="btn btn-primary">Submit Verification</button>
+
+                <div class="btn-group" style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+                    <button type="submit" class="btn btn-primary">
+                        <span class="spinner"></span>
+                        <span class="btn-text">Submit Verification</span>
+                    </button>
                     <a href="{% url 'payments' %}" class="btn btn-secondary">Cancel</a>
                 </div>
             </form>

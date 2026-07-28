@@ -1,3 +1,396 @@
-{% extends 'base_form.html' %}
+{% extends 'base.html' %}
+{% load static %}
 
 {% block title %}{{ title }} - Samana Builders ERP{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <div class="top-bar">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <span class="top-bar-title">{% if "Edit" in title %}Edit{% else %}New{% endif %} Customer</span>
+        <div class="top-bar-actions">
+            <div class="theme-switcher">
+                <button class="theme-btn" data-theme="professional-blue"></button>
+                <button class="theme-btn" data-theme="modern-green"></button>
+                <button class="theme-btn" data-theme="elegant-dark"></button>
+                <button class="theme-btn" data-theme="warm-earth"></button>
+                <button class="theme-btn" data-theme="minimalist-purple"></button>
+            </div>
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">SB</div>
+            <div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Main Menu</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a></li>
+                <li class="nav-item"><a href="{% url 'customers' %}" class="nav-link active"><span class="nav-icon">👥</span> Customers</a></li>
+                <li class="nav-item"><a href="{% url 'properties' %}" class="nav-link"><span class="nav-icon">🏗️</span> Properties</a></li>
+                <li class="nav-item"><a href="{% url 'bookings' %}" class="nav-link"><span class="nav-icon">📋</span> Bookings</a></li>
+                <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link"><span class="nav-icon">💰</span> Payments</a></li>
+            </ul>
+            <div class="nav-divider"></div>
+            <div class="nav-section">Administration</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'users' %}" class="nav-link"><span class="nav-icon">👤</span> Users</a></li>
+                <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link"><span class="nav-icon">📝</span> Audit Logs</a></li>
+                <li class="nav-item"><a href="/admin/" class="nav-link"><span class="nav-icon">⚙️</span> Admin Panel</a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>{{ title }}</h1>
+            <div class="page-actions">
+                <div class="theme-switcher" style="display:flex;">
+                    <button class="theme-btn" data-theme="professional-blue"></button>
+                    <button class="theme-btn" data-theme="modern-green"></button>
+                    <button class="theme-btn" data-theme="elegant-dark"></button>
+                    <button class="theme-btn" data-theme="warm-earth"></button>
+                    <button class="theme-btn" data-theme="minimalist-purple"></button>
+                </div>
+                <a href="{% url 'customers' %}" class="btn btn-secondary btn-sm">← Back to Customers</a>
+            </div>
+        </div>
+
+        {% if form.errors %}
+        <div class="alert alert-error animate-slide-right">
+            <span>⚠️</span>
+            <span>Please correct the errors below.</span>
+        </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <!-- Personal Information -->
+            <div class="card animate-fade-up">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border);">
+                    <div style="width:48px; height:48px; border-radius:12px; background:var(--primary-bg); display:flex; align-items:center; justify-content:center; font-size:24px;">👤</div>
+                    <div>
+                        <h3 style="font-size:16px; font-weight:600; color:var(--text-primary);">Personal Information</h3>
+                        <p style="font-size:13px; color:var(--text-secondary);">Basic customer details and identification</p>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="floating-group">
+                        {{ form.first_name }}
+                        <label for="{{ form.first_name.id_for_label }}">First Name <span style="color:var(--accent-red);">*</span></label>
+                        {% if form.first_name.errors %}
+                        <div class="form-error">{% for error in form.first_name.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="floating-group">
+                        {{ form.last_name }}
+                        <label for="{{ form.last_name.id_for_label }}">Last Name <span style="color:var(--accent-red);">*</span></label>
+                        {% if form.last_name.errors %}
+                        <div class="form-error">{% for error in form.last_name.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="floating-group">
+                        {{ form.email }}
+                        <label for="{{ form.email.id_for_label }}">Email Address</label>
+                        {% if form.email.errors %}
+                        <div class="form-error">{% for error in form.email.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="floating-group">
+                        {{ form.cnic }}
+                        <label for="{{ form.cnic.id_for_label }}">CNIC Number <span style="color:var(--accent-red);">*</span></label>
+                        {% if form.cnic.errors %}
+                        <div class="form-error">{% for error in form.cnic.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="floating-group">
+                        {{ form.phone }}
+                        <label for="{{ form.phone.id_for_label }}">Phone Number <span style="color:var(--accent-red);">*</span></label>
+                        {% if form.phone.errors %}
+                        <div class="form-error">{% for error in form.phone.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="floating-group">
+                        {{ form.alternate_phone }}
+                        <label for="{{ form.alternate_phone.id_for_label }}">Alternate Phone</label>
+                        {% if form.alternate_phone.errors %}
+                        <div class="form-error">{% for error in form.alternate_phone.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-check" style="margin-top:4px;">
+                    {{ form.is_active }}
+                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Active Customer</label>
+                </div>
+            </div>
+
+            <!-- Address -->
+            <div class="card animate-fade-up stagger-1">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border);">
+                    <div style="width:48px; height:48px; border-radius:12px; background:var(--stat-green-bg); display:flex; align-items:center; justify-content:center; font-size:24px;">📍</div>
+                    <div>
+                        <h3 style="font-size:16px; font-weight:600; color:var(--text-primary);">Address</h3>
+                        <p style="font-size:13px; color:var(--text-secondary);">Customer's residential or contact address</p>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="floating-group">
+                        {{ form.city }}
+                        <label for="{{ form.city.id_for_label }}">City</label>
+                        {% if form.city.errors %}
+                        <div class="form-error">{% for error in form.city.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="floating-group" style="grid-column: span 1;"></div>
+                </div>
+
+                <div class="floating-group">
+                    {{ form.address }}
+                    <label for="{{ form.address.id_for_label }}">Full Address</label>
+                    {% if form.address.errors %}
+                    <div class="form-error">{% for error in form.address.errors %}{{ error }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Documents & Image -->
+            <div class="card animate-fade-up stagger-2">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border);">
+                    <div style="width:48px; height:48px; border-radius:12px; background:var(--stat-amber-bg); display:flex; align-items:center; justify-content:center; font-size:24px;">📎</div>
+                    <div>
+                        <h3 style="font-size:16px; font-weight:600; color:var(--text-primary);">Documents & Photo</h3>
+                        <p style="font-size:13px; color:var(--text-secondary);">Upload customer photo and identification documents</p>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <!-- Image Upload -->
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Customer Photo</label>
+                        <div class="upload-zone" id="imageUploadZone">
+                            {% if customer and customer.image %}
+                            <img src="{{ customer.image.url }}" alt="Customer Photo" id="imagePreview" style="max-width:100%; max-height:160px; border-radius:8px; object-fit:cover;">
+                            {% else %}
+                            <div id="imagePlaceholder" class="upload-placeholder">
+                                <div class="upload-icon">📷</div>
+                                <p class="upload-text">No photo selected</p>
+                                <p class="upload-hint">JPG, PNG up to 5MB</p>
+                            </div>
+                            <img src="" alt="" id="imagePreviewNew" style="display:none; max-width:100%; max-height:160px; border-radius:8px; object-fit:cover;">
+                            {% endif %}
+                        </div>
+                        <label for="id_image" class="upload-btn" style="margin-top:8px;">
+                            <span>📎 Choose Photo</span>
+                        </label>
+                        <div style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);">{{ form.image }}</div>
+                        {% if form.image.errors %}
+                        <div class="form-error">{% for error in form.image.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Document Upload -->
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">ID Document</label>
+                        <div class="upload-zone" id="docUploadZone">
+                            {% if customer and customer.document %}
+                            <div class="upload-placeholder">
+                                <div class="upload-icon">📄</div>
+                                <p class="upload-text" style="font-weight:600; color:var(--text-primary);">{{ customer.document.name|cut:"customers/documents/" }}</p>
+                                <a href="{{ customer.document.url }}" target="_blank" class="upload-link">View Document →</a>
+                            </div>
+                            {% else %}
+                            <div id="docPlaceholder" class="upload-placeholder">
+                                <div class="upload-icon">📄</div>
+                                <p class="upload-text">No document selected</p>
+                                <p class="upload-hint">PDF, DOC, JPG up to 10MB</p>
+                            </div>
+                            <div id="docPreviewNew" style="display:none;" class="upload-placeholder">
+                                <div class="upload-icon" style="color:var(--accent-green);">✅</div>
+                                <p id="docFileName" class="upload-text" style="font-weight:600; color:var(--text-primary);"></p>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <label for="id_document" class="upload-btn" style="margin-top:8px;">
+                            <span>📎 Choose Document</span>
+                        </label>
+                        <div style="position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0);">{{ form.document }}</div>
+                        {% if form.document.errors %}
+                        <div class="form-error">{% for error in form.document.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="card animate-fade-up stagger-3">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border);">
+                    <div style="width:48px; height:48px; border-radius:12px; background:var(--stat-purple-bg); display:flex; align-items:center; justify-content:center; font-size:24px;">📝</div>
+                    <div>
+                        <h3 style="font-size:16px; font-weight:600; color:var(--text-primary);">Additional Notes</h3>
+                        <p style="font-size:13px; color:var(--text-secondary);">Any extra information about this customer</p>
+                    </div>
+                </div>
+
+                <div class="floating-group">
+                    {{ form.notes }}
+                    <label for="{{ form.notes.id_for_label }}">Notes</label>
+                    {% if form.notes.errors %}
+                    <div class="form-error">{% for error in form.notes.errors %}{{ error }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="card animate-fade-up stagger-4" style="border:none; background:transparent; box-shadow:none; padding:0;">
+                <div class="btn-group" style="justify-content:flex-end;">
+                    <a href="{% url 'customers' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <span class="spinner"></span>
+                        <span class="btn-text">{% if "Edit" in title %}Update Customer{% else %}Create Customer{% endif %}</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var imageInput = document.getElementById('id_image');
+    var docInput = document.getElementById('id_document');
+
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    var placeholder = document.getElementById('imagePlaceholder');
+                    var previewNew = document.getElementById('imagePreviewNew');
+                    var previewOld = document.getElementById('imagePreview');
+                    if (placeholder) placeholder.style.display = 'none';
+                    if (previewOld) previewOld.style.display = 'none';
+                    if (previewNew) {
+                        previewNew.src = ev.target.result;
+                        previewNew.style.display = 'block';
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    if (docInput) {
+        docInput.addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            if (file) {
+                var placeholder = document.getElementById('docPlaceholder');
+                var previewNew = document.getElementById('docPreviewNew');
+                var fileName = document.getElementById('docFileName');
+                if (placeholder) placeholder.style.display = 'none';
+                if (previewNew) previewNew.style.display = 'flex';
+                if (fileName) fileName.textContent = file.name;
+            }
+        });
+    }
+});
+</script>
+<style>
+    .upload-zone {
+        border: 2px dashed var(--border);
+        border-radius: var(--radius-md);
+        padding: 24px 16px;
+        cursor: default;
+        transition: all 0.3s ease;
+        background: var(--bg-input);
+        min-height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .upload-zone:hover {
+        border-color: var(--primary-light);
+        background: var(--primary-bg);
+    }
+    .upload-zone input[type="file"] {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0,0,0,0);
+    }
+    .upload-placeholder {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+    .upload-icon {
+        font-size: 36px;
+        margin-bottom: 4px;
+        opacity: 0.6;
+    }
+    .upload-text {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+    .upload-hint {
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin: 0;
+        opacity: 0.7;
+    }
+    .upload-link {
+        font-size: 12px;
+        color: var(--primary);
+        margin-top: 4px;
+        display: inline-block;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .upload-link:hover {
+        text-decoration: underline;
+    }
+    .upload-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 18px;
+        background: var(--primary-bg);
+        color: var(--primary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: 'Inter', sans-serif;
+    }
+    .upload-btn:hover {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+</style>
+{% endblock %}

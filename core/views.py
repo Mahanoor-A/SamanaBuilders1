@@ -5,11 +5,13 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Sum, Count, Q
+from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
+from decimal import Decimal
 from .models import UserProfile, AuditLog
-from .forms import UserForm, UserProfileForm, CreateUserForm
-from .permissions import role_required, sales_or_admin, accounts_or_admin, management_or_admin
+from .forms import UserForm, UserProfileForm, CreateUserForm, UserEditForm
+from .permissions import role_required, super_admin_required, admin_or_above, staff_or_above
 from customers.models import Customer
 from properties.models import Project, Plot
 from bookings.models import Booking, Installment
@@ -24,6 +26,12 @@ def login_view(request):
         form = AuthenticationForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
+            
+            # Deactivated users cannot log in
+            if not user.is_active:
+                messages.error(request, 'Your account has been deactivated. Contact an administrator.')
+                return render(request, 'login.html', {'form': form})
+            
             login(request, user)
             AuditLog.objects.create(
                 user=user, action='login', model_name='User',
@@ -56,30 +64,75 @@ def dashboard_view(request):
     today = timezone.now().date()
     month_ago = today - timedelta(days=30)
     
+    # Revenue stats
+    total_revenue = Payment.objects.filter(status='verified').aggregate(total=Sum('amount'))['total'] or 0
+    monthly_revenue = Payment.objects.filter(
+        status='verified', payment_date__gte=month_ago
+    ).aggregate(total=Sum('amount'))['total'] or 0
+    
+    # Booking stats
+    pending_bookings = Booking.objects.filter(status='pending').count()
+    active_bookings = Booking.objects.filter(status__in=['confirmed', 'active']).count()
+    
+    # Payment stats
+    pending_payments = Payment.objects.filter(status='pending').count()
+    verified_payments = Payment.objects.filter(status='verified').count()
+    
+    # Property stats
+    available_plots = Plot.objects.filter(status='available').count()
+    booked_plots = Plot.objects.filter(status='booked').count()
+    sold_plots = Plot.objects.filter(status='sold').count()
+    
+    # Installment stats
+    overdue_installments = Installment.objects.filter(status='overdue').count()
+    paid_installments = Installment.objects.filter(status='paid').count()
+    
+    # Staff vs admin dashboard
+    user_role = None
+    if hasattr(request.user, 'profile'):
+        user_role = request.user.profile.role
+    
     context = {
+        # Customers
         'total_customers': Customer.objects.count(),
         'active_customers': Customer.objects.filter(is_active=True).count(),
+        
+        # Projects / Properties
         'total_projects': Project.objects.filter(is_active=True).count(),
         'total_plots': Plot.objects.count(),
-        'available_plots': Plot.objects.filter(status='available').count(),
-        'booked_plots': Plot.objects.filter(status='booked').count(),
-        'sold_plots': Plot.objects.filter(status='sold').count(),
+        'available_plots': available_plots,
+        'booked_plots': booked_plots,
+        'sold_plots': sold_plots,
+        
+        # Bookings
         'total_bookings': Booking.objects.count(),
-        'pending_bookings': Booking.objects.filter(status='pending').count(),
+        'pending_bookings': pending_bookings,
+        'active_bookings': active_bookings,
         'confirmed_bookings': Booking.objects.filter(status='confirmed').count(),
+        'cancelled_bookings': Booking.objects.filter(status='cancelled').count(),
+        
+        # Payments
         'total_payments': Payment.objects.count(),
-        'pending_payments': Payment.objects.filter(status='pending').count(),
-        'verified_payments': Payment.objects.filter(status='verified').count(),
-        'total_revenue': Payment.objects.filter(status='verified').aggregate(total=Sum('amount'))['total'] or 0,
-        'monthly_revenue': Payment.objects.filter(
-            status='verified', payment_date__gte=month_ago
-        ).aggregate(total=Sum('amount'))['total'] or 0,
+        'pending_payments': pending_payments,
+        'verified_payments': verified_payments,
+        'total_revenue': total_revenue,
+        'monthly_revenue': monthly_revenue,
+        
+        # Installments
+        'overdue_installments': overdue_installments,
+        'paid_installments': paid_installments,
+        
+        # Recent records
         'recent_bookings': Booking.objects.select_related('customer', 'plot').order_by('-created_at')[:5],
-        'recent_payments': Payment.objects.select_related('booking').order_by('-created_at')[:5],
-        'overdue_installments': Installment.objects.filter(status='overdue').count(),
+        'recent_payments': Payment.objects.select_related('booking', 'booking__customer').order_by('-created_at')[:5],
+        
+        # User role for template
+        'user_role': user_role,
     }
     return render(request, 'dashboard.html', context)
 
+
+# ─── CUSTOMERS ───────────────────────────────────────────────────────────────────
 
 @login_required
 def customers_view(request):
@@ -108,7 +161,7 @@ def customer_create_view(request):
     from customers.forms import CustomerForm
     
     if request.method == 'POST':
-        form = CustomerForm(request.POST)
+        form = CustomerForm(request.POST, request.FILES)
         if form.is_valid():
             customer = form.save(commit=False)
             customer.created_by = request.user
@@ -132,7 +185,7 @@ def customer_edit_view(request, pk):
     
     customer = get_object_or_404(Customer, pk=pk)
     if request.method == 'POST':
-        form = CustomerForm(request.POST, instance=customer)
+        form = CustomerForm(request.POST, request.FILES, instance=customer)
         if form.is_valid():
             form.save()
             AuditLog.objects.create(
@@ -149,6 +202,7 @@ def customer_edit_view(request, pk):
 
 
 @login_required
+@admin_or_above
 def customer_delete_view(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     if request.method == 'POST':
@@ -164,6 +218,19 @@ def customer_delete_view(request, pk):
     
     return render(request, 'confirm_delete.html', {'object': customer, 'title': 'Delete Customer', 'cancel_url': 'customers'})
 
+
+@login_required
+def customer_detail_view(request, pk):
+    customer = get_object_or_404(Customer, pk=pk)
+    bookings = customer.bookings.select_related('plot', 'plot__project').all()
+    context = {
+        'customer': customer,
+        'bookings': bookings,
+    }
+    return render(request, 'customer_detail.html', context)
+
+
+# ─── PROPERTIES / PROJECTS / PLOTS ───────────────────────────────────────────────
 
 @login_required
 def properties_view(request):
@@ -231,6 +298,7 @@ def project_edit_view(request, pk):
 
 
 @login_required
+@admin_or_above
 def project_delete_view(request, pk):
     project = get_object_or_404(Project, pk=pk)
     if request.method == 'POST':
@@ -291,6 +359,7 @@ def plot_edit_view(request, pk):
 
 
 @login_required
+@admin_or_above
 def plot_delete_view(request, pk):
     plot = get_object_or_404(Plot, pk=pk)
     if request.method == 'POST':
@@ -307,9 +376,11 @@ def plot_delete_view(request, pk):
     return render(request, 'confirm_delete.html', {'object': plot, 'title': 'Delete Plot', 'cancel_url': 'properties'})
 
 
+# ─── BOOKINGS ────────────────────────────────────────────────────────────────────
+
 @login_required
 def bookings_view(request):
-    bookings = Booking.objects.select_related('customer', 'plot').all()
+    bookings = Booking.objects.select_related('customer', 'plot', 'plot__project').all()
     status_filter = request.GET.get('status', '')
     
     if status_filter:
@@ -358,7 +429,7 @@ def booking_detail_view(request, pk):
         pk=pk
     )
     installments = booking.installment_plan.installments.all() if hasattr(booking, 'installment_plan') else []
-    payments = booking.payments.all()
+    payments = booking.payments.select_related('verified_by').all()
     
     context = {
         'booking': booking,
@@ -391,6 +462,7 @@ def booking_edit_view(request, pk):
 
 
 @login_required
+@admin_or_above
 def booking_delete_view(request, pk):
     booking = get_object_or_404(Booking, pk=pk)
     if request.method == 'POST':
@@ -410,6 +482,88 @@ def booking_delete_view(request, pk):
     
     return render(request, 'confirm_delete.html', {'object': booking, 'title': 'Delete Booking', 'cancel_url': 'bookings'})
 
+
+# ─── BOOKING TRANSFER ──────────────────────────────────────────────────────────
+
+@login_required
+@admin_or_above
+def booking_transfer_view(request, pk):
+    from bookings.models import BookingTransfer
+    
+    booking = get_object_or_404(Booking, pk=pk)
+    
+    if request.method == 'POST':
+        to_customer_id = request.POST.get('to_customer')
+        transfer_fee = Decimal(request.POST.get('transfer_fee', '0'))
+        handling = request.POST.get('payment_handling', 'transfer')
+        notes = request.POST.get('notes', '')
+        
+        try:
+            to_customer = Customer.objects.get(pk=to_customer_id)
+            transfer = BookingTransfer.objects.create(
+                booking=booking,
+                from_customer=booking.customer,
+                to_customer=to_customer,
+                transfer_fee=transfer_fee,
+                previous_payments_handling=handling,
+                approved_by=request.user,
+                notes=notes,
+            )
+            # Update booking customer
+            old_customer = booking.customer
+            booking.customer = to_customer
+            booking.save()
+            
+            AuditLog.objects.create(
+                user=request.user, action='transfer', model_name='Booking',
+                object_id=booking.booking_id,
+                description=f'Transferred booking {booking.booking_id} from {old_customer.full_name} to {to_customer.full_name}'
+            )
+            messages.success(request, f'Booking transferred successfully!')
+            return redirect('booking_detail', pk=booking.pk)
+        except Customer.DoesNotExist:
+            messages.error(request, 'Customer not found.')
+    
+    customers = Customer.objects.filter(is_active=True).exclude(pk=booking.customer.pk)
+    return render(request, 'booking_transfer.html', {
+        'booking': booking,
+        'customers': customers,
+    })
+
+
+# ─── RESERVATION ──────────────────────────────────────────────────────────────
+
+@login_required
+def reservation_create_view(request):
+    from bookings.models import Reservation
+    from bookings.forms import ReservationForm
+    
+    if request.method == 'POST':
+        form = ReservationForm(request.POST)
+        if form.is_valid():
+            reservation = form.save(commit=False)
+            reservation.created_by = request.user
+            reservation.save()
+            
+            # Reserve the plot
+            plot = reservation.plot
+            plot.status = 'reserved'
+            plot.save()
+            
+            AuditLog.objects.create(
+                user=request.user, action='create', model_name='Reservation',
+                object_id=str(reservation.id),
+                description=f'Created reservation for {reservation.customer.full_name} on plot {plot.plot_number}'
+            )
+            messages.success(request, 'Plot reserved successfully!')
+            return redirect('properties')
+    else:
+        form = ReservationForm()
+    
+    return render(request, 'reservation_form.html', {'form': form, 'title': 'Create Reservation'})
+
+
+# ─── PAYMENTS ────────────────────────────────────────────────────────────────────
 
 @login_required
 def payments_view(request):
@@ -450,7 +604,7 @@ def payment_create_view(request):
 
 
 @login_required
-@accounts_or_admin
+@admin_or_above  # Only admin/super_admin can verify payments
 def payment_verify_view(request, pk):
     from payments.forms import PaymentVerificationForm
     
@@ -506,6 +660,7 @@ def payment_verify_view(request, pk):
 
 
 @login_required
+@admin_or_above  # Only admin/super_admin can delete payments
 def payment_delete_view(request, pk):
     payment = get_object_or_404(Payment, pk=pk)
     if request.method == 'POST':
@@ -522,15 +677,17 @@ def payment_delete_view(request, pk):
     return render(request, 'confirm_delete.html', {'object': payment, 'title': 'Delete Payment', 'cancel_url': 'payments'})
 
 
+# ─── USERS (admin/super_admin only) ──────────────────────────────────────────────
+
 @login_required
-@management_or_admin
+@admin_or_above
 def users_view(request):
     users = User.objects.select_related('profile').all()
     return render(request, 'users.html', {'users': users})
 
 
 @login_required
-@management_or_admin
+@admin_or_above
 def user_create_view(request):
     from .forms import CreateUserForm
     
@@ -547,12 +704,13 @@ def user_create_view(request):
             UserProfile.objects.create(
                 user=user,
                 role=form.cleaned_data['role'],
-                phone=form.cleaned_data['phone'],
+                phone=form.cleaned_data.get('phone', ''),
+                cnic=form.cleaned_data.get('cnic', ''),
             )
             AuditLog.objects.create(
                 user=request.user, action='create', model_name='User',
                 object_id=user.username,
-                description=f'Created user {user.username}'
+                description=f'Created user {user.username} with role {form.cleaned_data["role"]}'
             )
             messages.success(request, f'User {user.username} created successfully!')
             return redirect('users')
@@ -563,7 +721,116 @@ def user_create_view(request):
 
 
 @login_required
-@management_or_admin
+@admin_or_above
+def user_edit_view(request, pk):
+    user = get_object_or_404(User.objects.select_related('profile'), pk=pk)
+    
+    if request.method == 'POST':
+        form = UserEditForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            AuditLog.objects.create(
+                user=request.user, action='update', model_name='User',
+                object_id=user.username,
+                description=f'Updated user {user.username}'
+            )
+            messages.success(request, f'User {user.username} updated successfully!')
+            return redirect('users')
+    else:
+        form = UserEditForm(instance=user)
+    
+    return render(request, 'user_form.html', {'form': form, 'title': f'Edit User: {user.username}', 'user': user})
+
+
+@login_required
+@admin_or_above
+def user_deactivate_view(request, pk):
+    user = get_object_or_404(User, pk=pk)
+    
+    # Prevent self-deactivation
+    if user == request.user:
+        messages.error(request, 'You cannot deactivate your own account.')
+        return redirect('users')
+    
+    if request.method == 'POST':
+        user.is_active = not user.is_active
+        user.save()
+        status = 'activated' if user.is_active else 'deactivated'
+        AuditLog.objects.create(
+            user=request.user, action='update', model_name='User',
+            object_id=user.username,
+            description=f'{status.title()} user {user.username}'
+        )
+        messages.success(request, f'User {user.username} {status} successfully!')
+        return redirect('users')
+    
+    return render(request, 'confirm_delete.html', {
+        'object': user,
+        'title': f'{"Deactivate" if user.is_active else "Activate"} User',
+        'message': f'Are you sure you want to {"deactivate" if user.is_active else "activate"} user "{user.username}"?',
+        'cancel_url': 'users',
+    })
+
+
+# ─── AUDIT LOGS ──────────────────────────────────────────────────────────────────
+
+@login_required
+@admin_or_above
 def audit_logs_view(request):
     logs = AuditLog.objects.select_related('user').all()[:100]
     return render(request, 'audit_logs.html', {'logs': logs})
+
+
+# ─── PROFILE (self-service) ──────────────────────────────────────────────────────
+
+@login_required
+def profile_view(request):
+    user = request.user
+    
+    if request.method == 'POST':
+        user_form = UserForm(request.POST, instance=user, data={'is_active': user.is_active})
+        # Build profile form manually
+        profile = getattr(user, 'profile', None)
+        if profile:
+            profile_form = UserProfileForm(request.POST, instance=profile)
+        else:
+            profile_form = UserProfileForm(request.POST)
+        
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile = profile_form.save(commit=False)
+            profile.user = user
+            profile.save()
+            messages.success(request, 'Profile updated successfully!')
+            return redirect('profile')
+    else:
+        user_form = UserForm(instance=user)
+        profile = getattr(user, 'profile', None)
+        profile_form = UserProfileForm(instance=profile) if profile else UserProfileForm()
+    
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+    }
+    return render(request, 'profile.html', context)
+
+
+@login_required
+def save_theme_view(request):
+    """AJAX endpoint to persist theme preference."""
+    if request.method == 'POST':
+        import json
+        try:
+            body = json.loads(request.body)
+            theme = body.get('theme', 'professional-blue')
+        except (json.JSONDecodeError, AttributeError):
+            theme = request.POST.get('theme', 'professional-blue')
+        
+        valid_themes = ['professional-blue', 'modern-green', 'elegant-dark', 'warm-earth', 'minimalist-purple']
+        if theme in valid_themes:
+            profile, _ = UserProfile.objects.get_or_create(user=request.user)
+            profile.theme = theme
+            profile.save()
+            return JsonResponse({'status': 'ok', 'theme': theme})
+    
+    return JsonResponse({'status': 'error'}, status=400)

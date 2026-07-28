@@ -1,215 +1,298 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Booking {{ booking.booking_id }} - Samana Builders ERP{% endblock %}
 
 {% block content %}
 <div class="app-layout">
-    <!-- Sidebar -->
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+    <div class="top-bar">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <span class="top-bar-title">Booking {{ booking.booking_id }}</span>
+        <div class="top-bar-actions">
+            <div class="theme-switcher">
+                <button class="theme-btn" data-theme="professional-blue"></button>
+                <button class="theme-btn" data-theme="modern-green"></button>
+                <button class="theme-btn" data-theme="elegant-dark"></button>
+                <button class="theme-btn" data-theme="warm-earth"></button>
+                <button class="theme-btn" data-theme="minimalist-purple"></button>
+            </div>
+        </div>
+    </div>
+
     <aside class="sidebar">
-        <div class="sidebar-brand">
-            <h2>Samana Builders</h2>
-            <p>Real Estate ERP</p>
-        </div>
-        <ul class="nav-menu">
-            <li class="nav-item">
-                <a href="{% url 'dashboard' %}" class="nav-link">
-                    <span class="nav-icon">📊</span>
-                    Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'customers' %}" class="nav-link">
-                    <span class="nav-icon">👥</span>
-                    Customers
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'properties' %}" class="nav-link">
-                    <span class="nav-icon">🏗️</span>
-                    Properties
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'bookings' %}" class="nav-link active">
-                    <span class="nav-icon">📋</span>
-                    Bookings
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'payments' %}" class="nav-link">
-                    <span class="nav-icon">💰</span>
-                    Payments
-                </a>
-            </li>
+        <div class="sidebar-brand"><div class="brand-icon">SB</div><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Main Menu</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a></li>
+                <li class="nav-item"><a href="{% url 'customers' %}" class="nav-link"><span class="nav-icon">👥</span> Customers</a></li>
+                <li class="nav-item"><a href="{% url 'properties' %}" class="nav-link"><span class="nav-icon">🏗️</span> Properties</a></li>
+                <li class="nav-item"><a href="{% url 'bookings' %}" class="nav-link active"><span class="nav-icon">📋</span> Bookings</a></li>
+                <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link"><span class="nav-icon">💰</span> Payments</a></li>
+            </ul>
             <div class="nav-divider"></div>
-            <li class="nav-item">
-                <a href="{% url 'users' %}" class="nav-link">
-                    <span class="nav-icon">👤</span>
-                    Users
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{% url 'audit_logs' %}" class="nav-link">
-                    <span class="nav-icon">📝</span>
-                    Audit Logs
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="/admin/" class="nav-link">
-                    <span class="nav-icon">⚙️</span>
-                    Admin Panel
-                </a>
-            </li>
-        </ul>
-        <div style="margin-top: auto; padding: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <a href="{% url 'logout' %}" class="nav-link">
-                <span class="nav-icon">🚪</span>
-                Logout
-            </a>
-        </div>
+            <div class="nav-section">Administration</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'users' %}" class="nav-link"><span class="nav-icon">👤</span> Users</a></li>
+                <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link"><span class="nav-icon">📝</span> Audit Logs</a></li>
+                <li class="nav-item"><a href="/admin/" class="nav-link"><span class="nav-icon">⚙️</span> Admin Panel</a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer"><a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a></div>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content">
         <div class="page-header">
             <h1>Booking {{ booking.booking_id }}</h1>
-            <div class="user-info">
-                <a href="{% url 'booking_edit' booking.pk %}" class="btn btn-primary btn-sm">Edit Booking</a>
-                <a href="{% url 'bookings' %}" class="btn btn-secondary btn-sm">Back to List</a>
+            <div class="page-actions">
+                <div class="theme-switcher" style="display:flex;">
+                    <button class="theme-btn" data-theme="professional-blue"></button>
+                    <button class="theme-btn" data-theme="modern-green"></button>
+                    <button class="theme-btn" data-theme="elegant-dark"></button>
+                    <button class="theme-btn" data-theme="warm-earth"></button>
+                    <button class="theme-btn" data-theme="minimalist-purple"></button>
+                </div>
+                <a href="{% url 'booking_edit' booking.pk %}" class="btn btn-primary btn-sm">✏️ Edit Booking</a>
+                <a href="{% url 'bookings' %}" class="btn btn-secondary btn-sm">← Back to List</a>
             </div>
         </div>
 
-        <!-- Booking Details -->
-        <div class="card">
-            <h3 style="margin-bottom: 16px;">Booking Information</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+        <!-- Status Banner -->
+        <div class="card animate-fade-up" style="padding:16px 24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; border-left:4px solid {% if booking.status == 'confirmed' %}var(--accent-green){% elif booking.status == 'pending' %}var(--accent-amber){% elif booking.status == 'cancelled' %}var(--accent-red){% else %}var(--primary){% endif %};">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <span style="font-size:28px;">
+                    {% if booking.status == 'confirmed' %}✅{% elif booking.status == 'pending' %}⏳{% elif booking.status == 'cancelled' %}❌{% else %}✅{% endif %}
+                </span>
                 <div>
-                    <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Booking ID</strong>
-                    <p style="font-size: 16px; font-weight: 600;">{{ booking.booking_id }}</p>
-                </div>
-                <div>
-                    <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Customer</strong>
-                    <p style="font-size: 16px; font-weight: 600;">{{ booking.customer.full_name }}</p>
-                    <p style="font-size: 12px; color: #64748b;">{{ booking.customer.phone }}</p>
-                </div>
-                <div>
-                    <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Plot</strong>
-                    <p style="font-size: 16px; font-weight: 600;">{{ booking.plot.plot_number }}</p>
-                    <p style="font-size: 12px; color: #64748b;">{{ booking.plot.project.name }}</p>
-                </div>
-                <div>
-                    <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Total Amount</strong>
-                    <p style="font-size: 16px; font-weight: 600;">Rs. {{ booking.total_amount|floatformat:0 }}</p>
-                </div>
-                <div>
-                    <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Advance Paid</strong>
-                    <p style="font-size: 16px; font-weight: 600; color: var(--accent-green);">Rs. {{ booking.advance_paid|floatformat:0 }}</p>
-                </div>
-                <div>
-                    <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Remaining Balance</strong>
-                    <p style="font-size: 16px; font-weight: 600; color: var(--accent-amber);">Rs. {{ booking.remaining_balance|floatformat:0 }}</p>
-                </div>
-                <div>
-                    <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Status</strong>
-                    <p>
-                        <span class="badge badge-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% elif booking.status == 'cancelled' %}danger{% else %}info{% endif %}">
-                            {{ booking.get_status_display }}
-                        </span>
-                    </p>
-                </div>
-                <div>
-                    <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Booking Date</strong>
-                    <p style="font-size: 16px; font-weight: 600;">{{ booking.booking_date }}</p>
+                    <div style="font-size:14px; font-weight:600; color:var(--text-primary);">Status: <span class="badge badge-{% if booking.status == 'confirmed' %}success{% elif booking.status == 'pending' %}warning{% elif booking.status == 'cancelled' %}danger{% else %}info{% endif %}" style="font-size:13px;">{{ booking.get_status_display }}</span></div>
+                    <div style="font-size:12px; color:var(--text-secondary);">Created {{ booking.booking_date|date:"d M Y" }}</div>
                 </div>
             </div>
+            <div style="display:flex; gap:8px;">
+                {% if booking.status == 'pending' %}
+                <a href="{% url 'booking_edit' booking.pk %}" class="btn btn-success btn-sm">✓ Confirm Booking</a>
+                {% endif %}
+                {% if booking.status != 'cancelled' %}
+                <a href="{% url 'booking_delete' booking.pk %}" class="btn btn-danger btn-sm">✕ Cancel Booking</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Booking Info Card -->
+        <div class="card animate-fade-up stagger-1">
+            <div class="card-header">
+                <h3>📄 Booking Information</h3>
+            </div>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Booking ID</div>
+                    <div class="detail-value">{{ booking.booking_id }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Customer</div>
+                    <div class="detail-value">{{ booking.customer.full_name }}</div>
+                    <div style="font-size:12px; color:var(--text-secondary);">{{ booking.customer.phone }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Plot</div>
+                    <div class="detail-value">{{ booking.plot.plot_number }}</div>
+                    <div style="font-size:12px; color:var(--text-secondary);">{{ booking.plot.project.name }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Total Amount</div>
+                    <div class="detail-value" style="color:var(--primary);">Rs. {{ booking.total_amount|floatformat:0 }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Advance Paid</div>
+                    <div class="detail-value" style="color:var(--accent-green);">Rs. {{ booking.advance_paid|floatformat:0 }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Remaining Balance</div>
+                    <div class="detail-value" style="color:var(--accent-amber);">Rs. {{ booking.remaining_balance|floatformat:0 }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Booking Date</div>
+                    <div class="detail-value">{{ booking.booking_date|date:"d M Y" }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Payment Plan</div>
+                    <div class="detail-value">{{ booking.get_payment_plan_display }}</div>
+                </div>
+            </div>
+
+            <!-- Payment Progress -->
+            <div style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+                <div class="progress-label">
+                    <span>Payment Progress</span>
+                    <span>{{ payment_percentage|default:0 }}% Complete</span>
+                </div>
+                <div class="progress-bar" style="height:12px; border-radius:6px;">
+                    <div class="progress-fill green" style="width:{{ payment_percentage|default:0 }}%;"></div>
+                </div>
+            </div>
+
             {% if booking.notes %}
-            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
-                <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Notes</strong>
-                <p style="font-size: 14px; margin-top: 4px;">{{ booking.notes }}</p>
+            <div style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
+                <div class="detail-label" style="margin-bottom:4px;">Notes</div>
+                <p style="font-size:14px; color:var(--text-primary);">{{ booking.notes }}</p>
             </div>
             {% endif %}
         </div>
 
-        <!-- Installments -->
-        {% if installments %}
-        <div class="card">
-            <div class="card-header">
-                <h3>Installment Schedule</h3>
+        <!-- Tabs: Installments + Payments + Timeline -->
+        <div class="card animate-fade-up stagger-2">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab(this, 'installments')">📅 Installments</button>
+                <button class="tab" onclick="switchTab(this, 'payments')">💰 Payments</button>
+                <button class="tab" onclick="switchTab(this, 'timeline')">📊 Timeline</button>
             </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Due Date</th>
-                            <th>Amount</th>
-                            <th>Late Fee</th>
-                            <th>Paid</th>
-                            <th>Remaining</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for inst in installments %}
-                        <tr>
-                            <td>{{ inst.installment_number }}</td>
-                            <td>{{ inst.due_date }}</td>
-                            <td>Rs. {{ inst.amount|floatformat:0 }}</td>
-                            <td>Rs. {{ inst.late_fee|floatformat:0 }}</td>
-                            <td>Rs. {{ inst.paid_amount|floatformat:0 }}</td>
-                            <td>Rs. {{ inst.remaining_amount|floatformat:0 }}</td>
-                            <td>
-                                <span class="badge badge-{% if inst.status == 'paid' %}success{% elif inst.status == 'overdue' %}danger{% elif inst.status == 'partial' %}warning{% else %}info{% endif %}">
-                                    {{ inst.get_status_display }}
-                                </span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        {% endif %}
 
-        <!-- Payments -->
-        <div class="card">
-            <div class="card-header">
-                <h3>Payment History</h3>
-                <a href="{% url 'payment_create' %}" class="btn btn-primary btn-sm">Record Payment</a>
-            </div>
-            <div class="table-container">
-                {% if payments %}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Payment ID</th>
-                            <th>Amount</th>
-                            <th>Method</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for payment in payments %}
-                        <tr>
-                            <td><strong>{{ payment.payment_id }}</strong></td>
-                            <td>Rs. {{ payment.amount|floatformat:0 }}</td>
-                            <td>{{ payment.get_payment_method_display }}</td>
-                            <td>{{ payment.payment_date }}</td>
-                            <td>
-                                <span class="badge badge-{% if payment.status == 'verified' %}success{% elif payment.status == 'pending' %}warning{% else %}danger{% endif %}">
-                                    {{ payment.get_status_display }}
-                                </span>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <!-- Installments Tab -->
+            <div class="tab-content active" id="installments" data-tab="installments">
+                <div class="card-header" style="padding:0 0 16px 0; margin-bottom:16px;">
+                    <h3>Installment Schedule</h3>
+                    <a href="{% url 'payment_create' %}" class="btn btn-primary btn-sm">Record Payment</a>
+                </div>
+                {% if installments %}
+                <div class="table-container">
+                    <table class="sortable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Due Date</th>
+                                <th>Amount</th>
+                                <th>Late Fee</th>
+                                <th>Paid</th>
+                                <th>Remaining</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inst in installments %}
+                            <tr>
+                                <td><strong>{{ inst.installment_number }}</strong></td>
+                                <td>{{ inst.due_date|date:"d M Y" }}</td>
+                                <td>Rs. {{ inst.amount|floatformat:0 }}</td>
+                                <td>Rs. {{ inst.late_fee|floatformat:0 }}</td>
+                                <td>Rs. {{ inst.paid_amount|floatformat:0 }}</td>
+                                <td style="font-weight:600; color:var(--accent-amber);">Rs. {{ inst.remaining_amount|floatformat:0 }}</td>
+                                <td>
+                                    <span class="badge badge-{% if inst.status == 'paid' %}success{% elif inst.status == 'overdue' %}danger{% elif inst.status == 'partial' %}warning{% else %}info{% endif %}">
+                                        {{ inst.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
                 {% else %}
                 <div class="empty-state">
-                    <p>No payments recorded yet</p>
+                    <div class="empty-icon">📅</div>
+                    <h3>No Installments</h3>
+                    <p>Installment schedule will appear once the booking is confirmed.</p>
                 </div>
                 {% endif %}
+            </div>
+
+            <!-- Payments Tab -->
+            <div class="tab-content" id="payments" data-tab="payments">
+                <div class="card-header" style="padding:0 0 16px 0; margin-bottom:16px;">
+                    <h3>Payment History</h3>
+                    <a href="{% url 'payment_create' %}" class="btn btn-primary btn-sm">+ Record Payment</a>
+                </div>
+                {% if payments %}
+                <div class="table-container">
+                    <table class="sortable">
+                        <thead>
+                            <tr>
+                                <th>Payment ID</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Reference</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td><strong>{{ payment.payment_id }}</strong></td>
+                                <td style="font-weight:600;">Rs. {{ payment.amount|floatformat:0 }}</td>
+                                <td>{{ payment.get_payment_method_display }}</td>
+                                <td>{{ payment.reference_number|default:"-" }}</td>
+                                <td>{{ payment.payment_date|date:"d M Y" }}</td>
+                                <td>
+                                    <span class="badge badge-{% if payment.status == 'verified' %}success{% elif payment.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                        {{ payment.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">💰</div>
+                    <h3>No Payments Yet</h3>
+                    <p>Record the first payment for this booking.</p>
+                    <a href="{% url 'payment_create' %}" class="btn btn-primary btn-sm">+ Record Payment</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Timeline Tab -->
+            <div class="tab-content" id="timeline" data-tab="timeline">
+                <div class="card-header" style="padding:0 0 16px 0; margin-bottom:16px;">
+                    <h3>Booking Timeline</h3>
+                </div>
+                <div class="timeline">
+                    <div class="timeline-item completed">
+                        <div class="timeline-date">{{ booking.booking_date|date:"d M Y" }}</div>
+                        <div class="timeline-title">Booking Created</div>
+                        <div class="timeline-desc">Booking {{ booking.booking_id }} was initiated</div>
+                    </div>
+                    {% if booking.status == 'confirmed' or booking.status == 'completed' %}
+                    <div class="timeline-item completed">
+                        <div class="timeline-date">{{ booking.booking_date|date:"d M Y" }}</div>
+                        <div class="timeline-title">Booking Confirmed</div>
+                        <div class="timeline-desc">Advance payment received and booking confirmed</div>
+                    </div>
+                    {% endif %}
+                    {% for inst in installments %}
+                    <div class="timeline-item {% if inst.status == 'paid' %}completed{% elif forloop.last %}current{% endif %}">
+                        <div class="timeline-date">Due: {{ inst.due_date|date:"d M Y" }}</div>
+                        <div class="timeline-title">Installment #{{ inst.installment_number }}</div>
+                        <div class="timeline-desc">
+                            {% if inst.status == 'paid' %}
+                            ✅ Paid — Rs. {{ inst.paid_amount|floatformat:0 }}
+                            {% elif inst.status == 'overdue' %}
+                            ⚠️ Overdue — Rs. {{ inst.remaining_amount|floatformat:0 }} remaining
+                            {% elif inst.status == 'partial' %}
+                            ⏳ Partially Paid — Rs. {{ inst.remaining_amount|floatformat:0 }} remaining
+                            {% else %}
+                            ⏳ Pending — Rs. {{ inst.amount|floatformat:0 }} due
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if booking.status == 'completed' %}
+                    <div class="timeline-item completed">
+                        <div class="timeline-date">{{ booking.completed_date|date:"d M Y" }}</div>
+                        <div class="timeline-title">Booking Completed</div>
+                        <div class="timeline-desc">All payments received. Booking fulfilled.</div>
+                    </div>
+                    {% endif %}
+                    {% if booking.status == 'cancelled' %}
+                    <div class="timeline-item" style="--timeline-dot:var(--accent-red);">
+                        <div class="timeline-date">{{ booking.cancelled_date|date:"d M Y" }}</div>
+                        <div class="timeline-title" style="color:var(--accent-red);">Booking Cancelled</div>
+                        <div class="timeline-desc">This booking has been cancelled.</div>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </main>

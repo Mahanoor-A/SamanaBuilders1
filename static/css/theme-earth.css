@@ -1,0 +1,37 @@
+/* ==========================================================================
+   Theme: Warm Earth
+   Primary: #b45309 | Dark: #92400e | Light: #fffbeb
+   ========================================================================== */
+
+[data-theme="earth"] {
+  --primary: #b45309;
+  --primary-dark: #92400e;
+  --primary-light: #fffbeb;
+  --bg: #fffaf0;
+  --bg-card: #ffffff;
+  --text: #2d1f0b;
+  --text-muted: #8b7355;
+  --border: #fde68a;
+  --sidebar-bg: #2d1f0b;
+  --sidebar-text: #d4a574;
+  --sidebar-active: #b45309;
+  --header-bg: #ffffff;
+  --success: #65a30d;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --info: #0891b2;
+  --shadow-sm: 0 1px 2px rgba(180,83,9,0.05);
+  --shadow: 0 1px 3px rgba(180,83,9,0.08), 0 1px 2px rgba(180,83,9,0.05);
+  --shadow-md: 0 4px 6px rgba(180,83,9,0.07), 0 2px 4px rgba(180,83,9,0.05);
+  --shadow-lg: 0 10px 15px rgba(180,83,9,0.08), 0 4px 6px rgba(180,83,9,0.05);
+}
+
+[data-theme="earth"] .shimmer {
+  background: linear-gradient(
+    90deg,
+    #fde68a 0%,
+    #fffbeb 40%,
+    #fde68a 80%
+  );
+  background-size: 200% 100%;
+}

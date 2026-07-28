@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}{{ customer.customer_id }} - Customer Details - Samana Builders ERP{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <div class="top-bar">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <span class="top-bar-title">Customer Details</span>
+        <div class="top-bar-actions">
+            <div class="theme-switcher">
+                <button class="theme-btn" data-theme="professional-blue"></button>
+                <button class="theme-btn" data-theme="modern-green"></button>
+                <button class="theme-btn" data-theme="elegant-dark"></button>
+                <button class="theme-btn" data-theme="warm-earth"></button>
+                <button class="theme-btn" data-theme="minimalist-purple"></button>
+            </div>
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">SB</div>
+            <div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Main Menu</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a></li>
+                <li class="nav-item"><a href="{% url 'customers' %}" class="nav-link active"><span class="nav-icon">👥</span> Customers</a></li>
+                <li class="nav-item"><a href="{% url 'properties' %}" class="nav-link"><span class="nav-icon">🏗️</span> Properties</a></li>
+                <li class="nav-item"><a href="{% url 'bookings' %}" class="nav-link"><span class="nav-icon">📋</span> Bookings</a></li>
+                <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link"><span class="nav-icon">💰</span> Payments</a></li>
+            </ul>
+            <div class="nav-divider"></div>
+            <div class="nav-section">Administration</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'users' %}" class="nav-link"><span class="nav-icon">👤</span> Users</a></li>
+                <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link"><span class="nav-icon">📝</span> Audit Logs</a></li>
+                <li class="nav-item"><a href="/admin/" class="nav-link"><span class="nav-icon">⚙️</span> Admin Panel</a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Customer Details</h1>
+            <div class="page-actions">
+                <div class="theme-switcher" style="display:flex;">
+                    <button class="theme-btn" data-theme="professional-blue"></button>
+                    <button class="theme-btn" data-theme="modern-green"></button>
+                    <button class="theme-btn" data-theme="elegant-dark"></button>
+                    <button class="theme-btn" data-theme="warm-earth"></button>
+                    <button class="theme-btn" data-theme="minimalist-purple"></button>
+                </div>
+                <a href="{% url 'customer_edit' customer.pk %}" class="btn btn-secondary btn-sm">✏️ Edit</a>
+                <a href="{% url 'customers' %}" class="btn btn-secondary btn-sm">← Back</a>
+            </div>
+        </div>
+
+        <!-- Profile Header Card -->
+        <div class="card animate-fade-up" style="padding:0; overflow:hidden;">
+            <div style="background:var(--gradient-header); padding:32px; display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
+                {% if customer.image %}
+                <img src="{{ customer.image.url }}" alt="{{ customer.full_name }}" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:3px solid rgba(255,255,255,0.3); flex-shrink:0;">
+                {% else %}
+                <div style="width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:800; color:white; flex-shrink:0; border:3px solid rgba(255,255,255,0.3);">
+                    {{ customer.first_name|first }}{{ customer.last_name|first }}
+                </div>
+                {% endif %}
+                <div style="flex:1;">
+                    <h2 style="font-size:24px; font-weight:700; color:white; margin-bottom:4px;">{{ customer.full_name }}</h2>
+                    <p style="font-size:14px; color:rgba(255,255,255,0.7); margin-bottom:8px;">{{ customer.customer_id }}</p>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                        <span class="badge badge-{% if customer.is_active %}success{% else %}danger{% endif %}" style="font-size:12px;">
+                            {% if customer.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                        <span class="badge badge-info" style="font-size:12px;">{{ customer.total_bookings }} Booking{{ customer.total_bookings|pluralize }}</span>
+                    </div>
+                </div>
+                {% if customer.document %}
+                <a href="{{ customer.document.url }}" target="_blank" class="btn btn-sm" style="background:rgba(255,255,255,0.2); color:white; border:1px solid rgba(255,255,255,0.3);">
+                    📄 View Document
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Info Grid -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+            <!-- Contact Information -->
+            <div class="card animate-fade-up stagger-1">
+                <div class="card-header">
+                    <h3>📞 Contact Information</h3>
+                </div>
+                <div class="detail-grid" style="grid-template-columns:1fr;">
+                    <div class="detail-item" style="padding:12px 0; border-bottom:1px solid var(--border);">
+                        <div class="detail-label">Phone Number</div>
+                        <div class="detail-value" style="font-size:15px;">{{ customer.phone }}</div>
+                    </div>
+                    {% if customer.alternate_phone %}
+                    <div class="detail-item" style="padding:12px 0; border-bottom:1px solid var(--border);">
+                        <div class="detail-label">Alternate Phone</div>
+                        <div class="detail-value" style="font-size:15px;">{{ customer.alternate_phone }}</div>
+                    </div>
+                    {% endif %}
+                    <div class="detail-item" style="padding:12px 0; border-bottom:1px solid var(--border);">
+                        <div class="detail-label">Email Address</div>
+                        <div class="detail-value" style="font-size:15px;">{{ customer.email|default:"Not provided" }}</div>
+                    </div>
+                    <div class="detail-item" style="padding:12px 0;">
+                        <div class="detail-label">CNIC Number</div>
+                        <div class="detail-value" style="font-size:15px; font-family:monospace;">{{ customer.cnic }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address & Details -->
+            <div class="card animate-fade-up stagger-2">
+                <div class="card-header">
+                    <h3>📍 Address & Details</h3>
+                </div>
+                <div class="detail-grid" style="grid-template-columns:1fr;">
+                    <div class="detail-item" style="padding:12px 0; border-bottom:1px solid var(--border);">
+                        <div class="detail-label">City</div>
+                        <div class="detail-value" style="font-size:15px;">{{ customer.city|default:"Not specified" }}</div>
+                    </div>
+                    <div class="detail-item" style="padding:12px 0; border-bottom:1px solid var(--border);">
+                        <div class="detail-label">Full Address</div>
+                        <div class="detail-value" style="font-size:15px; line-height:1.5;">{{ customer.address|default:"Not provided" }}</div>
+                    </div>
+                    <div class="detail-item" style="padding:12px 0; border-bottom:1px solid var(--border);">
+                        <div class="detail-label">Created On</div>
+                        <div class="detail-value" style="font-size:15px;">{{ customer.created_at|date:"d M Y" }}</div>
+                    </div>
+                    <div class="detail-item" style="padding:12px 0;">
+                        <div class="detail-label">Last Updated</div>
+                        <div class="detail-value" style="font-size:15px;">{{ customer.updated_at|date:"d M Y" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Financial Summary -->
+        <div class="card animate-fade-up stagger-3">
+            <div class="card-header">
+                <h3>💰 Financial Summary</h3>
+            </div>
+            <div class="stats-grid" style="grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); margin-bottom:0;">
+                <div style="text-align:center; padding:16px;">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-secondary); font-weight:600; margin-bottom:8px;">Total Bookings</div>
+                    <div style="font-size:28px; font-weight:800; color:var(--text-primary);">{{ customer.total_bookings }}</div>
+                </div>
+                <div style="text-align:center; padding:16px; border-left:1px solid var(--border);">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-secondary); font-weight:600; margin-bottom:8px;">Total Paid</div>
+                    <div style="font-size:28px; font-weight:800; color:var(--accent-green);">Rs. {{ customer.total_paid|floatformat:0|intcomma }}</div>
+                </div>
+                <div style="text-align:center; padding:16px; border-left:1px solid var(--border);">
+                    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-secondary); font-weight:600; margin-bottom:8px;">Current Balance</div>
+                    <div style="font-size:28px; font-weight:800; color:{% if customer.current_balance > 0 %}var(--accent-red){% else %}var(--accent-green){% endif %};">Rs. {{ customer.current_balance|floatformat:0|intcomma }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        {% if customer.notes %}
+        <div class="card animate-fade-up stagger-4">
+            <div class="card-header">
+                <h3>📝 Notes</h3>
+            </div>
+            <p style="font-size:14px; color:var(--text-secondary); line-height:1.7;">{{ customer.notes }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Bookings -->
+        <div class="card animate-fade-up stagger-5">
+            <div class="card-header">
+                <h3>📋 Booking History</h3>
+                <span class="badge badge-info">{{ bookings|length }} booking{{ bookings|length|pluralize }}</span>
+            </div>
+            {% if bookings %}
+            <div class="table-container">
+                <table class="sortable">
+                    <thead>
+                        <tr>
+                            <th>Booking ID</th>
+                            <th>Property</th>
+                            <th>Total Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for booking in bookings %}
+                        <tr>
+                            <td><a href="{% url 'booking_detail' booking.pk %}" style="font-weight:600;">{{ booking.booking_id }}</a></td>
+                            <td>{{ booking.plot.plot_number }}{% if booking.plot.project %} - {{ booking.plot.project.name }}{% endif %}</td>
+                            <td>Rs. {{ booking.total_amount|floatformat:0|intcomma }}</td>
+                            <td>
+                                <span class="badge badge-{% if booking.status == 'confirmed' or booking.status == 'active' %}success{% elif booking.status == 'pending' %}warning{% elif booking.status == 'cancelled' %}danger{% else %}info{% endif %}">
+                                    {{ booking.get_status_display|default:booking.status }}
+                                </span>
+                            </td>
+                            <td>{{ booking.created_at|date:"d M Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding:32px 16px;">
+                <div class="empty-icon">📋</div>
+                <h3>No Bookings Yet</h3>
+                <p>This customer doesn't have any bookings.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="card animate-fade-up stagger-6" style="border:1px solid var(--accent-red); background:var(--badge-danger-bg);">
+            <div class="card-header">
+                <h3 style="color:var(--accent-red);">⚠️ Danger Zone</h3>
+            </div>
+            <p style="font-size:14px; color:var(--text-secondary); margin-bottom:16px;">Permanently delete this customer and all associated data. This action cannot be undone.</p>
+            <a href="{% url 'customer_delete' customer.pk %}" class="btn btn-danger btn-sm">🗑️ Delete Customer</a>
+        </div>
+    </main>
+</div>
+{% endblock %}
