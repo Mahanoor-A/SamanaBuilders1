@@ -10,8 +10,8 @@
     --color-primary-light-rgb: 45 90 135;
     --color-primary-lighter: #94b8d4;
     --color-primary-lighter-rgb: 148 184 212;
-    --color-bg: #f0f4f8;
-    --color-bg-rgb: 240 244 248;
+    --color-bg: #f8fafc;
+    --color-bg-rgb: 248 250 252;
     --color-surface: #ffffff;
     --color-surface-rgb: 255 255 255;
     --color-text: #1e293b;
@@ -28,7 +28,7 @@
     --color-accent-danger-rgb: 239 68 68;
     --gradient-primary: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
     --gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #2d5a87 100%);
-    --gradient-surface: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+    --gradient-surface: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   }
 
   html {
@@ -36,35 +36,22 @@
   }
 
   body {
-    @apply bg-bg text-text-main antialiased;
+    @apply bg-white text-gray-900 antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Poppins', system-ui, sans-serif;
+    font-family: 'Playfair Display', Georgia, serif;
   }
 }
 
 @layer components {
-  .glass {
-    @apply bg-white/10 backdrop-blur-md border border-white/20;
-  }
-
-  .glass-dark {
-    @apply bg-black/20 backdrop-blur-md border border-white/10;
-  }
-
   .section-padding {
-    @apply py-16 md:py-24 px-4 sm:px-6 lg:px-8;
+    @apply py-16 md:py-20;
   }
 
   .container-wide {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
-  }
-
-  .text-gradient {
-    @apply bg-clip-text text-transparent;
-    background-image: var(--gradient-primary);
   }
 
   .animate-on-scroll {
@@ -75,14 +62,15 @@
     @apply opacity-100 translate-y-0;
   }
 
-  /* ========== ERP Components ========== */
+  .font-serif {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
 
-  /* ERP Card - glassmorphism with subtle border glow */
+  /* ERP Components */
+
   .erp-card {
     @apply rounded-2xl p-5 lg:p-6 shadow-sm;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: var(--color-surface);
     border: 1px solid var(--color-border);
     transition: all 0.3s ease;
   }
@@ -92,7 +80,6 @@
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
   }
 
-  /* ERP Primary Button */
   .erp-btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl
       font-semibold text-sm text-white
@@ -110,39 +97,36 @@
     box-shadow: 0 4px 12px -2px rgba(var(--color-primary-rgb), 0.2);
   }
 
-  /* ERP Secondary Button */
   .erp-btn-secondary {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl
-      font-medium text-sm text-text-main
-      bg-primary/5 border border-border/60
-      hover:bg-primary/10 hover:border-primary/30
+      font-medium text-sm text-gray-700
+      bg-gray-50 border border-gray-200
+      hover:bg-gray-100 hover:border-gray-300
       transition-all duration-300;
   }
 
-  /* ERP Input */
   .erp-input {
     @apply px-4 py-2.5 rounded-xl
-      bg-primary/5 border border-border/60
-      text-sm text-text-main placeholder:text-text-muted/50
+      bg-white border border-gray-200
+      text-sm text-gray-900 placeholder:text-gray-400
       transition-all duration-300
       focus:ring-2 focus:ring-primary/20 focus:border-primary/30 focus:outline-none;
   }
 
-  /* ERP Table */
   .erp-table {
     @apply w-full border-collapse;
   }
 
   .erp-table thead {
-    @apply border-b border-border;
+    @apply border-b border-gray-200;
   }
 
   .erp-table th {
-    @apply px-6 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wider;
+    @apply px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider;
   }
 
   .erp-table tbody tr {
-    @apply border-b border-border/50 transition-colors duration-200 hover:bg-primary/[0.02];
+    @apply border-b border-gray-100 transition-colors duration-200 hover:bg-gray-50;
   }
 
   .erp-table tbody tr:last-child {
@@ -153,7 +137,6 @@
     @apply px-6 py-3.5 text-sm;
   }
 
-  /* ERP Content Area - staggered fade-in for children */
   .erp-content-area > * {
     @apply animate-fade-in-up;
     animation-fill-mode: both;

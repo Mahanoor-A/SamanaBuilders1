@@ -4,6 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        gold: '#c9a84c',
         primary: {
           DEFAULT: 'rgb(var(--color-primary-rgb) / <alpha-value>)',
           light: 'rgb(var(--color-primary-light-rgb) / <alpha-value>)',
@@ -21,6 +22,7 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
         display: ['Poppins', 'system-ui', 'sans-serif'],
+        serif: ['Playfair Display', 'Georgia', 'serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.6s ease-out forwards',
