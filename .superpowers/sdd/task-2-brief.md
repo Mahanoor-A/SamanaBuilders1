@@ -1,49 +1,93 @@
-### Task 2: Navbar — grounded, clean, glassmorphism-free
+### Task 2: Backend — Booking Payment-Summary Endpoint
 
 **Files:**
-- Modify: `frontend/src/components/layout/Navbar.jsx`
-- Modify: `frontend/src/components/layout/ThemeSwitcher.jsx`
+- Modify: `bookings/api_views.py`
 
 **Interfaces:**
-- Consumes: ThemeSwitcher renders theme palette icon
-- Produces: Navbar with transparent → white/90 backdrop-blur on scroll, ThemeSwitcher as palette icon
+- Consumes: `Booking`, `InstallmentPlan`, `Installment`, `Payment` models, existing `BookingGroup` model
+- Produces: `GET /api/bookings/{id}/payment-summary/` endpoint
 
-- **Step 1: Rewrite Navbar.jsx**
+**Steps:**
 
-Navbar structure:
-```
-[Logo: Playfair Display "Samana Builders"]  [Home] [Communities] [About] [Projects] [Services] [Contact]  [🌐] [0800-12345] [Book Now]
-```
+1. Add imports to `bookings/api_views.py`:
+   ```python
+   from django.db.models import Sum
+   from payments.models import Payment
+   ```
 
-Key states:
-- **At top**: `bg-transparent`, all text white, no shadow
-- **On scroll (>50px)**: `bg-white/90 backdrop-blur-md`, charcoal text, subtle bottom border `border-b border-gray-100`
-- Active link: gold underline/bottom border
-- ThemeSwitcher: palette icon only (no text label), positioned in right cluster
-- Mobile: hamburger → full-height overlay with links + theme switcher + Book Now CTA
+2. Add `payment_summary` action method to `BookingViewSet` class (after the `confirm` action):
+   ```python
+   @action(detail=True, methods=['get'])
+   def payment_summary(self, request, pk=None):
+       booking = self.get_object()
+       
+       property_price = booking.total_amount
+       
+       installment_plan = getattr(booking, 'installment_plan', None)
+       discount = 0
+       down_payment = 0
+       remaining_amount = property_price
+       
+       installments_data = []
+       total_installments = 0
+       paid_installments = 0
+       installment_amount = 0
+       
+       if installment_plan:
+           group = BookingGroup.objects.filter(bookings=booking).first()
+           discount = group.discount_amount if group else 0
+           down_payment = installment_plan.down_payment_amount
+           remaining_amount = property_price - down_payment
+           total_installments = installment_plan.total_installments
+           installment_amount = installment_plan.installment_amount
+           
+           for inst in installment_plan.installments.all().order_by('installment_number'):
+               if inst.status == 'paid':
+                   paid_installments += 1
+               installments_data.append({
+                   'id': inst.id,
+                   'installment_number': inst.installment_number,
+                   'due_date': inst.due_date,
+                   'amount': float(inst.amount),
+                   'late_fee': float(inst.late_fee),
+                   'paid_amount': float(inst.paid_amount),
+                   'remaining_amount': float(inst.remaining_amount),
+                   'status': inst.status,
+                   'status_display': inst.get_status_display(),
+               })
+       
+       final_price = property_price - discount
+       total_paid = float(booking.advance_paid)
+       outstanding = float(booking.remaining_balance)
+       progress = booking.payment_progress
+       
+       return Response({
+           'booking_id': booking.booking_id,
+           'property_price': float(property_price),
+           'discount': float(discount),
+           'final_price': float(final_price),
+           'down_payment': float(down_payment),
+           'remaining_amount': float(remaining_amount),
+           'total_paid': total_paid,
+           'paid_installments': paid_installments,
+           'total_installments': total_installments,
+           'installment_amount': float(installment_amount),
+           'outstanding': outstanding,
+           'progress_percent': progress,
+           'has_installment_plan': installment_plan is not None,
+           'installment_plan': {
+               'id': installment_plan.id,
+               'total_installments': installment_plan.total_installments,
+               'installment_amount': float(installment_plan.installment_amount),
+               'down_payment_amount': float(installment_plan.down_payment_amount),
+               'start_date': installment_plan.start_date,
+               'frequency': installment_plan.frequency,
+               'frequency_display': installment_plan.get_frequency_display(),
+           } if installment_plan else None,
+           'installments': installments_data,
+       })
+   ```
 
-```jsx
-// Key parts:
-const [scrolled, setScrolled] = useState(false);
-// scroll listener
+3. Run `python manage.py check` to verify.
 
-<nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-  scrolled ? 'bg-white/90 backdrop-blur-md border-b border-gray-100' : 'bg-transparent'
-}`}>
-```
-
-- **Step 2: Update ThemeSwitcher.jsx — icon-only mode**
-
-Add `iconOnly` prop. When true, only show the palette icon (no theme name, no chevron). The dropdown still works.
-
-- **Step 3: Build to verify**
-
-Run: `cd frontend; npm run build`
-Expected: Build succeeds, no errors
-
-- **Step 4: Commit**
-
-```bash
-git add frontend/src/components/layout/Navbar.jsx frontend/src/components/layout/ThemeSwitcher.jsx
-git commit -m "feat: redesign navbar — grounded, glassmorphism-free, icon-only theme switcher"
-```
+**Report file:** `.superpowers/sdd/task-2-report.md`
