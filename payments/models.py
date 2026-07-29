@@ -25,12 +25,20 @@ class Payment(models.Model):
         ('raast', 'Raast Transfer'),
     ]
     
+    PAYMENT_TYPE_CHOICES = [
+        ('down_payment', 'Down Payment'),
+        ('installment', 'Installment'),
+        ('full_payment', 'Full Payment'),
+        ('other', 'Other'),
+    ]
+    
     payment_id = models.CharField(max_length=20, unique=True, editable=False)
     booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='payments')
     installment = models.ForeignKey(Installment, on_delete=models.SET_NULL, null=True, blank=True, related_name='payments')
     amount = models.DecimalField(max_digits=15, decimal_places=2)
     payment_date = models.DateField()
     payment_method = models.CharField(max_length=20, choices=METHOD_CHOICES, default='cash')
+    payment_type = models.CharField(max_length=20, choices=PAYMENT_TYPE_CHOICES, default='other')
     reference_number = models.CharField(max_length=100, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     
@@ -143,3 +151,21 @@ class Receipt(models.Model):
     
     class Meta:
         verbose_name_plural = 'Receipts'
+
+
+class PaymentAttachment(models.Model):
+    ATTACHMENT_TYPES = [
+        ('cheque_image', 'Cheque Image'),
+        ('payment_screenshot', 'Payment Screenshot'),
+        ('receipt_image', 'Receipt Image'),
+        ('other', 'Other'),
+    ]
+    payment = models.ForeignKey(Payment, on_delete=models.CASCADE, related_name='attachments')
+    file = models.FileField(upload_to='payments/%Y/%m/')
+    attachment_type = models.CharField(max_length=30, choices=ATTACHMENT_TYPES)
+    filename = models.CharField(max_length=255)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        return f"{self.filename} - {self.payment.payment_id}"

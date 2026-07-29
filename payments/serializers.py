@@ -1,5 +1,23 @@
 from rest_framework import serializers
-from .models import Payment, Receipt, Refund, PaymentAllocation
+from .models import Payment, Receipt, Refund, PaymentAllocation, PaymentAttachment
+
+
+# ─── ATTACHMENTS ─────────────────────────────────────────────────────────────────
+
+class PaymentAttachmentSerializer(serializers.ModelSerializer):
+    uploaded_by_name = serializers.CharField(source='uploaded_by.username', read_only=True, allow_null=True)
+    file_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PaymentAttachment
+        fields = ['id', 'payment', 'file', 'file_url', 'attachment_type', 'filename', 'uploaded_at', 'uploaded_by', 'uploaded_by_name']
+        read_only_fields = ['id', 'uploaded_at', 'uploaded_by']
+
+    def get_file_url(self, obj):
+        request = self.context.get('request')
+        if obj.file and request:
+            return request.build_absolute_uri(obj.file.url)
+        return None
 
 
 # ─── RECEIPTS ────────────────────────────────────────────────────────────────────
@@ -48,6 +66,7 @@ class PaymentSerializer(serializers.ModelSerializer):
     booking_id_display = serializers.CharField(source='booking.booking_id', read_only=True)
     customer_name = serializers.CharField(source='booking.customer.full_name', read_only=True)
     payment_method_display = serializers.CharField(source='get_payment_method_display', read_only=True)
+    payment_type_display = serializers.CharField(source='get_payment_type_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     created_by_name = serializers.CharField(source='created_by.username', read_only=True, allow_null=True)
     verified_by_name = serializers.CharField(source='verified_by.username', read_only=True, allow_null=True)
@@ -56,10 +75,12 @@ class PaymentSerializer(serializers.ModelSerializer):
         model = Payment
         fields = ['id', 'payment_id', 'booking', 'booking_id_display', 'customer_name',
                   'installment', 'amount', 'payment_date', 'payment_method',
-                  'payment_method_display', 'reference_number', 'bank_name',
+                  'payment_method_display', 'payment_type', 'payment_type_display',
+                  'reference_number', 'bank_name',
                   'cheque_number', 'cheque_date', 'status', 'status_display',
                   'bounce_reason', 'bounce_fee', 'unallocated_amount',
                   'receipt_generated', 'notes',
+                  'attachments',
                   'created_at', 'updated_at', 'created_by', 'created_by_name',
                   'verified_by', 'verified_by_name', 'verified_at']
         read_only_fields = ['id', 'payment_id', 'created_at', 'updated_at',
@@ -74,7 +95,7 @@ class PaymentSerializer(serializers.ModelSerializer):
 class PaymentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
-        fields = ['booking', 'installment', 'amount', 'payment_date', 'payment_method',
+        fields = ['booking', 'installment', 'amount', 'payment_date', 'payment_method', 'payment_type',
                   'reference_number', 'bank_name', 'cheque_number', 'cheque_date', 'notes']
     
     def validate_amount(self, value):
@@ -92,26 +113,29 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
 
 
 class PaymentDetailSerializer(serializers.ModelSerializer):
-    """Full payment detail with receipts and allocations."""
+    """Full payment detail with receipts, allocations, and attachments."""
     booking_id_display = serializers.CharField(source='booking.booking_id', read_only=True)
     customer_name = serializers.CharField(source='booking.customer.full_name', read_only=True)
     payment_method_display = serializers.CharField(source='get_payment_method_display', read_only=True)
+    payment_type_display = serializers.CharField(source='get_payment_type_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     created_by_name = serializers.CharField(source='created_by.username', read_only=True, allow_null=True)
     verified_by_name = serializers.CharField(source='verified_by.username', read_only=True, allow_null=True)
     receipts = ReceiptSerializer(many=True, read_only=True)
     allocations = PaymentAllocationSerializer(many=True, read_only=True)
+    attachments = PaymentAttachmentSerializer(many=True, read_only=True)
     
     class Meta:
         model = Payment
         fields = ['id', 'payment_id', 'booking', 'booking_id_display', 'customer_name',
                   'installment', 'amount', 'payment_date', 'payment_method',
-                  'payment_method_display', 'reference_number', 'bank_name',
+                  'payment_method_display', 'payment_type', 'payment_type_display',
+                  'reference_number', 'bank_name',
                   'cheque_number', 'cheque_date', 'clearance_date',
                   'status', 'status_display',
                   'bounce_reason', 'bounce_fee', 'unallocated_amount',
                   'receipt_generated', 'notes',
-                  'receipts', 'allocations',
+                  'receipts', 'allocations', 'attachments',
                   'created_at', 'updated_at', 'created_by', 'created_by_name',
                   'verified_by', 'verified_by_name', 'verified_at']
         read_only_fields = ['id', 'payment_id', 'created_at', 'updated_at',
