@@ -78,13 +78,13 @@ class PaymentSerializer(serializers.ModelSerializer):
                   'payment_method_display', 'payment_type', 'payment_type_display',
                   'reference_number', 'bank_name',
                   'cheque_number', 'cheque_date', 'status', 'status_display',
-                  'bounce_reason', 'bounce_fee', 'unallocated_amount',
-                  'receipt_generated', 'notes',
-                  'attachments',
-                  'created_at', 'updated_at', 'created_by', 'created_by_name',
-                  'verified_by', 'verified_by_name', 'verified_at']
+              'bounce_reason', 'bounce_fee', 'unallocated_amount',
+              'receipt_generated', 'notes',
+              'attachments', 'method_data',
+              'created_at', 'updated_at', 'created_by', 'created_by_name',
+              'verified_by', 'verified_by_name', 'verified_at']
         read_only_fields = ['id', 'payment_id', 'created_at', 'updated_at',
-                           'created_by', 'verified_by', 'verified_at', 'receipt_generated']
+                            'created_by', 'verified_by', 'verified_at', 'receipt_generated']
     
     def validate_amount(self, value):
         if value and value <= 0:
@@ -96,7 +96,7 @@ class PaymentCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = ['booking', 'installment', 'amount', 'payment_date', 'payment_method', 'payment_type',
-                  'reference_number', 'bank_name', 'cheque_number', 'cheque_date', 'notes']
+                  'reference_number', 'bank_name', 'cheque_number', 'cheque_date', 'notes', 'method_data']
     
     def validate_amount(self, value):
         if value and value <= 0:
@@ -135,11 +135,11 @@ class PaymentDetailSerializer(serializers.ModelSerializer):
                   'status', 'status_display',
                   'bounce_reason', 'bounce_fee', 'unallocated_amount',
                   'receipt_generated', 'notes',
-                  'receipts', 'allocations', 'attachments',
+                  'receipts', 'allocations', 'attachments', 'method_data',
                   'created_at', 'updated_at', 'created_by', 'created_by_name',
                   'verified_by', 'verified_by_name', 'verified_at']
         read_only_fields = ['id', 'payment_id', 'created_at', 'updated_at',
-                           'created_by', 'verified_by', 'verified_at', 'receipt_generated']
+                            'created_by', 'verified_by', 'verified_at', 'receipt_generated']
 
 
 class PaymentVerificationSerializer(serializers.Serializer):

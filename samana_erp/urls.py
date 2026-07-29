@@ -45,8 +45,12 @@ urlpatterns = [
     # Payments
     path('payments/', core_views.payments_view, name='payments'),
     path('payments/create/', core_views.payment_create_view, name='payment_create'),
+    path('payments/<int:pk>/', core_views.payment_detail_view, name='payment_detail'),
     path('payments/<int:pk>/verify/', core_views.payment_verify_view, name='payment_verify'),
     path('payments/<int:pk>/delete/', core_views.payment_delete_view, name='payment_delete'),
+    
+    # Receipts
+    path('receipts/<int:pk>/', core_views.receipt_detail_view, name='receipt_detail'),
     
     # Users & Admin
     path('users/', core_views.users_view, name='users'),

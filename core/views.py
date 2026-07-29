@@ -429,7 +429,7 @@ def booking_detail_view(request, pk):
         pk=pk
     )
     installments = booking.installment_plan.installments.all() if hasattr(booking, 'installment_plan') else []
-    payments = booking.payments.select_related('verified_by').all()
+    payments = booking.payments.select_related('verified_by').prefetch_related('receipts').all()
     
     context = {
         'booking': booking,
@@ -569,13 +569,34 @@ def reservation_create_view(request):
 def payments_view(request):
     payments = Payment.objects.select_related('booking', 'booking__customer').all()
     status_filter = request.GET.get('status', '')
+    method_filter = request.GET.get('method', '')
+    search = request.GET.get('search', '')
     
     if status_filter:
         payments = payments.filter(status=status_filter)
+    if method_filter:
+        payments = payments.filter(payment_method=method_filter)
+    if search:
+        payments = payments.filter(
+            Q(payment_id__icontains=search) |
+            Q(booking__booking_id__icontains=search) |
+            Q(booking__customer__full_name__icontains=search)
+        )
+    
+    payments = payments.select_related('booking', 'booking__customer', 'booking__plot', 'verified_by')
+    
+    verified_count = payments.filter(status='verified').count()
+    pending_count = payments.filter(status='pending').count()
+    rejected_count = payments.filter(status='rejected').count()
     
     context = {
         'payments': payments,
         'status_filter': status_filter,
+        'method_filter': method_filter,
+        'search': search,
+        'verified_count': verified_count,
+        'pending_count': pending_count,
+        'rejected_count': rejected_count,
     }
     return render(request, 'payments.html', context)
 
@@ -583,6 +604,13 @@ def payments_view(request):
 @login_required
 def payment_create_view(request):
     from payments.forms import PaymentForm
+    from payments.models import Receipt, PaymentAttachment
+    
+    booking_id = request.GET.get('booking_id')
+    pre_filled_booking = None
+    
+    if booking_id:
+        pre_filled_booking = get_object_or_404(Booking, pk=booking_id)
     
     if request.method == 'POST':
         form = PaymentForm(request.POST)
@@ -590,17 +618,52 @@ def payment_create_view(request):
             payment = form.save(commit=False)
             payment.created_by = request.user
             payment.save()
+            
+            # Auto-generate receipt
+            receipt = Receipt.objects.create(
+                payment=payment,
+                receipt_date=payment.payment_date,
+                generated_by=request.user,
+            )
+            payment.receipt_generated = True
+            payment.save(update_fields=['receipt_generated'])
+            
+            # Handle file attachments
+            files = request.FILES.getlist('attachments')
+            for f in files:
+                PaymentAttachment.objects.create(
+                    payment=payment,
+                    file=f,
+                    attachment_type='other',
+                    filename=f.name,
+                    uploaded_by=request.user,
+                )
+            
             AuditLog.objects.create(
                 user=request.user, action='create', model_name='Payment',
                 object_id=payment.payment_id,
                 description=f'Created payment {payment.payment_id} for booking {payment.booking.booking_id}'
             )
-            messages.success(request, f'Payment {payment.payment_id} created successfully!')
+            messages.success(request, f'Payment {payment.payment_id} created successfully! Receipt {receipt.receipt_number} generated.')
             return redirect('payments')
     else:
         form = PaymentForm()
+        if pre_filled_booking:
+            form.fields['booking'].initial = pre_filled_booking.id
+            form.fields['booking'].widget.attrs['disabled'] = True
     
-    return render(request, 'payment_form.html', {'form': form, 'title': 'Record New Payment'})
+    projects = Project.objects.filter(is_active=True)
+    plots = Plot.objects.all()
+    bookings = Booking.objects.filter(status__in=['pending', 'confirmed', 'active']).select_related('customer', 'plot', 'plot__project')
+    
+    return render(request, 'payment_form.html', {
+        'form': form,
+        'title': 'Receive Payment' if pre_filled_booking else 'Record New Payment',
+        'projects': projects,
+        'plots': plots,
+        'bookings': bookings,
+        'pre_filled_booking': pre_filled_booking,
+    })
 
 
 @login_required
@@ -636,6 +699,8 @@ def payment_verify_view(request, pk):
                 # Update booking advance
                 booking = payment.booking
                 booking.advance_paid += payment.amount
+                if booking.remaining_balance <= 0:
+                    booking.status = 'completed'
                 booking.save()
                 
                 messages.success(request, f'Payment {payment.payment_id} verified successfully!')
@@ -660,6 +725,45 @@ def payment_verify_view(request, pk):
 
 
 @login_required
+def payment_detail_view(request, pk):
+    payment = get_object_or_404(Payment.objects.select_related(
+        'booking', 'booking__customer', 'booking__plot', 'booking__plot__project',
+        'installment', 'created_by', 'verified_by'
+    ).prefetch_related('receipts'), pk=pk)
+    
+    installments = []
+    payment_summary = None
+    plan = getattr(payment.booking, 'installment_plan', None)
+    
+    if plan:
+        installments = plan.installments.all().order_by('installment_number')
+        total_paid = float(payment.booking.advance_paid)
+        progress = payment.booking.payment_progress
+        paid_count = installments.filter(status='paid').count()
+        payment_summary = {
+            'property_price': float(payment.booking.total_amount),
+            'down_payment': float(plan.down_payment_amount),
+            'total_paid': total_paid,
+            'remaining': float(payment.booking.remaining_balance),
+            'total_installments': plan.total_installments,
+            'installment_amount': float(plan.installment_amount),
+            'paid_installments': paid_count,
+            'remaining_installments': plan.total_installments - paid_count,
+            'progress': progress,
+            'is_fully_paid': payment.booking.remaining_balance <= 0,
+        }
+    
+    all_attachments = payment.attachments.all()
+    
+    return render(request, 'payment_detail.html', {
+        'payment': payment,
+        'installments': installments,
+        'payment_summary': payment_summary,
+        'attachments': all_attachments,
+    })
+
+
+@login_required
 @admin_or_above  # Only admin/super_admin can delete payments
 def payment_delete_view(request, pk):
     payment = get_object_or_404(Payment, pk=pk)
@@ -675,6 +779,34 @@ def payment_delete_view(request, pk):
         return redirect('payments')
     
     return render(request, 'confirm_delete.html', {'object': payment, 'title': 'Delete Payment', 'cancel_url': 'payments'})
+
+
+# ─── RECEIPTS ─────────────────────────────────────────────────────────────────────
+
+@login_required
+def receipt_detail_view(request, pk):
+    from payments.models import Receipt
+    from payments.utils import amount_in_words
+    
+    receipt = get_object_or_404(
+        Receipt.objects.select_related(
+            'payment', 'payment__booking', 'payment__booking__customer',
+            'payment__booking__plot', 'payment__booking__plot__project',
+            'generated_by'
+        ),
+        pk=pk
+    )
+    
+    payment = receipt.payment
+    booking = payment.booking
+    amount_words = amount_in_words(payment.amount)
+    
+    return render(request, 'receipt_detail.html', {
+        'receipt': receipt,
+        'payment': payment,
+        'booking': booking,
+        'amount_words': amount_words,
+    })
 
 
 # ─── USERS (admin/super_admin only) ──────────────────────────────────────────────

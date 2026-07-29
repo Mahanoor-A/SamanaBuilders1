@@ -1,2 +1,604 @@
-{% extends 'base_form.html' %}
+{% extends 'base.html' %}
+{% load static %}
+
 {% block title %}{{ title }} - Samana Builders ERP{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+    <div class="top-bar">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <span class="top-bar-title">{{ title }}</span>
+        <div class="top-bar-actions">
+            <div class="theme-switcher">
+                <button class="theme-btn" data-theme="professional-blue"></button>
+                <button class="theme-btn" data-theme="modern-green"></button>
+                <button class="theme-btn" data-theme="elegant-dark"></button>
+                <button class="theme-btn" data-theme="warm-earth"></button>
+                <button class="theme-btn" data-theme="minimalist-purple"></button>
+            </div>
+        </div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="sidebar-brand"><div class="brand-icon">SB</div><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Main Menu</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a></li>
+                <li class="nav-item"><a href="{% url 'customers' %}" class="nav-link"><span class="nav-icon">👥</span> Customers</a></li>
+                <li class="nav-item"><a href="{% url 'properties' %}" class="nav-link"><span class="nav-icon">🏗️</span> Properties</a></li>
+                <li class="nav-item"><a href="{% url 'bookings' %}" class="nav-link"><span class="nav-icon">📋</span> Bookings</a></li>
+                <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link active"><span class="nav-icon">💰</span> Payments</a></li>
+            </ul>
+            <div class="nav-divider"></div>
+            <div class="nav-section">Administration</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'users' %}" class="nav-link"><span class="nav-icon">👤</span> Users</a></li>
+                <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link"><span class="nav-icon">📝</span> Audit Logs</a></li>
+                <li class="nav-item"><a href="/admin/" class="nav-link"><span class="nav-icon">⚙️</span> Admin Panel</a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer"><a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a></div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>{{ title }}</h1>
+                <div class="page-actions">
+                    <div class="theme-switcher" style="display:flex;">
+                        <button class="theme-btn" data-theme="professional-blue"></button>
+                        <button class="theme-btn" data-theme="modern-green"></button>
+                        <button class="theme-btn" data-theme="elegant-dark"></button>
+                        <button class="theme-btn" data-theme="warm-earth"></button>
+                        <button class="theme-btn" data-theme="minimalist-purple"></button>
+                    </div>
+                    <a href="{% if pre_filled_booking %}{% url 'booking_detail' pre_filled_booking.pk %}{% else %}{% url 'payments' %}{% endif %}" class="btn btn-secondary btn-sm">← Back</a>
+                </div>
+        </div>
+
+        {% if form.errors %}
+        <div class="alert alert-error animate-slide-right">
+            <span>⚠️</span>
+            <span>Please correct the errors below.</span>
+        </div>
+        {% endif %}
+
+        <form method="post" novalidate enctype="multipart/form-data" id="paymentForm">
+            {% csrf_token %}
+            {{ form.method_data }}
+
+            <!-- SECTION 1: Booking Selection -->
+            {% if pre_filled_booking %}
+            <div class="card animate-fade-up mb-4">
+                <div class="card-header">
+                    <h3>📋 Receiving Payment For</h3>
+                </div>
+                <div class="card-body" style="padding:20px;">
+                    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; padding:16px; background:var(--primary-bg); border-radius:var(--radius-md); margin-bottom:12px;">
+                        <div><div style="font-size:11px; color:var(--text-secondary); margin-bottom:2px;">Customer</div><div style="font-size:14px; font-weight:600; color:var(--text-primary);">{{ pre_filled_booking.customer.full_name }}</div></div>
+                        <div><div style="font-size:11px; color:var(--text-secondary); margin-bottom:2px;">Booking No.</div><div style="font-size:14px; font-weight:600; color:var(--text-primary);">{{ pre_filled_booking.booking_id }}</div></div>
+                        <div><div style="font-size:11px; color:var(--text-secondary); margin-bottom:2px;">Plot</div><div style="font-size:14px; font-weight:600; color:var(--text-primary);">{{ pre_filled_booking.plot.plot_number }} ({{ pre_filled_booking.plot.project.name }})</div></div>
+                        <div><div style="font-size:11px; color:var(--text-secondary); margin-bottom:2px;">Total / Paid / Remaining</div><div style="font-size:14px; font-weight:600; color:var(--text-primary);">Rs. {{ pre_filled_booking.total_amount|floatformat:0 }} / Rs. {{ pre_filled_booking.advance_paid|floatformat:0 }} / <span style="color:var(--accent-amber);">Rs. {{ pre_filled_booking.remaining_balance|floatformat:0 }}</span></div></div>
+                    </div>
+                    <input type="hidden" name="booking" value="{{ pre_filled_booking.id }}" id="id_booking">
+                </div>
+            </div>
+            {% else %}
+            <div class="card animate-fade-up mb-4">
+                <div class="card-header">
+                    <h3>📋 Booking Selection</h3>
+                </div>
+                <div class="card-body" style="padding:20px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px;">
+                        <div class="form-group">
+                            <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Project</label>
+                            <select id="projectSelect" class="form-control" onchange="loadPlots(this.value)">
+                                <option value="">Select Project...</option>
+                                {% for p in projects %}
+                                <option value="{{ p.id }}">{{ p.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Property / Plot</label>
+                            <select id="plotSelect" class="form-control" onchange="filterBookings()">
+                                <option value="">Select Plot...</option>
+                                {% for pl in plots %}
+                                <option value="{{ pl.id }}" data-project="{{ pl.project_id }}">{{ pl.plot_number }} ({{ pl.size_marla }} marla)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Booking <span style="color:var(--accent-red);">*</span></label>
+                            <select name="booking" id="id_booking" class="form-control" required onchange="loadBookingSummary(this.value)">
+                                <option value="">Select Booking...</option>
+                                {% for b in bookings %}
+                                <option value="{{ b.id }}" data-project="{{ b.plot.project_id }}" data-plot="{{ b.plot_id }}"
+                                    data-customer="{{ b.customer.full_name }}" data-plot-no="{{ b.plot.plot_number }}"
+                                    data-project-name="{{ b.plot.project.name }}" data-total="{{ b.total_amount }}"
+                                    data-advance="{{ b.advance_paid }}">
+                                    {{ b.booking_id }} - {{ b.customer.full_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Booking Info (hidden until selected) -->
+                    <div id="bookingInfo" style="display:none;">
+                        <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:12px; padding:16px; background:var(--primary-bg); border-radius:var(--radius-md);">
+                            <div><div style="font-size:11px; color:var(--text-secondary); margin-bottom:2px;">Customer</div><div id="infoCustomer" style="font-size:14px; font-weight:600; color:var(--text-primary);">—</div></div>
+                            <div><div style="font-size:11px; color:var(--text-secondary); margin-bottom:2px;">Booking No.</div><div id="infoBooking" style="font-size:14px; font-weight:600; color:var(--text-primary);">—</div></div>
+                            <div><div style="font-size:11px; color:var(--text-secondary); margin-bottom:2px;">Plot No.</div><div id="infoPlot" style="font-size:14px; font-weight:600; color:var(--text-primary);">—</div></div>
+                            <div><div style="font-size:11px; color:var(--text-secondary); margin-bottom:2px;">Project</div><div id="infoProject" style="font-size:14px; font-weight:600; color:var(--text-primary);">—</div></div>
+                            <div><div style="font-size:11px; color:var(--text-secondary); margin-bottom:2px;">Booking Date</div><div id="infoDate" style="font-size:14px; font-weight:600; color:var(--text-primary);">—</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- SECTION 2: Pricing Summary -->
+            <div class="card animate-fade-up mb-4">
+                <div class="card-header">
+                    <h3>💰 Pricing Summary</h3>
+                </div>
+                <div class="card-body" style="padding:20px;">
+                    <div id="pricingSummary" style="display:none;">
+                        <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:12px;">
+                            <div class="summary-card"><div class="summary-label">Property Price</div><div class="summary-value" id="summaryPrice">—</div></div>
+                            <div class="summary-card"><div class="summary-label">Down Payment</div><div class="summary-value" id="summaryDown">—</div></div>
+                            <div class="summary-card accent"><div class="summary-label">Amount Paid</div><div class="summary-value" id="summaryPaid">—</div></div>
+                            <div class="summary-card"><div class="summary-label">Discount</div><div class="summary-value" id="summaryDiscount">—</div></div>
+                            <div class="summary-card highlight"><div class="summary-label">Remaining Balance</div><div class="summary-value" id="summaryRemaining">—</div></div>
+                        </div>
+                        <div id="planInfo" style="display:none; margin-top:12px; padding:10px 14px; background:var(--primary-bg); border-radius:var(--radius-sm); font-size:13px; color:var(--text-secondary);"></div>
+                    </div>
+                    <div id="noBookingMsg" style="text-align:center; padding:20px; color:var(--text-secondary); font-size:14px;">Select a booking to view pricing summary</div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: Payment Plan -->
+            <div class="card animate-fade-up mb-4">
+                <div class="card-header">
+                    <h3>📅 Payment Plan</h3>
+                </div>
+                <div class="card-body" style="padding:20px;">
+                    <div style="display:flex; gap:12px; margin-bottom:16px;">
+                        <button type="button" class="plan-btn active" data-plan="full" onclick="selectPlan('full')">💰 Full Payment</button>
+                        <button type="button" class="plan-btn" data-plan="installment" onclick="selectPlan('installment')">📅 Installment Plan</button>
+                    </div>
+                    <div id="installmentOptions" style="display:none;">
+                        <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:8px;">Payment Duration</label>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+                            <button type="button" class="duration-btn active" data-months="12" onclick="selectDuration(12)">12 Months</button>
+                            <button type="button" class="duration-btn" data-months="24" onclick="selectDuration(24)">24 Months</button>
+                            <button type="button" class="duration-btn" data-months="36" onclick="selectDuration(36)">36 Months</button>
+                            <button type="button" class="duration-btn" data-months="custom" onclick="selectDuration('custom')">Custom</button>
+                        </div>
+                        <div id="customMonths" style="display:none; margin-bottom:12px;">
+                            <div class="form-group">
+                                <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Number of Months</label>
+                                <input type="number" id="customMonthsInput" class="form-control" min="1" placeholder="Enter months..." oninput="calcInstallment()">
+                            </div>
+                        </div>
+                        <div id="installmentSummary" style="display:none; padding:16px; background:var(--bg-page); border-radius:var(--radius-md);">
+                            <div style="font-size:12px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Installment Summary</div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                                <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px;"><span style="color:var(--text-secondary);">Remaining Balance</span><span id="isRemaining" style="font-weight:600;">—</span></div>
+                                <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px;"><span style="color:var(--text-secondary);">Duration</span><span id="isDuration" style="font-weight:600;">—</span></div>
+                                <div style="display:flex; justify-content:space-between; padding:6px 0; font-size:14px; border-top:1px solid var(--border); grid-column:span 2;"><span style="color:var(--primary); font-weight:600;">Monthly Installment</span><span id="isMonthly" style="color:var(--primary); font-weight:700;">—</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 4: Current Payment -->
+            <div class="card animate-fade-up mb-4">
+                <div class="card-header">
+                    <h3>💳 Current Payment</h3>
+                </div>
+                <div class="card-body" style="padding:20px;">
+                    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
+                        <div class="floating-group">
+                            <input type="date" name="payment_date" id="id_payment_date" class="form-control" placeholder=" " required value="{% now 'Y-m-d' %}">
+                            <label for="id_payment_date">Payment Date <span style="color:var(--accent-red);">*</span></label>
+                        </div>
+                        <div class="floating-group">
+                            <input type="number" name="amount" id="id_amount" class="form-control" placeholder=" " step="0.01" min="0" required>
+                            <label for="id_amount">Amount (PKR) <span style="color:var(--accent-red);">*</span></label>
+                            <div id="amountError" style="display:none; font-size:12px; color:var(--accent-red); margin-top:4px;"></div>
+                        </div>
+                        <div class="floating-group">
+                            <select name="payment_type" id="id_payment_type" class="form-control" required>
+                                <option value="">Select...</option>
+                                <option value="down_payment">Down Payment</option>
+                                <option value="installment">Installment</option>
+                                <option value="advance">Advance</option>
+                                <option value="final_payment">Final Payment</option>
+                                <option value="late_fee">Late Fee</option>
+                                <option value="adjustment">Adjustment</option>
+                            </select>
+                            <label for="id_payment_type">Payment Type <span style="color:var(--accent-red);">*</span></label>
+                        </div>
+                    </div>
+                    <div style="margin-top:12px;">
+                        <div class="floating-group">
+                            <textarea name="notes" id="id_notes" class="form-control" placeholder=" " rows="2"></textarea>
+                            <label for="id_notes">Notes</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 5: Payment Method -->
+            <div class="card animate-fade-up mb-4">
+                <div class="card-header">
+                    <h3>🏦 Payment Method</h3>
+                </div>
+                <div class="card-body" style="padding:20px;">
+                    <div style="display:grid; grid-template-columns:1fr 2fr; gap:16px; margin-bottom:16px;">
+                        <div class="form-group">
+                            <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Method <span style="color:var(--accent-red);">*</span></label>
+                            <select name="payment_method" id="id_payment_method" class="form-control" required onchange="toggleMethodFields()">
+                                <option value="cash">Cash</option>
+                                <option value="cheque">Cheque</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="jazzcash">JazzCash</option>
+                                <option value="easypaisa">EasyPaisa</option>
+                                <option value="raast">Raast Transfer</option>
+                                <option value="online">Online Payment</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="methodFields" style="background:var(--bg-page); border-radius:var(--radius-md); padding:16px;">
+                        <div style="font-size:12px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;" id="methodTitle">Cash Details</div>
+                        <div id="methodFieldsGrid" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 6: Attachments -->
+            <div class="card animate-fade-up mb-4">
+                <div class="card-header">
+                    <h3>📎 Attachments</h3>
+                    <span style="font-size:12px; color:var(--text-secondary);">Optional</span>
+                </div>
+                <div class="card-body" style="padding:20px;">
+                    <div class="form-group">
+                        <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Upload Files</label>
+                        <input type="file" name="attachments" multiple class="form-control" accept="image/*,.pdf" style="padding:10px;">
+                        <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">JPG, PNG, PDF up to 5MB</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="card animate-fade-up mb-4">
+                <div class="card-body" style="padding:16px 20px; display:flex; justify-content:flex-end; gap:12px;">
+                    <a href="{% if pre_filled_booking %}{% url 'booking_detail' pre_filled_booking.pk %}{% else %}{% url 'payments' %}{% endif %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <span class="spinner"></span>
+                        <span class="btn-text">{% if pre_filled_booking %}Receive Payment{% elif "Edit" in title %}Update Payment{% else %}Record Payment{% endif %}</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </main>
+</div>
+
+<style>
+.summary-card { padding:14px; border-radius:var(--radius-md); background:var(--bg-page); border:1px solid var(--border); }
+.summary-card.highlight { background:var(--primary-bg); border-color:var(--primary); }
+.summary-card.accent { background:rgba(16,185,129,0.08); border-color:rgba(16,185,129,0.2); }
+.summary-label { font-size:11px; color:var(--text-secondary); margin-bottom:4px; }
+.summary-value { font-size:15px; font-weight:700; color:var(--text-primary); }
+.summary-card.highlight .summary-value { color:var(--primary); }
+.summary-card.accent .summary-value { color:var(--accent-green); }
+.plan-btn { flex:1; padding:12px 20px; border-radius:var(--radius-md); font-size:14px; font-weight:600; cursor:pointer; border:2px solid var(--border); background:var(--bg-card); color:var(--text-secondary); transition:all 0.3s ease; }
+.plan-btn.active { border-color:var(--primary); background:var(--primary-bg); color:var(--primary); }
+.duration-btn { padding:8px 18px; border-radius:var(--radius-sm); font-size:13px; font-weight:500; cursor:pointer; border:2px solid var(--border); background:var(--bg-card); color:var(--text-secondary); transition:all 0.3s ease; }
+.duration-btn.active { border-color:var(--primary); background:var(--primary-bg); color:var(--primary); }
+</style>
+
+<script>
+const bookingsData = [
+  {% for b in bookings %}
+  {
+    id: {{ b.id }},
+    booking_id: "{{ b.booking_id }}",
+    customer: "{{ b.customer.full_name|escapejs }}",
+    plot_id: {{ b.plot_id }},
+    plot_no: "{{ b.plot.plot_number|escapejs }}",
+    project_id: {{ b.plot.project_id }},
+    project_name: "{{ b.plot.project.name|escapejs }}",
+    total: {{ b.total_amount }},
+    advance: {{ b.advance_paid }},
+    date: "{{ b.booking_date|date:'Y-m-d' }}"
+  },
+  {% endfor %}
+];
+
+{% if pre_filled_booking %}
+const preFilledBooking = {
+  id: {{ pre_filled_booking.id }},
+  booking_id: "{{ pre_filled_booking.booking_id }}",
+  customer: "{{ pre_filled_booking.customer.full_name|escapejs }}",
+  plot_id: {{ pre_filled_booking.plot_id }},
+  plot_no: "{{ pre_filled_booking.plot.plot_number|escapejs }}",
+  project_id: {{ pre_filled_booking.plot.project_id }},
+  project_name: "{{ pre_filled_booking.plot.project.name|escapejs }}",
+  total: {{ pre_filled_booking.total_amount }},
+  advance: {{ pre_filled_booking.advance_paid }},
+  date: "{{ pre_filled_booking.booking_date|date:'Y-m-d' }}"
+};
+{% endif %}
+
+const methodFieldsConfig = {
+  cash: [
+    { key: 'received_by', label: 'Received By', type: 'text' },
+    { key: 'receipt_no', label: 'Receipt Number', type: 'text' },
+  ],
+  cheque: [
+    { key: 'cheque_number', label: 'Cheque Number', type: 'text' },
+    { key: 'cheque_date', label: 'Cheque Date', type: 'date' },
+    { key: 'issue_date', label: 'Issue Date', type: 'date' },
+    { key: 'bank_name', label: 'Bank Name', type: 'text' },
+    { key: 'branch_name', label: 'Branch Name', type: 'text' },
+    { key: 'account_title', label: 'Account Title', type: 'text' },
+    { key: 'account_number', label: 'Account Number', type: 'text' },
+  ],
+  bank_transfer: [
+    { key: 'company_bank', label: 'Company Bank', type: 'text' },
+    { key: 'company_account_title', label: 'Company Account Title', type: 'text' },
+    { key: 'company_account_number', label: 'Company Account Number', type: 'text' },
+    { key: 'company_iban', label: 'Company IBAN', type: 'text' },
+    { key: 'sender_bank', label: 'Sender Bank', type: 'text' },
+    { key: 'sender_account_name', label: 'Sender Account Name', type: 'text' },
+    { key: 'sender_account_number', label: 'Sender Account Number', type: 'text' },
+    { key: 'reference_number', label: 'Reference Number', type: 'text' },
+    { key: 'transfer_date', label: 'Transfer Date', type: 'date' },
+  ],
+  jazzcash: [
+    { key: 'company_jazzcash_number', label: 'Company JazzCash Number', type: 'text' },
+    { key: 'company_account_name', label: 'Company Account Name', type: 'text' },
+    { key: 'customer_mobile', label: 'Customer Mobile Number', type: 'text' },
+    { key: 'customer_name', label: 'Customer Name', type: 'text' },
+    { key: 'transaction_id', label: 'Transaction ID', type: 'text' },
+    { key: 'transaction_date', label: 'Transaction Date', type: 'date' },
+  ],
+  easypaisa: [
+    { key: 'company_easypaisa_number', label: 'Company EasyPaisa Number', type: 'text' },
+    { key: 'company_account_name', label: 'Company Account Name', type: 'text' },
+    { key: 'customer_mobile', label: 'Customer Mobile Number', type: 'text' },
+    { key: 'customer_name', label: 'Customer Name', type: 'text' },
+    { key: 'transaction_id', label: 'Transaction ID', type: 'text' },
+    { key: 'transaction_date', label: 'Transaction Date', type: 'date' },
+  ],
+  raast: [
+    { key: 'company_raast_id', label: 'Company Raast ID', type: 'text' },
+    { key: 'customer_raast_id', label: 'Customer Raast ID', type: 'text' },
+    { key: 'transaction_id', label: 'Transaction ID', type: 'text' },
+    { key: 'transfer_date', label: 'Transfer Date', type: 'date' },
+  ],
+  online: [
+    { key: 'gateway_name', label: 'Gateway Name', type: 'text' },
+    { key: 'reference_number', label: 'Reference Number', type: 'text' },
+    { key: 'transaction_id', label: 'Transaction ID', type: 'text' },
+    { key: 'payment_date', label: 'Payment Date', type: 'date' },
+  ],
+};
+
+let currentPlan = 'full';
+let currentDuration = 12;
+let selectedBooking = null;
+
+function loadPlots(projectId) {
+  const plotSelect = document.getElementById('plotSelect');
+  const options = plotSelect.querySelectorAll('option');
+  options.forEach((opt, i) => {
+    if (i === 0) { opt.style.display = ''; return; }
+    opt.style.display = !projectId || opt.dataset.project === projectId ? '' : 'none';
+  });
+  plotSelect.value = '';
+  filterBookings();
+}
+
+function filterBookings() {
+  const projectId = document.getElementById('projectSelect').value;
+  const plotId = document.getElementById('plotSelect').value;
+  const bookingSelect = document.getElementById('id_booking');
+  const options = bookingSelect.querySelectorAll('option');
+  options.forEach((opt, i) => {
+    if (i === 0) { opt.style.display = ''; return; }
+    const matchesProject = !projectId || opt.dataset.project === projectId;
+    const matchesPlot = !plotId || opt.dataset.plot === plotId;
+    opt.style.display = matchesProject && matchesPlot ? '' : 'none';
+  });
+  if (bookingSelect.value) loadBookingSummary(bookingSelect.value);
+}
+
+function loadBookingSummary(bookingId) {
+  const bk = bookingsData.find(b => String(b.id) === String(bookingId));
+  const infoDiv = document.getElementById('bookingInfo');
+  const summaryDiv = document.getElementById('pricingSummary');
+  const noMsg = document.getElementById('noBookingMsg');
+
+  if (!bk) {
+    infoDiv.style.display = 'none';
+    summaryDiv.style.display = 'none';
+    noMsg.style.display = '';
+    selectedBooking = null;
+    return;
+  }
+
+  selectedBooking = bk;
+  infoDiv.style.display = '';
+  document.getElementById('infoCustomer').textContent = bk.customer;
+  document.getElementById('infoBooking').textContent = bk.booking_id;
+  document.getElementById('infoPlot').textContent = bk.plot_no;
+  document.getElementById('infoProject').textContent = bk.project_name;
+  document.getElementById('infoDate').textContent = bk.date;
+
+  noMsg.style.display = 'none';
+  summaryDiv.style.display = '';
+
+  const remaining = bk.total - bk.advance;
+  document.getElementById('summaryPrice').textContent = 'Rs. ' + Number(bk.total).toLocaleString();
+  document.getElementById('summaryDown').textContent = '—';
+  document.getElementById('summaryPaid').textContent = 'Rs. ' + Number(bk.advance).toLocaleString();
+  document.getElementById('summaryDiscount').textContent = '—';
+  document.getElementById('summaryRemaining').textContent = 'Rs. ' + Number(remaining).toLocaleString();
+
+  // Check plan via API
+  fetch('/api/bookings/' + bookingId + '/payment-summary/')
+    .then(r => r.json())
+    .then(data => {
+      if (data.down_payment > 0) {
+        document.getElementById('summaryDown').textContent = 'Rs. ' + Number(data.down_payment).toLocaleString();
+      }
+      if (data.discount > 0) {
+        document.getElementById('summaryDiscount').textContent = 'Rs. ' + Number(data.discount).toLocaleString();
+      }
+      const planInfo = document.getElementById('planInfo');
+      if (data.has_installment_plan) {
+        planInfo.style.display = '';
+        planInfo.innerHTML = '📅 Installment Plan: ' + data.total_installments + ' payments of Rs. ' + Number(data.installment_amount).toLocaleString() + ' each';
+      } else {
+        planInfo.style.display = 'none';
+      }
+      if (data.outstanding !== undefined) {
+        document.getElementById('summaryRemaining').textContent = 'Rs. ' + Number(data.outstanding).toLocaleString();
+      }
+      calcInstallment();
+    })
+    .catch(() => {});
+}
+
+function selectPlan(plan) {
+  currentPlan = plan;
+  document.querySelectorAll('.plan-btn').forEach(b => b.classList.toggle('active', b.dataset.plan === plan));
+  document.getElementById('installmentOptions').style.display = plan === 'installment' ? '' : 'none';
+}
+
+function selectDuration(months) {
+  currentDuration = months;
+  document.querySelectorAll('.duration-btn').forEach(b => b.classList.toggle('active', String(b.dataset.months) === String(months)));
+  document.getElementById('customMonths').style.display = months === 'custom' ? '' : 'none';
+  calcInstallment();
+}
+
+function calcInstallment() {
+  const summaryDiv = document.getElementById('installmentSummary');
+  if (!selectedBooking || currentPlan !== 'installment') {
+    summaryDiv.style.display = 'none';
+    return;
+  }
+
+  const remaining = selectedBooking.total - selectedBooking.advance;
+  let months = currentDuration === 'custom'
+    ? parseInt(document.getElementById('customMonthsInput').value) || 0
+    : parseInt(currentDuration);
+
+  if (months <= 0) { summaryDiv.style.display = 'none'; return; }
+
+  summaryDiv.style.display = '';
+  const monthly = remaining / months;
+  document.getElementById('isRemaining').textContent = 'Rs. ' + Number(remaining).toLocaleString();
+  document.getElementById('isDuration').textContent = months + ' Months';
+  document.getElementById('isMonthly').textContent = 'Rs. ' + Math.round(monthly).toLocaleString();
+}
+
+function toggleMethodFields() {
+  const method = document.getElementById('id_payment_method').value;
+  const config = methodFieldsConfig[method] || [];
+  const grid = document.getElementById('methodFieldsGrid');
+  const title = document.getElementById('methodTitle');
+  title.textContent = method.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) + ' Details';
+  grid.innerHTML = '';
+  config.forEach(f => {
+    const div = document.createElement('div');
+    div.className = 'floating-group';
+    const inputId = 'method_' + f.key;
+    if (f.type === 'date') {
+      div.innerHTML = '<input type="date" id="' + inputId + '" class="form-control method-field" data-key="' + f.key + '" placeholder=" "><label for="' + inputId + '">' + f.label + '</label>';
+    } else {
+      div.innerHTML = '<input type="text" id="' + inputId + '" class="form-control method-field" data-key="' + f.key + '" placeholder=" "><label for="' + inputId + '">' + f.label + '</label>';
+    }
+    grid.appendChild(div);
+  });
+
+  // For cheque, add file upload hint
+  if (method === 'cheque') {
+    const hint = document.createElement('div');
+    hint.style.cssText = 'grid-column:span 3; font-size:12px; color:var(--text-secondary); padding:8px; background:var(--bg-card); border-radius:var(--radius-sm); border:1px dashed var(--border);';
+    hint.innerHTML = '📎 Upload Cheque Image: <input type="file" class="form-control" style="margin-top:4px;" accept="image/*">';
+    grid.appendChild(hint);
+  }
+}
+
+// Serialize method fields on form submit
+document.getElementById('paymentForm').addEventListener('submit', function(e) {
+  const methodFields = document.querySelectorAll('.method-field');
+  const methodData = {};
+  methodFields.forEach(f => {
+    if (f.value) methodData[f.dataset.key] = f.value;
+  });
+  document.getElementById('id_method_data').value = JSON.stringify(methodData);
+
+  // Validate amount vs remaining
+  const amount = parseFloat(document.getElementById('id_amount').value);
+  if (selectedBooking && amount > (selectedBooking.total - selectedBooking.advance)) {
+    e.preventDefault();
+    document.getElementById('amountError').textContent = 'Amount exceeds remaining balance of Rs. ' + Number(selectedBooking.total - selectedBooking.advance).toLocaleString();
+    document.getElementById('amountError').style.display = '';
+    return;
+  }
+  document.getElementById('amountError').style.display = 'none';
+});
+
+// Init
+toggleMethodFields();
+
+{% if pre_filled_booking %}
+// Pre-fill booking summary for Receive Payment flow
+(function() {
+  const bk = preFilledBooking;
+  selectedBooking = bk;
+
+  const summaryDiv = document.getElementById('pricingSummary');
+  const noMsg = document.getElementById('noBookingMsg');
+  if (summaryDiv) summaryDiv.style.display = '';
+  if (noMsg) noMsg.style.display = 'none';
+
+  const remaining = bk.total - bk.advance;
+  document.getElementById('summaryPrice').textContent = 'Rs. ' + Number(bk.total).toLocaleString();
+  document.getElementById('summaryPaid').textContent = 'Rs. ' + Number(bk.advance).toLocaleString();
+  document.getElementById('summaryRemaining').textContent = 'Rs. ' + Number(remaining).toLocaleString();
+
+  fetch('/api/bookings/' + bk.id + '/payment-summary/')
+    .then(r => r.json())
+    .then(data => {
+      if (data.down_payment > 0) {
+        document.getElementById('summaryDown').textContent = 'Rs. ' + Number(data.down_payment).toLocaleString();
+      }
+      if (data.discount > 0) {
+        document.getElementById('summaryDiscount').textContent = 'Rs. ' + Number(data.discount).toLocaleString();
+      }
+      const planInfo = document.getElementById('planInfo');
+      if (data.has_installment_plan && planInfo) {
+        planInfo.style.display = '';
+        planInfo.innerHTML = '📅 Installment Plan: ' + data.total_installments + ' payments of Rs. ' + Number(data.installment_amount).toLocaleString() + ' each';
+      }
+      if (data.outstanding !== undefined) {
+        document.getElementById('summaryRemaining').textContent = 'Rs. ' + Number(data.outstanding).toLocaleString();
+      }
+    })
+    .catch(function(){});
+})();
+{% endif %}
+</script>
+{% endblock %}

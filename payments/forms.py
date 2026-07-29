@@ -4,21 +4,29 @@ from bookings.models import Booking, Installment
 
 
 class PaymentForm(forms.ModelForm):
+    payment_type = forms.ChoiceField(
+        choices=[('', 'Select type...'), ('down_payment', 'Down Payment'), ('installment', 'Installment'),
+                 ('advance', 'Advance'), ('final_payment', 'Final Payment'), ('late_fee', 'Late Fee'),
+                 ('adjustment', 'Adjustment')],
+        required=True, widget=forms.Select(attrs={'class': 'form-control'})
+    )
+
     class Meta:
         model = Payment
-        fields = ['booking', 'installment', 'amount', 'payment_date', 'payment_method',
-                  'reference_number', 'bank_name', 'cheque_number', 'cheque_date', 'notes']
+        fields = ['booking', 'installment', 'amount', 'payment_date', 'payment_method', 'payment_type',
+                  'reference_number', 'bank_name', 'cheque_number', 'cheque_date', 'notes', 'method_data']
         widgets = {
-            'booking': forms.Select(attrs={'class': 'form-control'}),
+            'booking': forms.Select(attrs={'class': 'form-control', 'id': 'id_booking'}),
             'installment': forms.Select(attrs={'class': 'form-control'}),
-            'amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': ' ', 'step': '0.01'}),
-            'payment_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'payment_method': forms.Select(attrs={'class': 'form-control'}),
+            'amount': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': ' ', 'step': '0.01', 'id': 'id_amount'}),
+            'payment_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date', 'id': 'id_payment_date'}),
+            'payment_method': forms.Select(attrs={'class': 'form-control', 'id': 'id_payment_method'}),
             'reference_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
             'bank_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
             'cheque_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
             'cheque_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': ' '}),
+            'method_data': forms.HiddenInput(attrs={'id': 'id_method_data'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -31,6 +39,7 @@ class PaymentForm(forms.ModelForm):
         self.fields['bank_name'].required = False
         self.fields['cheque_number'].required = False
         self.fields['cheque_date'].required = False
+        self.fields['method_data'].required = False
 
     def clean_amount(self):
         amount = self.cleaned_data.get('amount')

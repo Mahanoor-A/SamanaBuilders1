@@ -50,6 +50,7 @@ class Payment(models.Model):
     bounce_reason = models.TextField(blank=True)
     bounce_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     
+    method_data = models.JSONField(default=dict, blank=True, help_text="Method-specific payment details")
     unallocated_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     notes = models.TextField(blank=True)
     receipt_generated = models.BooleanField(default=False)
@@ -141,8 +142,27 @@ class Receipt(models.Model):
         if not self.receipt_number:
             from datetime import date
             today = date.today()
-            receipts_today = Receipt.objects.filter(receipt_date=today).count()
-            self.receipt_number = f'RCP-{today.year}-{str(today.month).zfill(2)}-{str(receipts_today + 1).zfill(5)}'
+            if today.month >= 7:
+                fy_start = today.year
+                fy_end = today.year + 1
+            else:
+                fy_start = today.year - 1
+                fy_end = today.year
+            fy_start_date = date(fy_start, 7, 1)
+            fy_end_date = date(fy_end, 6, 30)
+            fy_count = Receipt.objects.filter(
+                receipt_date__gte=fy_start_date,
+                receipt_date__lte=fy_end_date
+            ).count()
+            fy_short = f'{str(fy_start)[2:]}-{str(fy_end)[2:]}'
+            self.receipt_number = f'RCP-FY{fy_short}/{str(fy_count + 1).zfill(5)}'
+        
+        if not self.receipt_date:
+            if self.payment and self.payment.payment_date:
+                self.receipt_date = self.payment.payment_date
+            else:
+                from datetime import date
+                self.receipt_date = date.today()
         
         super().save(*args, **kwargs)
     

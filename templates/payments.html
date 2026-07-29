@@ -85,7 +85,7 @@
         <div class="card animate-fade-up stagger-2">
             <form method="get">
                 <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                    <div style="position:relative; flex:1; min-width:250px;">
+                    <div style="position:relative; flex:1; min-width:200px;">
                         <span style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-secondary); font-size:15px; pointer-events:none; z-index:1;">🔍</span>
                         <input type="text" name="search" value="{{ search }}"
                             style="width:100%; padding:11px 14px 11px 42px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-family:'Inter',sans-serif; background:var(--bg-input); color:var(--text-primary); outline:none; transition:all 0.3s ease; box-sizing:border-box;"
@@ -94,17 +94,21 @@
                             onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';"
                         >
                     </div>
-                    <select name="status" style="min-width:170px; height:42px; padding:0 36px 0 14px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-family:'Inter',sans-serif; background:var(--bg-input); color:var(--text-primary); appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 12px center; cursor:pointer; outline:none;">
+                    <select name="status" style="min-width:150px; height:42px; padding:0 36px 0 14px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-family:'Inter',sans-serif; background:var(--bg-input); color:var(--text-primary); appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 12px center; cursor:pointer; outline:none;">
                         <option value="">All Status</option>
-                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending Verification</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
                         <option value="verified" {% if status_filter == 'verified' %}selected{% endif %}>Verified</option>
                         <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                        <option value="bounced" {% if status_filter == 'bounced' %}selected{% endif %}>Bounced</option>
                     </select>
-                    <select name="method" style="min-width:160px; height:42px; padding:0 36px 0 14px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-family:'Inter',sans-serif; background:var(--bg-input); color:var(--text-primary); appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 12px center; cursor:pointer; outline:none;">
+                    <select name="method" style="min-width:150px; height:42px; padding:0 36px 0 14px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-family:'Inter',sans-serif; background:var(--bg-input); color:var(--text-primary); appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 12px center; cursor:pointer; outline:none;">
                         <option value="">All Methods</option>
                         <option value="cash" {% if method_filter == 'cash' %}selected{% endif %}>Cash</option>
                         <option value="bank_transfer" {% if method_filter == 'bank_transfer' %}selected{% endif %}>Bank Transfer</option>
                         <option value="cheque" {% if method_filter == 'cheque' %}selected{% endif %}>Cheque</option>
+                        <option value="jazzcash" {% if method_filter == 'jazzcash' %}selected{% endif %}>JazzCash</option>
+                        <option value="easypaisa" {% if method_filter == 'easypaisa' %}selected{% endif %}>EasyPaisa</option>
+                        <option value="raast" {% if method_filter == 'raast' %}selected{% endif %}>Raast</option>
                         <option value="online" {% if method_filter == 'online' %}selected{% endif %}>Online</option>
                     </select>
                     <button type="submit" class="btn btn-primary btn-sm" style="height:42px; padding:0 20px; white-space:nowrap;">Filter</button>
@@ -130,9 +134,11 @@
                             <th>Booking</th>
                             <th>Customer</th>
                             <th>Amount</th>
+                            <th>Type</th>
                             <th>Method</th>
                             <th>Date</th>
                             <th>Status</th>
+                            <th>Verified By</th>
                             <th class="no-sort">Actions</th>
                         </tr>
                     </thead>
@@ -143,19 +149,22 @@
                             <td>{{ payment.booking.booking_id }}</td>
                             <td>{{ payment.booking.customer.full_name }}</td>
                             <td style="font-weight:600;">Rs. {{ payment.amount|floatformat:0 }}</td>
+                            <td><span class="badge badge-secondary">{{ payment.get_payment_type_display }}</span></td>
                             <td>{{ payment.get_payment_method_display }}</td>
                             <td>{{ payment.payment_date|date:"d M Y" }}</td>
                             <td>
-                                <span class="badge badge-{% if payment.status == 'verified' %}success{% elif payment.status == 'pending' %}warning{% else %}danger{% endif %}">
+                                <span class="badge badge-{% if payment.status == 'verified' %}success{% elif payment.status == 'pending' %}warning{% elif payment.status == 'rejected' or payment.status == 'bounced' %}danger{% else %}info{% endif %}">
                                     {{ payment.get_status_display }}
                                 </span>
                             </td>
+                            <td style="font-size:13px; color:var(--text-secondary);">{% if payment.verified_by %}{{ payment.verified_by.get_full_name|default:payment.verified_by.username }}{% else %}—{% endif %}</td>
                             <td>
                                 <div class="table-actions">
+                                    <a href="{% url 'payment_detail' payment.pk %}" class="btn btn-info btn-sm" title="View">👁️</a>
                                     {% if payment.status == 'pending' %}
                                     <a href="{% url 'payment_verify' payment.pk %}" class="btn btn-success btn-sm">Verify</a>
                                     {% endif %}
-                                    <a href="{% url 'payment_delete' payment.pk %}" class="btn btn-danger btn-sm">Delete</a>
+                                    <a href="{% url 'payment_delete' payment.pk %}" class="btn btn-danger btn-sm" title="Delete">🗑️</a>
                                 </div>
                             </td>
                         </tr>

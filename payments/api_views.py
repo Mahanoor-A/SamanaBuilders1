@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.utils import timezone
 from django.db import models as db_models
 from .models import Payment, Receipt, Refund, PaymentAllocation
@@ -118,6 +119,8 @@ class PaymentViewSet(viewsets.ModelViewSet):
             # Update booking advance
             booking = payment.booking
             booking.advance_paid += payment.amount
+            if booking.remaining_balance <= 0:
+                booking.status = 'completed'
             booking.save()
         else:
             payment.status = 'rejected'
@@ -136,6 +139,31 @@ class PaymentViewSet(viewsets.ModelViewSet):
         )
         
         return Response(PaymentSerializer(payment).data)
+    
+    @action(detail=True, methods=['post'], parser_classes=[MultiPartParser, FormParser])
+    def upload_attachment(self, request, pk=None):
+        """Upload an attachment for a payment."""
+        payment = self.get_object()
+        file = request.FILES.get('file')
+        attachment_type = request.data.get('attachment_type', 'other')
+        
+        if not file:
+            return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        from .models import PaymentAttachment
+        attachment = PaymentAttachment.objects.create(
+            payment=payment,
+            file=file,
+            attachment_type=attachment_type,
+            filename=file.name,
+            uploaded_by=request.user
+        )
+        
+        from .serializers import PaymentAttachmentSerializer
+        return Response(
+            PaymentAttachmentSerializer(attachment, context={'request': request}).data,
+            status=status.HTTP_201_CREATED
+        )
     
     @action(detail=True, methods=['post'])
     def mark_bounced(self, request, pk=None):
