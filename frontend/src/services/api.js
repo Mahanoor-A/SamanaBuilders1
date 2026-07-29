@@ -27,4 +27,19 @@ export const plotService = {
   getAll: () => api.get('/plots/'),
 };
 
+export const paymentAPI = {
+  getAll: (params) => api.get('/payments/', { params }),
+  getById: (id) => api.get(`/payments/${id}/`),
+  create: (data) => api.post('/payments/', data),
+  update: (id, data) => api.put(`/payments/${id}/`, data),
+  verify: (id, data) => api.post(`/payments/${id}/verify/`, data),
+  markBounced: (id, data) => api.post(`/payments/${id}/mark_bounced/`, data),
+  delete: (id) => api.delete(`/payments/${id}/`),
+  getAttachments: (paymentId) => api.get(`/payments/${paymentId}/attachments/`),
+};
+
+export const bookingPaymentAPI = {
+  getPaymentSummary: (bookingId) => api.get(`/bookings/${bookingId}/payment-summary/`),
+};
+
 export default api;
