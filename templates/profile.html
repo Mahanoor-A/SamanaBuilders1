@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile - Samana Builders ERP{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+    <div class="top-bar">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <span class="top-bar-title">My Profile</span>
+        <div class="top-bar-actions"></div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="sidebar-brand"><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">Main Menu</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a></li>
+                <li class="nav-item"><a href="{% url 'customers' %}" class="nav-link"><span class="nav-icon">👥</span> Customers</a></li>
+                <li class="nav-item"><a href="{% url 'properties' %}" class="nav-link"><span class="nav-icon">🏗️</span> Properties</a></li>
+                <li class="nav-item"><a href="{% url 'bookings' %}" class="nav-link"><span class="nav-icon">📋</span> Bookings</a></li>
+                <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link"><span class="nav-icon">💰</span> Payments</a></li>
+            </ul>
+            <div class="nav-divider"></div>
+            <div class="nav-section">Administration</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'users' %}" class="nav-link"><span class="nav-icon">👤</span> Users</a></li>
+                <li class="nav-item"><a href="{% url 'profile' %}" class="nav-link active"><span class="nav-icon">⚙️</span> Preferences</a></li>
+                <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link"><span class="nav-icon">📝</span> Audit Logs</a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer"><a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a></div>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>My Profile</h1>
+            <div class="page-actions">
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary btn-sm">← Back to Dashboard</a>
+            </div>
+        </div>
+
+        <!-- User Info Card -->
+        <div class="card animate-fade-up">
+            <div class="card-header">
+                <h3>👤 Account Information</h3>
+            </div>
+            <div style="display:flex; align-items:center; gap:20px; margin-bottom:24px; padding-bottom:24px; border-bottom:1px solid var(--border);">
+                <div class="user-avatar" style="width:64px; height:64px; font-size:24px;">{{ user.first_name|first|default:user.username|first|upper }}{{ user.last_name|first|upper }}</div>
+                <div>
+                    <div style="font-size:20px; font-weight:700; color:var(--text-primary);">{{ user.get_full_name|default:user.username }}</div>
+                    <div style="font-size:13px; color:var(--text-secondary);">{{ user.email|default:"No email" }} · {{ user.profile.get_role_display|default:"Staff" }}</div>
+                </div>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+                    <div class="floating-group">
+                        <input type="text" name="{{ user_form.first_name.name }}" id="id_first_name" class="form-control" placeholder=" " value="{{ user_form.first_name.value|default:'' }}">
+                        <label for="id_first_name">First Name</label>
+                        {% if user_form.first_name.errors %}<div class="form-error">{{ user_form.first_name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="floating-group">
+                        <input type="text" name="{{ user_form.last_name.name }}" id="id_last_name" class="form-control" placeholder=" " value="{{ user_form.last_name.value|default:'' }}">
+                        <label for="id_last_name">Last Name</label>
+                        {% if user_form.last_name.errors %}<div class="form-error">{{ user_form.last_name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="floating-group">
+                        <input type="email" name="{{ user_form.email.name }}" id="id_email" class="form-control" placeholder=" " value="{{ user_form.email.value|default:'' }}">
+                        <label for="id_email">Email</label>
+                        {% if user_form.email.errors %}<div class="form-error">{{ user_form.email.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="floating-group">
+                        <input type="text" name="{{ profile_form.phone.name }}" id="id_phone" class="form-control" placeholder=" " value="{{ profile_form.phone.value|default:'' }}">
+                        <label for="id_phone">Phone</label>
+                        {% if profile_form.phone.errors %}<div class="form-error">{{ profile_form.phone.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="floating-group">
+                        <input type="text" name="{{ profile_form.cnic.name }}" id="id_cnic" class="form-control" placeholder=" " value="{{ profile_form.cnic.value|default:'' }}">
+                        <label for="id_cnic">CNIC</label>
+                        {% if profile_form.cnic.errors %}<div class="form-error">{{ profile_form.cnic.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                <!-- Theme Preference -->
+                <div class="card" style="margin:0 0 20px 0;">
+                    <div class="card-header">
+                        <h3>🎨 Theme Preference</h3>
+                    </div>
+                    <div style="padding:0;">
+                        <div style="font-size:13px; color:var(--text-secondary); margin-bottom:16px;">Choose your preferred interface theme. Changes apply immediately and are saved to your profile.</div>
+                        <div class="theme-picker" style="display:flex; gap:16px; flex-wrap:wrap;">
+                            {% for theme_id, theme_name in profile_form.fields.theme.choices %}
+                            <label class="theme-option" data-theme="{{ theme_id }}" onclick="selectProfileTheme('{{ theme_id }}')" style="cursor:pointer; text-align:center; padding:16px 12px; border-radius:var(--radius-md); border:2px solid var(--border); transition:all 0.3s ease; min-width:120px; flex:1;">
+                                <div class="theme-swatch" style="width:40px; height:40px; border-radius:50%; margin:0 auto 10px;
+                                    {% if theme_id == 'professional-blue' %}background:#2d5a87;
+                                    {% elif theme_id == 'modern-green' %}background:#059669;
+                                    {% elif theme_id == 'elegant-dark' %}background:#6366f1;
+                                    {% elif theme_id == 'warm-earth' %}background:#b45309;
+                                    {% elif theme_id == 'minimalist-purple' %}background:#7c3aed;{% endif %}
+                                    box-shadow:0 2px 8px rgba(0,0,0,0.15);">
+                                </div>
+                                <div style="font-size:12px; font-weight:600; color:var(--text-primary);">{{ theme_name }}</div>
+                            </label>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" name="{{ profile_form.theme.name }}" id="id_theme" value="{{ profile_form.theme.value|default:'professional-blue' }}">
+                    </div>
+                </div>
+
+                <div class="btn-group" style="padding-top:16px; border-top:1px solid var(--border);">
+                    <button type="submit" class="btn btn-primary">
+                        <span class="spinner"></span>
+                        <span class="btn-text">Save Changes</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+
+<style>
+.theme-option.selected {
+    border-color: var(--primary) !important;
+    background: var(--primary-bg) !important;
+}
+.theme-option:hover {
+    border-color: var(--border-focus);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+</style>
+
+<script>
+function selectProfileTheme(themeId) {
+    document.getElementById('id_theme').value = themeId;
+    document.querySelectorAll('.theme-option').forEach(function(el) {
+        el.classList.toggle('selected', el.dataset.theme === themeId);
+    });
+    if (typeof setTheme === 'function') {
+        setTheme(themeId);
+    } else {
+        document.documentElement.setAttribute('data-theme', themeId);
+        localStorage.setItem('samana-theme', themeId);
+        try {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/save-theme/', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.setRequestHeader('X-CSRFToken', (document.cookie.match('(^|;)\\s*csrftoken\\s*=\\s*([^;]+)') || [])[2] || '');
+            xhr.send(JSON.stringify({theme: themeId}));
+        } catch(e) {}
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var currentTheme = document.getElementById('id_theme').value;
+    document.querySelectorAll('.theme-option').forEach(function(el) {
+        if (el.dataset.theme === currentTheme) {
+            el.classList.add('selected');
+        }
+    });
+});
+</script>
+{% endblock %}

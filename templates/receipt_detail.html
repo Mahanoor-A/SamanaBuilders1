@@ -10,18 +10,11 @@
         <button class="hamburger" onclick="toggleSidebar()">☰</button>
         <span class="top-bar-title">Receipt {{ receipt.receipt_number }}</span>
         <div class="top-bar-actions">
-            <div class="theme-switcher">
-                <button class="theme-btn" data-theme="professional-blue"></button>
-                <button class="theme-btn" data-theme="modern-green"></button>
-                <button class="theme-btn" data-theme="elegant-dark"></button>
-                <button class="theme-btn" data-theme="warm-earth"></button>
-                <button class="theme-btn" data-theme="minimalist-purple"></button>
-            </div>
         </div>
     </div>
 
     <aside class="sidebar no-print">
-        <div class="sidebar-brand"><div class="brand-icon">SB</div><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
+        <div class="sidebar-brand"><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
         <nav class="sidebar-nav">
             <div class="nav-section">Main Menu</div>
             <ul class="nav-menu">
@@ -31,6 +24,11 @@
                 <li class="nav-item"><a href="{% url 'bookings' %}" class="nav-link"><span class="nav-icon">📋</span> Bookings</a></li>
                 <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link"><span class="nav-icon">💰</span> Payments</a></li>
             </ul>
+            <div class="nav-divider"></div>
+            <div class="nav-section">Administration</div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="{% url 'profile' %}" class="nav-link"><span class="nav-icon">⚙️</span> Preferences</a></li>
+            </ul>
         </nav>
         <div class="sidebar-footer"><a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a></div>
     </aside>
@@ -39,13 +37,6 @@
         <div class="page-header no-print">
             <h1>Receipt {{ receipt.receipt_number }}</h1>
             <div class="page-actions">
-                <div class="theme-switcher" style="display:flex;">
-                    <button class="theme-btn" data-theme="professional-blue"></button>
-                    <button class="theme-btn" data-theme="modern-green"></button>
-                    <button class="theme-btn" data-theme="elegant-dark"></button>
-                    <button class="theme-btn" data-theme="warm-earth"></button>
-                    <button class="theme-btn" data-theme="minimalist-purple"></button>
-                </div>
                 <button onclick="window.print()" class="btn btn-primary btn-sm">🖨️ Print Receipt</button>
                 <a href="{% url 'payment_detail' payment.pk %}" class="btn btn-secondary btn-sm">← Back to Payment</a>
             </div>
@@ -56,8 +47,7 @@
             <div class="receipt">
                 <div class="receipt-header">
                     <div class="receipt-brand">
-                        <div class="receipt-logo">SB</div>
-                        <div>
+                                                <div>
                             <div class="receipt-company">Samana Builders & Developers</div>
                             <div class="receipt-tagline">Excellence in Real Estate</div>
                         </div>

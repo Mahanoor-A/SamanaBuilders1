@@ -10,18 +10,11 @@
         <button class="hamburger" onclick="toggleSidebar()">☰</button>
         <span class="top-bar-title">{{ title }}</span>
         <div class="top-bar-actions">
-            <div class="theme-switcher">
-                <button class="theme-btn" data-theme="professional-blue"></button>
-                <button class="theme-btn" data-theme="modern-green"></button>
-                <button class="theme-btn" data-theme="elegant-dark"></button>
-                <button class="theme-btn" data-theme="warm-earth"></button>
-                <button class="theme-btn" data-theme="minimalist-purple"></button>
-            </div>
         </div>
     </div>
 
     <aside class="sidebar">
-        <div class="sidebar-brand"><div class="brand-icon">SB</div><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
+        <div class="sidebar-brand"><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
         <nav class="sidebar-nav">
             <div class="nav-section">Main Menu</div>
             <ul class="nav-menu">
@@ -35,8 +28,8 @@
             <div class="nav-section">Administration</div>
             <ul class="nav-menu">
                 <li class="nav-item"><a href="{% url 'users' %}" class="nav-link"><span class="nav-icon">👤</span> Users</a></li>
+                <li class="nav-item"><a href="{% url 'profile' %}" class="nav-link"><span class="nav-icon">⚙️</span> Preferences</a></li>
                 <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link"><span class="nav-icon">📝</span> Audit Logs</a></li>
-                <li class="nav-item"><a href="/admin/" class="nav-link"><span class="nav-icon">⚙️</span> Admin Panel</a></li>
             </ul>
         </nav>
         <div class="sidebar-footer"><a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a></div>
@@ -46,13 +39,6 @@
         <div class="page-header">
             <h1>{{ title }}</h1>
                 <div class="page-actions">
-                    <div class="theme-switcher" style="display:flex;">
-                        <button class="theme-btn" data-theme="professional-blue"></button>
-                        <button class="theme-btn" data-theme="modern-green"></button>
-                        <button class="theme-btn" data-theme="elegant-dark"></button>
-                        <button class="theme-btn" data-theme="warm-earth"></button>
-                        <button class="theme-btn" data-theme="minimalist-purple"></button>
-                    </div>
                     <a href="{% if pre_filled_booking %}{% url 'booking_detail' pre_filled_booking.pk %}{% else %}{% url 'payments' %}{% endif %}" class="btn btn-secondary btn-sm">← Back</a>
                 </div>
         </div>
@@ -261,17 +247,19 @@
                 </div>
             </div>
 
-            <!-- SECTION 6: Attachments -->
+            <!-- SECTION 6: Additional Documents -->
             <div class="card animate-fade-up mb-4">
                 <div class="card-header">
-                    <h3>📎 Attachments</h3>
+                    <h3>📎 Additional Documents</h3>
                     <span style="font-size:12px; color:var(--text-secondary);">Optional</span>
                 </div>
-                <div class="card-body" style="padding:20px;">
-                    <div class="form-group">
-                        <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Upload Files</label>
-                        <input type="file" name="attachments" multiple class="form-control" accept="image/*,.pdf" style="padding:10px;">
-                        <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">JPG, PNG, PDF up to 5MB</div>
+                <div class="card-body" style="padding:16px 20px;">
+                    <div class="upload-zone" onclick="this.querySelector('.upload-input').click()" ondrop="handleDrop(event, this)">
+                        <div class="upload-icon">📄</div>
+                        <div class="upload-label">Upload Additional Files</div>
+                        <div class="upload-hint">Click to browse or drop files — JPG, PNG, PDF (multiple allowed)</div>
+                        <input type="file" name="attachments" accept="image/*,.pdf" multiple class="upload-input" onchange="updateUploadLabels(this)">
+                        <div class="upload-filename" style="margin-top:6px;"></div>
                     </div>
                 </div>
             </div>
@@ -302,6 +290,28 @@
 .plan-btn.active { border-color:var(--primary); background:var(--primary-bg); color:var(--primary); }
 .duration-btn { padding:8px 18px; border-radius:var(--radius-sm); font-size:13px; font-weight:500; cursor:pointer; border:2px solid var(--border); background:var(--bg-card); color:var(--text-secondary); transition:all 0.3s ease; }
 .duration-btn.active { border-color:var(--primary); background:var(--primary-bg); color:var(--primary); }
+.upload-zone {
+    border:2px dashed var(--border);
+    border-radius:var(--radius-md);
+    padding:20px;
+    text-align:center;
+    background:var(--bg-card);
+    cursor:pointer;
+    transition:border-color 0.3s ease, background 0.3s ease;
+}
+.upload-zone:hover {
+    border-color:var(--primary);
+    background:var(--primary-bg);
+}
+.upload-zone.dragover {
+    border-color:var(--primary);
+    background:var(--primary-bg);
+}
+.upload-icon { font-size:28px; margin-bottom:6px; }
+.upload-label { font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:2px; }
+.upload-hint { font-size:11px; color:var(--text-secondary); }
+.upload-input { display:none; }
+.upload-filename { font-size:12px; color:var(--accent-green); margin-top:6px; font-weight:500; }
 </style>
 
 <script>
@@ -531,14 +541,62 @@ function toggleMethodFields() {
     grid.appendChild(div);
   });
 
-  // For cheque, add file upload hint
-  if (method === 'cheque') {
-    const hint = document.createElement('div');
-    hint.style.cssText = 'grid-column:span 3; font-size:12px; color:var(--text-secondary); padding:8px; background:var(--bg-card); border-radius:var(--radius-sm); border:1px dashed var(--border);';
-    hint.innerHTML = '📎 Upload Cheque Image: <input type="file" class="form-control" style="margin-top:4px;" accept="image/*">';
-    grid.appendChild(hint);
+  // Add file upload area for every method
+  var labels = {
+    cash: 'Cash Receipt Image',
+    cheque: 'Cheque Image',
+    bank_transfer: 'Bank Transfer Screenshot',
+    jazzcash: 'JazzCash Screenshot',
+    easypaisa: 'EasyPaisa Screenshot',
+    raast: 'Raast Screenshot',
+    online: 'Online Payment Screenshot',
+  };
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'grid-column:span 3; margin-top:8px;';
+  wrap.innerHTML = '<div class="upload-zone" onclick="this.querySelector(\'.upload-input\').click()" ondrop="handleDrop(event, this)">'
+    + '<div class="upload-icon">📎</div>'
+    + '<div class="upload-label">Upload ' + (labels[method] || 'Attachment') + '</div>'
+    + '<div class="upload-hint">Click to browse or drop — JPG, PNG, PDF</div>'
+    + '<input type="file" name="attachments" accept="image/*,.pdf" class="upload-input" onchange="updateUploadLabel(this)">'
+    + '<div class="upload-filename"></div>'
+    + '</div>';
+  grid.appendChild(wrap);
+}
+
+function updateUploadLabel(input) {
+  var nameEl = input.parentElement.querySelector('.upload-filename');
+  nameEl.textContent = input.files[0] ? '✓ ' + input.files[0].name : '';
+}
+
+function updateUploadLabels(input) {
+  var nameEl = input.parentElement.querySelector('.upload-filename');
+  var files = input.files;
+  if (files.length === 0) {
+    nameEl.textContent = '';
+  } else if (files.length === 1) {
+    nameEl.textContent = '✓ ' + files[0].name;
+  } else {
+    nameEl.textContent = '✓ ' + files.length + ' files selected';
   }
 }
+
+function handleDrop(e, zone) {
+  e.preventDefault();
+  zone.classList.remove('dragover');
+  var input = zone.querySelector('.upload-input');
+  if (e.dataTransfer.files.length) {
+    input.files = e.dataTransfer.files;
+    input.hasAttribute('multiple') ? updateUploadLabels(input) : updateUploadLabel(input);
+  }
+}
+
+document.addEventListener('dragenter', function(e) {
+  e.target.closest && e.target.closest('.upload-zone') && e.target.closest('.upload-zone').classList.add('dragover');
+});
+document.addEventListener('dragleave', function(e) {
+  e.target.closest && e.target.closest('.upload-zone') && e.target.closest('.upload-zone').classList.remove('dragover');
+});
+document.addEventListener('dragover', function(e) { e.preventDefault(); });
 
 // Serialize method fields on form submit
 document.getElementById('paymentForm').addEventListener('submit', function(e) {

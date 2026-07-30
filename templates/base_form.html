@@ -13,20 +13,12 @@
         <button class="hamburger" onclick="toggleSidebar()">☰</button>
         <span class="top-bar-title">{{ title }}</span>
         <div class="top-bar-actions">
-            <div class="theme-switcher">
-                <button class="theme-btn" data-theme="professional-blue"></button>
-                <button class="theme-btn" data-theme="modern-green"></button>
-                <button class="theme-btn" data-theme="elegant-dark"></button>
-                <button class="theme-btn" data-theme="warm-earth"></button>
-                <button class="theme-btn" data-theme="minimalist-purple"></button>
-            </div>
         </div>
     </div>
 
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-brand">
-            <div class="brand-icon">SB</div>
             <div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div>
         </div>
         <nav class="sidebar-nav">
@@ -42,8 +34,8 @@
             <div class="nav-section">Administration</div>
             <ul class="nav-menu">
                 <li class="nav-item"><a href="{% url 'users' %}" class="nav-link"><span class="nav-icon">👤</span> Users</a></li>
+                <li class="nav-item"><a href="{% url 'profile' %}" class="nav-link"><span class="nav-icon">⚙️</span> Preferences</a></li>
                 <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link"><span class="nav-icon">📝</span> Audit Logs</a></li>
-                <li class="nav-item"><a href="/admin/" class="nav-link"><span class="nav-icon">⚙️</span> Admin Panel</a></li>
             </ul>
         </nav>
         <div class="sidebar-footer">
@@ -56,13 +48,6 @@
         <div class="page-header">
             <h1>{{ title }}</h1>
             <div class="page-actions">
-                <div class="theme-switcher" style="display:flex;">
-                    <button class="theme-btn" data-theme="professional-blue"></button>
-                    <button class="theme-btn" data-theme="modern-green"></button>
-                    <button class="theme-btn" data-theme="elegant-dark"></button>
-                    <button class="theme-btn" data-theme="warm-earth"></button>
-                    <button class="theme-btn" data-theme="minimalist-purple"></button>
-                </div>
                 <button class="btn btn-secondary btn-sm" onclick="history.back()">← Back</button>
             </div>
         </div>

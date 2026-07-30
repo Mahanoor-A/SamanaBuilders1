@@ -10,18 +10,11 @@
         <button class="hamburger" onclick="toggleSidebar()">☰</button>
         <span class="top-bar-title">Properties</span>
         <div class="top-bar-actions">
-            <div class="theme-switcher">
-                <button class="theme-btn" data-theme="professional-blue"></button>
-                <button class="theme-btn" data-theme="modern-green"></button>
-                <button class="theme-btn" data-theme="elegant-dark"></button>
-                <button class="theme-btn" data-theme="warm-earth"></button>
-                <button class="theme-btn" data-theme="minimalist-purple"></button>
-            </div>
         </div>
     </div>
 
     <aside class="sidebar">
-        <div class="sidebar-brand"><div class="brand-icon">SB</div><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
+        <div class="sidebar-brand"><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
         <nav class="sidebar-nav">
             <div class="nav-section">Main Menu</div>
             <ul class="nav-menu">
@@ -35,8 +28,8 @@
             <div class="nav-section">Administration</div>
             <ul class="nav-menu">
                 <li class="nav-item"><a href="{% url 'users' %}" class="nav-link"><span class="nav-icon">👤</span> Users</a></li>
+                <li class="nav-item"><a href="{% url 'profile' %}" class="nav-link"><span class="nav-icon">⚙️</span> Preferences</a></li>
                 <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link"><span class="nav-icon">📝</span> Audit Logs</a></li>
-                <li class="nav-item"><a href="/admin/" class="nav-link"><span class="nav-icon">⚙️</span> Admin Panel</a></li>
             </ul>
         </nav>
         <div class="sidebar-footer"><a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a></div>
@@ -46,13 +39,6 @@
         <div class="page-header">
             <h1>Properties</h1>
             <div class="page-actions">
-                <div class="theme-switcher" style="display:flex;">
-                    <button class="theme-btn" data-theme="professional-blue"></button>
-                    <button class="theme-btn" data-theme="modern-green"></button>
-                    <button class="theme-btn" data-theme="elegant-dark"></button>
-                    <button class="theme-btn" data-theme="warm-earth"></button>
-                    <button class="theme-btn" data-theme="minimalist-purple"></button>
-                </div>
                 <a href="{% url 'project_create' %}" class="btn btn-primary btn-sm">+ Add Project</a>
                 <a href="{% url 'plot_create' %}" class="btn btn-success btn-sm">+ Add Plot</a>
             </div>
@@ -201,6 +187,9 @@
                             </td>
                             <td>
                                 <div class="table-actions">
+                                    {% if plot.status == 'available' %}
+                                    <a href="{% url 'booking_create' %}?plot_id={{ plot.pk }}" class="btn btn-success btn-sm">Book</a>
+                                    {% endif %}
                                     <a href="{% url 'plot_edit' plot.pk %}" class="btn btn-secondary btn-sm">Edit</a>
                                     <a href="{% url 'plot_delete' plot.pk %}" class="btn btn-danger btn-sm">Delete</a>
                                 </div>

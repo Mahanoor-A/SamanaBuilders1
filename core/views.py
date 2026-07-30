@@ -5,6 +5,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Sum, Count, Q
+from django.db.models.functions import TruncMonth
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
@@ -62,21 +63,47 @@ def logout_view(request):
 @login_required
 def dashboard_view(request):
     today = timezone.now().date()
-    month_ago = today - timedelta(days=30)
+    month_start = today.replace(day=1)
+    
+    verified_payments_qs = Payment.objects.filter(status='verified')
     
     # Revenue stats
-    total_revenue = Payment.objects.filter(status='verified').aggregate(total=Sum('amount'))['total'] or 0
-    monthly_revenue = Payment.objects.filter(
-        status='verified', payment_date__gte=month_ago
+    total_revenue = verified_payments_qs.aggregate(total=Sum('amount'))['total'] or 0
+    monthly_revenue = verified_payments_qs.filter(
+        payment_date__gte=month_start
     ).aggregate(total=Sum('amount'))['total'] or 0
+    
+    # Monthly revenue trend (last 6 months)
+    six_months_ago = today - timedelta(days=180)
+    monthly_data = (
+        verified_payments_qs.filter(payment_date__gte=six_months_ago)
+        .annotate(month=TruncMonth('payment_date'))
+        .values('month')
+        .annotate(total=Sum('amount'))
+        .order_by('month')
+    )
+    monthly_revenue_data = []
+    max_amount = 1
+    for entry in monthly_data:
+        amt = float(entry['total'])
+        if amt > max_amount:
+            max_amount = amt
+        monthly_revenue_data.append({
+            'label': entry['month'].strftime('%b'),
+            'amount': amt,
+        })
+    for item in monthly_revenue_data:
+        item['pct'] = round((item['amount'] / max_amount) * 100, 1)
     
     # Booking stats
     pending_bookings = Booking.objects.filter(status='pending').count()
     active_bookings = Booking.objects.filter(status__in=['confirmed', 'active']).count()
+    confirmed_bookings = Booking.objects.filter(status='confirmed').count()
+    cancelled_bookings = Booking.objects.filter(status='cancelled').count()
     
     # Payment stats
     pending_payments = Payment.objects.filter(status='pending').count()
-    verified_payments = Payment.objects.filter(status='verified').count()
+    verified_payments = verified_payments_qs.count()
     
     # Property stats
     available_plots = Plot.objects.filter(status='available').count()
@@ -86,6 +113,48 @@ def dashboard_view(request):
     # Installment stats
     overdue_installments = Installment.objects.filter(status='overdue').count()
     paid_installments = Installment.objects.filter(status='paid').count()
+    
+    # Collection rate
+    total_installment_amount = Installment.objects.aggregate(total=Sum('amount'))['total'] or 1
+    total_paid_amount = Installment.objects.aggregate(total=Sum('paid_amount'))['total'] or 0
+    collection_rate = round((total_paid_amount / total_installment_amount) * 100, 1)
+    if collection_rate > 100:
+        collection_rate = 100
+    
+    # Payment method breakdown
+    method_data = (
+        verified_payments_qs.values('payment_method')
+        .annotate(total=Sum('amount'))
+        .order_by('-total')
+    )
+    method_labels = dict(Payment.METHOD_CHOICES)
+    payment_method_data = [
+        {'method': method_labels.get(m['payment_method'], m['payment_method']), 'total': float(m['total'])}
+        for m in method_data
+    ]
+    
+    # Plots by project
+    plots_by_project = (
+        Plot.objects.values('project__name')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    plots_by_project_data = [
+        {'project': p['project__name'], 'count': p['count']}
+        for p in plots_by_project
+    ]
+    
+    # Booking status for doughnut
+    booking_status_data = [
+        {'label': 'Confirmed', 'count': confirmed_bookings, 'color': '#10b981'},
+        {'label': 'Active', 'count': active_bookings, 'color': '#3b82f6'},
+        {'label': 'Pending', 'count': pending_bookings, 'color': '#f59e0b'},
+        {'label': 'Cancelled', 'count': cancelled_bookings, 'color': '#ef4444'},
+    ]
+    
+    # Monthly target (20% above average monthly revenue)
+    months_with_data = len(monthly_revenue_data) or 1
+    monthly_target = round((float(total_revenue) / max(months_with_data, 1)) * 1.2, -4)
     
     # Staff vs admin dashboard
     user_role = None
@@ -103,13 +172,14 @@ def dashboard_view(request):
         'available_plots': available_plots,
         'booked_plots': booked_plots,
         'sold_plots': sold_plots,
+        'plots_sold': sold_plots,
         
         # Bookings
         'total_bookings': Booking.objects.count(),
         'pending_bookings': pending_bookings,
         'active_bookings': active_bookings,
-        'confirmed_bookings': Booking.objects.filter(status='confirmed').count(),
-        'cancelled_bookings': Booking.objects.filter(status='cancelled').count(),
+        'confirmed_bookings': confirmed_bookings,
+        'cancelled_bookings': cancelled_bookings,
         
         # Payments
         'total_payments': Payment.objects.count(),
@@ -117,10 +187,18 @@ def dashboard_view(request):
         'verified_payments': verified_payments,
         'total_revenue': total_revenue,
         'monthly_revenue': monthly_revenue,
+        'monthly_target': monthly_target,
         
         # Installments
         'overdue_installments': overdue_installments,
         'paid_installments': paid_installments,
+        'collection_rate': collection_rate,
+        
+        # Chart data
+        'monthly_revenue_data': monthly_revenue_data,
+        'booking_status_data': booking_status_data,
+        'payment_method_data': payment_method_data,
+        'plots_by_project_data': plots_by_project_data,
         
         # Recent records
         'recent_bookings': Booking.objects.select_related('customer', 'plot').order_by('-created_at')[:5],
@@ -397,6 +475,14 @@ def bookings_view(request):
 def booking_create_view(request):
     from bookings.forms import BookingForm
     
+    customer_id = request.GET.get('customer_id')
+    plot_id = request.GET.get('plot_id')
+    initial = {}
+    if customer_id:
+        initial['customer'] = customer_id
+    if plot_id:
+        initial['plot'] = plot_id
+    
     if request.method == 'POST':
         form = BookingForm(request.POST)
         if form.is_valid():
@@ -417,7 +503,7 @@ def booking_create_view(request):
             messages.success(request, f'Booking {booking.booking_id} created successfully!')
             return redirect('bookings')
     else:
-        form = BookingForm()
+        form = BookingForm(initial=initial)
     
     return render(request, 'booking_form.html', {'form': form, 'title': 'Create New Booking'})
 
@@ -628,13 +714,22 @@ def payment_create_view(request):
             payment.receipt_generated = True
             payment.save(update_fields=['receipt_generated'])
             
-            # Handle file attachments
+            # Handle file attachments with method-appropriate type
+            method_type_map = {
+                'cash': 'receipt_image',
+                'cheque': 'cheque_image',
+                'bank_transfer': 'payment_screenshot',
+                'jazzcash': 'payment_screenshot',
+                'easypaisa': 'payment_screenshot',
+                'raast': 'payment_screenshot',
+                'online': 'payment_screenshot',
+            }
             files = request.FILES.getlist('attachments')
             for f in files:
                 PaymentAttachment.objects.create(
                     payment=payment,
                     file=f,
-                    attachment_type='other',
+                    attachment_type=method_type_map.get(payment.payment_method, 'other'),
                     filename=f.name,
                     uploaded_by=request.user,
                 )
@@ -920,7 +1015,7 @@ def profile_view(request):
     user = request.user
     
     if request.method == 'POST':
-        user_form = UserForm(request.POST, instance=user, data={'is_active': user.is_active})
+        user_form = UserForm(request.POST, instance=user)
         # Build profile form manually
         profile = getattr(user, 'profile', None)
         if profile:

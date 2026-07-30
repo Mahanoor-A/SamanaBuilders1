@@ -10,18 +10,11 @@
         <button class="hamburger" onclick="toggleSidebar()">☰</button>
         <span class="top-bar-title">Payments</span>
         <div class="top-bar-actions">
-            <div class="theme-switcher">
-                <button class="theme-btn" data-theme="professional-blue"></button>
-                <button class="theme-btn" data-theme="modern-green"></button>
-                <button class="theme-btn" data-theme="elegant-dark"></button>
-                <button class="theme-btn" data-theme="warm-earth"></button>
-                <button class="theme-btn" data-theme="minimalist-purple"></button>
-            </div>
         </div>
     </div>
 
     <aside class="sidebar">
-        <div class="sidebar-brand"><div class="brand-icon">SB</div><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
+        <div class="sidebar-brand"><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
         <nav class="sidebar-nav">
             <div class="nav-section">Main Menu</div>
             <ul class="nav-menu">
@@ -35,8 +28,8 @@
             <div class="nav-section">Administration</div>
             <ul class="nav-menu">
                 <li class="nav-item"><a href="{% url 'users' %}" class="nav-link"><span class="nav-icon">👤</span> Users</a></li>
+                <li class="nav-item"><a href="{% url 'profile' %}" class="nav-link"><span class="nav-icon">⚙️</span> Preferences</a></li>
                 <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link"><span class="nav-icon">📝</span> Audit Logs</a></li>
-                <li class="nav-item"><a href="/admin/" class="nav-link"><span class="nav-icon">⚙️</span> Admin Panel</a></li>
             </ul>
         </nav>
         <div class="sidebar-footer"><a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a></div>
@@ -46,13 +39,6 @@
         <div class="page-header">
             <h1>Payments</h1>
             <div class="page-actions">
-                <div class="theme-switcher" style="display:flex;">
-                    <button class="theme-btn" data-theme="professional-blue"></button>
-                    <button class="theme-btn" data-theme="modern-green"></button>
-                    <button class="theme-btn" data-theme="elegant-dark"></button>
-                    <button class="theme-btn" data-theme="warm-earth"></button>
-                    <button class="theme-btn" data-theme="minimalist-purple"></button>
-                </div>
                 <a href="{% url 'payment_create' %}" class="btn btn-primary btn-sm">+ Record Payment</a>
             </div>
         </div>
@@ -146,8 +132,8 @@
                         {% for payment in payments %}
                         <tr>
                             <td><strong>{{ payment.payment_id }}</strong></td>
-                            <td>{{ payment.booking.booking_id }}</td>
-                            <td>{{ payment.booking.customer.full_name }}</td>
+                            <td><a href="{% url 'booking_detail' payment.booking.pk %}" style="font-weight:600;">{{ payment.booking.booking_id }}</a></td>
+                            <td><a href="{% url 'customer_detail' payment.booking.customer.pk %}" style="font-weight:500;">{{ payment.booking.customer.full_name }}</a></td>
                             <td style="font-weight:600;">Rs. {{ payment.amount|floatformat:0 }}</td>
                             <td><span class="badge badge-secondary">{{ payment.get_payment_type_display }}</span></td>
                             <td>{{ payment.get_payment_method_display }}</td>
@@ -163,6 +149,7 @@
                                     <a href="{% url 'payment_detail' payment.pk %}" class="btn btn-info btn-sm" title="View">👁️</a>
                                     {% if payment.status == 'pending' %}
                                     <a href="{% url 'payment_verify' payment.pk %}" class="btn btn-success btn-sm">Verify</a>
+                                    <a href="{% url 'payment_verify' payment.pk %}" class="btn btn-danger btn-sm">Reject</a>
                                     {% endif %}
                                     <a href="{% url 'payment_delete' payment.pk %}" class="btn btn-danger btn-sm" title="Delete">🗑️</a>
                                 </div>
