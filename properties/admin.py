@@ -4,9 +4,9 @@ from .models import Project, ProjectPhase, Plot, PlotFeature, PlotDocument, Pric
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ['name', 'location', 'total_plots', 'available_plots', 'booked_plots', 'sold_plots', 'is_active']
+    list_display = ['name', 'location', 'total_plots', 'status', 'available_plots', 'booked_plots', 'sold_plots']
     search_fields = ['name', 'location']
-    list_filter = ['is_active']
+    list_filter = ['status']
 
 
 @admin.register(ProjectPhase)

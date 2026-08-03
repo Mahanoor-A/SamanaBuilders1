@@ -48,7 +48,7 @@ class ProjectModelTest(TestCase):
             total_plots=100
         )
         self.assertEqual(project.name, 'Test Project')
-        self.assertTrue(project.is_active)
+        self.assertEqual(project.status, 'booking_open')
 
 
 class PlotModelTest(TestCase):

@@ -13,27 +13,7 @@
         </div>
     </div>
 
-    <aside class="sidebar">
-        <div class="sidebar-brand"><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
-        <nav class="sidebar-nav">
-            <div class="nav-section">Main Menu</div>
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a></li>
-                <li class="nav-item"><a href="{% url 'customers' %}" class="nav-link"><span class="nav-icon">👥</span> Customers</a></li>
-                <li class="nav-item"><a href="{% url 'properties' %}" class="nav-link"><span class="nav-icon">🏗️</span> Properties</a></li>
-                <li class="nav-item"><a href="{% url 'bookings' %}" class="nav-link"><span class="nav-icon">📋</span> Bookings</a></li>
-                <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link active"><span class="nav-icon">💰</span> Payments</a></li>
-            </ul>
-            <div class="nav-divider"></div>
-            <div class="nav-section">Administration</div>
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="{% url 'users' %}" class="nav-link"><span class="nav-icon">👤</span> Users</a></li>
-                <li class="nav-item"><a href="{% url 'profile' %}" class="nav-link"><span class="nav-icon">⚙️</span> Preferences</a></li>
-                <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link"><span class="nav-icon">📝</span> Audit Logs</a></li>
-            </ul>
-        </nav>
-        <div class="sidebar-footer"><a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a></div>
-    </aside>
+    {% include 'includes/sidebar.html' %}
 
     <main class="main-content">
         <div class="page-header">
@@ -47,23 +27,18 @@
         <div class="stats-grid">
             <div class="stat-card animate-fade-up stagger-1">
                 <div class="stat-icon blue">💰</div>
-                <div class="stat-value" data-target="{{ payments|length|default:0 }}">{{ payments|length|default:0 }}</div>
+                <div class="stat-value" data-target="{{ total_count|default:0 }}">{{ total_count|default:0 }}</div>
                 <div class="stat-label">Total Payments</div>
             </div>
             <div class="stat-card animate-fade-up stagger-2">
-                <div class="stat-icon green">✅</div>
-                <div class="stat-value" data-target="{{ verified_count|default:0 }}">{{ verified_count|default:0 }}</div>
-                <div class="stat-label">Verified</div>
+                <div class="stat-icon green">💵</div>
+                <div class="stat-value" data-target="{{ total_amount|default:0|floatformat:0 }}">{{ total_amount|default:0|floatformat:0 }}</div>
+                <div class="stat-label">Total Amount (Rs.)</div>
             </div>
             <div class="stat-card animate-fade-up stagger-3">
-                <div class="stat-icon amber">⏳</div>
-                <div class="stat-value" data-target="{{ pending_count|default:0 }}">{{ pending_count|default:0 }}</div>
-                <div class="stat-label">Pending Verification</div>
-            </div>
-            <div class="stat-card animate-fade-up stagger-4">
-                <div class="stat-icon red">❌</div>
-                <div class="stat-value" data-target="{{ rejected_count|default:0 }}">{{ rejected_count|default:0 }}</div>
-                <div class="stat-label">Rejected</div>
+                <div class="stat-icon amber">📅</div>
+                <div class="stat-value" data-target="{{ month_amount|default:0|floatformat:0 }}">{{ month_amount|default:0|floatformat:0 }}</div>
+                <div class="stat-label">This Month (Rs.)</div>
             </div>
         </div>
 
@@ -80,13 +55,6 @@
                             onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';"
                         >
                     </div>
-                    <select name="status" style="min-width:150px; height:42px; padding:0 36px 0 14px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-family:'Inter',sans-serif; background:var(--bg-input); color:var(--text-primary); appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 12px center; cursor:pointer; outline:none;">
-                        <option value="">All Status</option>
-                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
-                        <option value="verified" {% if status_filter == 'verified' %}selected{% endif %}>Verified</option>
-                        <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
-                        <option value="bounced" {% if status_filter == 'bounced' %}selected{% endif %}>Bounced</option>
-                    </select>
                     <select name="method" style="min-width:150px; height:42px; padding:0 36px 0 14px; border:2px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-family:'Inter',sans-serif; background:var(--bg-input); color:var(--text-primary); appearance:none; background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E&quot;); background-repeat:no-repeat; background-position:right 12px center; cursor:pointer; outline:none;">
                         <option value="">All Methods</option>
                         <option value="cash" {% if method_filter == 'cash' %}selected{% endif %}>Cash</option>
@@ -98,12 +66,22 @@
                         <option value="online" {% if method_filter == 'online' %}selected{% endif %}>Online</option>
                     </select>
                     <button type="submit" class="btn btn-primary btn-sm" style="height:42px; padding:0 20px; white-space:nowrap;">Filter</button>
-                    {% if status_filter or search or method_filter %}
+                    {% if status_filter or search or method_filter or customer_filter %}
                     <a href="{% url 'payments' %}" class="btn btn-secondary btn-sm" style="height:42px; padding:0 16px; white-space:nowrap;">Clear</a>
                     {% endif %}
                 </div>
             </form>
         </div>
+
+        {% if customer_filter %}
+        <div class="card animate-fade-up stagger-2" style="padding:12px 20px; border-left:4px solid var(--primary);">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <span style="font-size:14px; color:var(--text-secondary);">💳 Showing payments for:</span>
+                <strong style="font-size:15px;">{{ customer_filter.full_name }}</strong>
+                <span style="font-size:13px; color:var(--text-secondary);">({{ customer_filter.customer_id }})</span>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Payments List -->
         <div class="card animate-fade-up stagger-3">
@@ -123,8 +101,6 @@
                             <th>Type</th>
                             <th>Method</th>
                             <th>Date</th>
-                            <th>Status</th>
-                            <th>Verified By</th>
                             <th class="no-sort">Actions</th>
                         </tr>
                     </thead>
@@ -139,19 +115,11 @@
                             <td>{{ payment.get_payment_method_display }}</td>
                             <td>{{ payment.payment_date|date:"d M Y" }}</td>
                             <td>
-                                <span class="badge badge-{% if payment.status == 'verified' %}success{% elif payment.status == 'pending' %}warning{% elif payment.status == 'rejected' or payment.status == 'bounced' %}danger{% else %}info{% endif %}">
-                                    {{ payment.get_status_display }}
-                                </span>
-                            </td>
-                            <td style="font-size:13px; color:var(--text-secondary);">{% if payment.verified_by %}{{ payment.verified_by.get_full_name|default:payment.verified_by.username }}{% else %}—{% endif %}</td>
-                            <td>
                                 <div class="table-actions">
-                                    <a href="{% url 'payment_detail' payment.pk %}" class="btn btn-info btn-sm" title="View">👁️</a>
-                                    {% if payment.status == 'pending' %}
-                                    <a href="{% url 'payment_verify' payment.pk %}" class="btn btn-success btn-sm">Verify</a>
-                                    <a href="{% url 'payment_verify' payment.pk %}" class="btn btn-danger btn-sm">Reject</a>
+                                    <a href="{% url 'payment_detail' payment.pk %}" class="btn btn-info btn-sm" title="View payment details">View</a>
+                                    {% if payment.receipts.all %}
+                                    <a href="{% url 'receipt_detail' payment.receipts.first.pk %}" class="btn btn-secondary btn-sm" title="View receipt" onclick="window.open(this.href,'_blank');return false;">🧾</a>
                                     {% endif %}
-                                    <a href="{% url 'payment_delete' payment.pk %}" class="btn btn-danger btn-sm" title="Delete">🗑️</a>
                                 </div>
                             </td>
                         </tr>

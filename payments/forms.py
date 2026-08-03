@@ -58,22 +58,6 @@ class PaymentForm(forms.ModelForm):
         return cleaned
 
 
-class PaymentVerificationForm(forms.Form):
-    ACTION_CHOICES = [
-        ('verify', 'Verify Payment'),
-        ('reject', 'Reject Payment'),
-    ]
-    
-    action = forms.ChoiceField(
-        choices=ACTION_CHOICES,
-        widget=forms.RadioSelect(attrs={'class': 'form-check-input'})
-    )
-    notes = forms.CharField(
-        required=False,
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Verification notes...'})
-    )
-
-
 class PaymentFilterForm(forms.Form):
     STATUS_CHOICES = [
         ('', 'All Statuses'),

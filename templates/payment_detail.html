@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static humanize %}
 
 {% block title %}Payment {{ payment.payment_id }} - Samana Builders ERP{% endblock %}
 
@@ -13,27 +13,7 @@
         </div>
     </div>
 
-    <aside class="sidebar">
-        <div class="sidebar-brand"><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
-        <nav class="sidebar-nav">
-            <div class="nav-section">Main Menu</div>
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a></li>
-                <li class="nav-item"><a href="{% url 'customers' %}" class="nav-link"><span class="nav-icon">👥</span> Customers</a></li>
-                <li class="nav-item"><a href="{% url 'properties' %}" class="nav-link"><span class="nav-icon">🏗️</span> Properties</a></li>
-                <li class="nav-item"><a href="{% url 'bookings' %}" class="nav-link"><span class="nav-icon">📋</span> Bookings</a></li>
-                <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link active"><span class="nav-icon">💰</span> Payments</a></li>
-            </ul>
-            <div class="nav-divider"></div>
-            <div class="nav-section">Administration</div>
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="{% url 'users' %}" class="nav-link"><span class="nav-icon">👤</span> Users</a></li>
-                <li class="nav-item"><a href="{% url 'profile' %}" class="nav-link"><span class="nav-icon">⚙️</span> Preferences</a></li>
-                <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link"><span class="nav-icon">📝</span> Audit Logs</a></li>
-            </ul>
-        </nav>
-        <div class="sidebar-footer"><a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a></div>
-    </aside>
+    {% include 'includes/sidebar.html' %}
 
     <main class="main-content">
         <div class="page-header">
@@ -53,9 +33,7 @@
                     <div style="font-size:15px; font-weight:600; color:var(--text-primary);">
                         Status: <span class="badge badge-{% if payment.status == 'verified' %}success{% elif payment.status == 'pending' %}warning{% elif payment.status == 'rejected' or payment.status == 'bounced' %}danger{% else %}info{% endif %}" style="font-size:13px;">{{ payment.get_status_display }}</span>
                     </div>
-                    <div style="font-size:12px; color:var(--text-secondary);">
-                        {% if payment.verified_by %}Verified by {{ payment.verified_by.get_full_name|default:payment.verified_by.username }}{% elif payment.status == 'pending' %}Awaiting verification{% endif %}
-                    </div>
+                    <div style="font-size:12px; color:var(--text-secondary);">Recorded by {{ payment.created_by.get_full_name|default:payment.created_by.username }}</div>
                 </div>
             </div>
             <div style="text-align:right;">
@@ -278,25 +256,6 @@
                 </div>
                 {% endif %}
 
-                <!-- Verification Info -->
-                <div class="card" style="margin:0;">
-                    <div class="card-header"><h3>🔐 Verification</h3></div>
-                    <div class="detail-grid" style="border:none; padding:16px;">
-                        <div class="detail-item">
-                            <div class="detail-label">Status</div>
-                            <div class="detail-value"><span class="badge badge-{% if payment.status == 'verified' %}success{% elif payment.status == 'pending' %}warning{% elif payment.status == 'rejected' or payment.status == 'bounced' %}danger{% else %}info{% endif %}">{{ payment.get_status_display }}</span></div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Verified By</div>
-                            <div class="detail-value">{% if payment.verified_by %}{{ payment.verified_by.get_full_name|default:payment.verified_by.username }}{% else %}—{% endif %}</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">Verified At</div>
-                            <div class="detail-value">{{ payment.verified_at|date:"d M Y H:i"|default:"—" }}</div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Receipt Info -->
                 <div class="card" style="margin:0;">
                     <div class="card-header"><h3>🧾 Receipt</h3></div>
@@ -334,6 +293,54 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Customer Payment History -->
+        <div class="card animate-fade-up" style="margin-top:20px;">
+            <div class="card-header">
+                <h3>💳 Payment History — {{ payment.booking.customer.full_name }}</h3>
+                <span class="badge badge-info">{{ customer_payments|length }} payment{{ customer_payments|length|pluralize }}</span>
+            </div>
+            {% if customer_payments %}
+            <div class="table-container">
+                <table class="sortable">
+                    <thead>
+                        <tr>
+                            <th>Payment ID</th>
+                            <th>Booking</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th class="no-sort">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cp in customer_payments %}
+                        <tr{% if cp.pk == payment.pk %} style="background:var(--primary-bg);"{% endif %}>
+                            <td><strong>{{ cp.payment_id }}</strong></td>
+                            <td>{{ cp.booking.booking_id }}</td>
+                            <td>Rs. {{ cp.amount|floatformat:0|intcomma }}</td>
+                            <td>{{ cp.get_payment_method_display }}</td>
+                            <td>{{ cp.payment_date|date:"d M Y" }}</td>
+                            <td>
+                                <span class="badge badge-{% if cp.status == 'verified' %}success{% elif cp.status == 'pending' or cp.status == 'under_clearing' %}warning{% elif cp.status == 'rejected' or cp.status == 'bounced' or cp.status == 'reversed' %}danger{% else %}info{% endif %}">
+                                    {{ cp.get_status_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if cp.pk == payment.pk %}
+                                <span class="badge badge-info">Current</span>
+                                {% else %}
+                                <a href="{% url 'payment_detail' cp.pk %}" class="btn btn-secondary btn-sm">View</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
         </div>
     </main>
 </div>

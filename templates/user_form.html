@@ -1,2 +1,179 @@
-{% extends 'base_form.html' %}
+{% extends 'base.html' %}
+{% load static %}
+
 {% block title %}{{ title }} - Samana Builders ERP{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <div class="top-bar">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <span class="top-bar-title">{{ title }}</span>
+        <div class="top-bar-actions">
+        </div>
+    </div>
+
+    {% include 'includes/sidebar.html' %}
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>{{ title }}</h1>
+            <div class="page-actions">
+                <a href="{% url 'users' %}" class="btn btn-secondary btn-sm">← Back to Users</a>
+            </div>
+        </div>
+
+        {% if form.errors %}
+        <div class="alert alert-error animate-slide-right">
+            <span>⚠️</span>
+            <span>Please correct the errors below.</span>
+        </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <!-- Account Credentials -->
+            <div class="card animate-fade-up">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border);">
+                    <div style="width:48px; height:48px; border-radius:12px; background:var(--primary-bg); display:flex; align-items:center; justify-content:center; font-size:24px;">🔐</div>
+                    <div>
+                        <h3 style="font-size:16px; font-weight:600; color:var(--text-primary);">Account Credentials</h3>
+                        <p style="font-size:13px; color:var(--text-secondary);">Login details for the user</p>
+                    </div>
+                </div>
+
+                {% if form.username %}
+                <div class="form-row">
+                    <div class="floating-group">
+                        {{ form.username }}
+                        <label for="{{ form.username.id_for_label }}">Username <span style="color:var(--accent-red);">*</span></label>
+                        {% if form.username.errors %}
+                        <div class="form-error">{% for error in form.username.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="floating-group">
+                        {{ form.email }}
+                        <label for="{{ form.email.id_for_label }}">Email Address <span style="color:var(--accent-red);">*</span></label>
+                        {% if form.email.errors %}
+                        <div class="form-error">{% for error in form.email.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="floating-group">
+                        {{ form.password }}
+                        <label for="{{ form.password.id_for_label }}">Password <span style="color:var(--accent-red);">*</span></label>
+                        {% if form.password.errors %}
+                        <div class="form-error">{% for error in form.password.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="floating-group">
+                        {{ form.password_confirm }}
+                        <label for="{{ form.password_confirm.id_for_label }}">Confirm Password <span style="color:var(--accent-red);">*</span></label>
+                        {% if form.password_confirm.errors %}
+                        <div class="form-error">{% for error in form.password_confirm.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if form.new_password %}
+                <div class="form-row">
+                    <div class="floating-group">
+                        {{ form.new_password }}
+                        <label for="{{ form.new_password.id_for_label }}">New Password</label>
+                        {% if form.new_password.errors %}
+                        <div class="form-error">{% for error in form.new_password.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="floating-group">
+                        {{ form.confirm_password }}
+                        <label for="{{ form.confirm_password.id_for_label }}">Confirm New Password</label>
+                        {% if form.confirm_password.errors %}
+                        <div class="form-error">{% for error in form.confirm_password.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Personal Information -->
+            <div class="card animate-fade-up stagger-1">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border);">
+                    <div style="width:48px; height:48px; border-radius:12px; background:var(--stat-green-bg); display:flex; align-items:center; justify-content:center; font-size:24px;">👤</div>
+                    <div>
+                        <h3 style="font-size:16px; font-weight:600; color:var(--text-primary);">Personal Information</h3>
+                        <p style="font-size:13px; color:var(--text-secondary);">Profile and role details</p>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="floating-group">
+                        {{ form.first_name }}
+                        <label for="{{ form.first_name.id_for_label }}">First Name <span style="color:var(--accent-red);">*</span></label>
+                        {% if form.first_name.errors %}
+                        <div class="form-error">{% for error in form.first_name.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="floating-group">
+                        {{ form.last_name }}
+                        <label for="{{ form.last_name.id_for_label }}">Last Name <span style="color:var(--accent-red);">*</span></label>
+                        {% if form.last_name.errors %}
+                        <div class="form-error">{% for error in form.last_name.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Role <span style="color:var(--accent-red);">*</span></label>
+                        {{ form.role }}
+                        {% if form.role.errors %}
+                        <div class="form-error">{% for error in form.role.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                        {% if form.username and form.role.help_text %}
+                        <div class="form-hint">{{ form.role.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="floating-group">
+                        {{ form.phone }}
+                        <label for="{{ form.phone.id_for_label }}">Phone Number</label>
+                        {% if form.phone.errors %}
+                        <div class="form-error">{% for error in form.phone.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="floating-group">
+                    {{ form.cnic }}
+                    <label for="{{ form.cnic.id_for_label }}">CNIC Number</label>
+                    {% if form.cnic.errors %}
+                    <div class="form-error">{% for error in form.cnic.errors %}{{ error }}{% endfor %}</div>
+                    {% endif %}
+                </div>
+
+                {% if form.is_active %}
+                <div class="form-check" style="margin-top:4px;">
+                    {{ form.is_active }}
+                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Account Active</label>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Submit -->
+            <div class="card animate-fade-up stagger-2" style="border:none; background:transparent; box-shadow:none; padding:0;">
+                <div class="btn-group" style="justify-content:flex-end;">
+                    <a href="{% url 'users' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <span class="spinner"></span>
+                        <span class="btn-text">{% if "Edit" in title %}Update User{% else %}Create User{% endif %}</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </main>
+</div>
+{% endblock %}

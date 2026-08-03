@@ -81,6 +81,7 @@ class ProjectPhaseSerializer(serializers.ModelSerializer):
 
 
 class ProjectSerializer(serializers.ModelSerializer):
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
     available_plots = serializers.ReadOnlyField()
     booked_plots = serializers.ReadOnlyField()
     sold_plots = serializers.ReadOnlyField()
@@ -89,6 +90,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ['id', 'name', 'description', 'location', 'total_plots',
-                  'is_active', 'available_plots', 'booked_plots', 'sold_plots',
+                  'status', 'status_display', 'available_plots', 'booked_plots', 'sold_plots',
                   'phases', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']

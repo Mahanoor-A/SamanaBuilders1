@@ -13,7 +13,7 @@ from .serializers import (
 
 
 class IsStaffReadAdminWrite(permissions.BasePermission):
-    """Staff can read and create, only admin can verify/delete."""
+    """Finance roles can read and create, only management can verify/delete."""
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
@@ -22,7 +22,7 @@ class IsStaffReadAdminWrite(permissions.BasePermission):
         if request.user.is_superuser:
             return True
         if hasattr(request.user, 'profile'):
-            return request.user.profile.role in ['super_admin', 'admin', 'staff']
+            return request.user.profile.role in ['super_admin', 'admin', 'management', 'accounts']
         return False
     
     def has_object_permission(self, request, view, obj):
@@ -30,7 +30,7 @@ class IsStaffReadAdminWrite(permissions.BasePermission):
             if request.user.is_superuser:
                 return True
             if hasattr(request.user, 'profile'):
-                return request.user.profile.role in ['super_admin', 'admin']
+                return request.user.profile.role in ['super_admin', 'admin', 'management']
             return False
         return True
 

@@ -15,6 +15,7 @@ urlpatterns = [
     
     # Dashboard
     path('dashboard/', core_views.dashboard_view, name='dashboard'),
+    path('dashboard/revenue-trend/', core_views.revenue_trend_view, name='revenue_trend_data'),
     
     # Customers
     path('customers/', core_views.customers_view, name='customers'),
@@ -46,8 +47,6 @@ urlpatterns = [
     path('payments/', core_views.payments_view, name='payments'),
     path('payments/create/', core_views.payment_create_view, name='payment_create'),
     path('payments/<int:pk>/', core_views.payment_detail_view, name='payment_detail'),
-    path('payments/<int:pk>/verify/', core_views.payment_verify_view, name='payment_verify'),
-    path('payments/<int:pk>/delete/', core_views.payment_delete_view, name='payment_delete'),
     
     # Receipts
     path('receipts/<int:pk>/', core_views.receipt_detail_view, name='receipt_detail'),
@@ -56,8 +55,13 @@ urlpatterns = [
     path('users/', core_views.users_view, name='users'),
     path('users/create/', core_views.user_create_view, name='user_create'),
     path('users/<int:pk>/edit/', core_views.user_edit_view, name='user_edit'),
+    path('users/<int:pk>/role/', core_views.user_role_update_view, name='user_role_update'),
     path('users/<int:pk>/toggle-active/', core_views.user_deactivate_view, name='user_deactivate'),
     path('audit-logs/', core_views.audit_logs_view, name='audit_logs'),
+
+    # Backup
+    path('backup/', core_views.backup_view, name='backup'),
+    path('backup/download/', core_views.backup_download_view, name='backup_download'),
     
     # Profile
     path('profile/', core_views.profile_view, name='profile'),

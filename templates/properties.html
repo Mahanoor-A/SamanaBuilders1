@@ -13,27 +13,7 @@
         </div>
     </div>
 
-    <aside class="sidebar">
-        <div class="sidebar-brand"><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
-        <nav class="sidebar-nav">
-            <div class="nav-section">Main Menu</div>
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a></li>
-                <li class="nav-item"><a href="{% url 'customers' %}" class="nav-link"><span class="nav-icon">👥</span> Customers</a></li>
-                <li class="nav-item"><a href="{% url 'properties' %}" class="nav-link active"><span class="nav-icon">🏗️</span> Properties</a></li>
-                <li class="nav-item"><a href="{% url 'bookings' %}" class="nav-link"><span class="nav-icon">📋</span> Bookings</a></li>
-                <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link"><span class="nav-icon">💰</span> Payments</a></li>
-            </ul>
-            <div class="nav-divider"></div>
-            <div class="nav-section">Administration</div>
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="{% url 'users' %}" class="nav-link"><span class="nav-icon">👤</span> Users</a></li>
-                <li class="nav-item"><a href="{% url 'profile' %}" class="nav-link"><span class="nav-icon">⚙️</span> Preferences</a></li>
-                <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link"><span class="nav-icon">📝</span> Audit Logs</a></li>
-            </ul>
-        </nav>
-        <div class="sidebar-footer"><a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a></div>
-    </aside>
+    {% include 'includes/sidebar.html' %}
 
     <main class="main-content">
         <div class="page-header">
@@ -127,14 +107,16 @@
                                 <span style="font-weight:600; color:var(--accent-green);">{{ project.available_plots }}</span>
                             </td>
                             <td>
-                                <span class="badge badge-{% if project.is_active %}success{% else %}secondary{% endif %}">
-                                    {% if project.is_active %}Active{% else %}Inactive{% endif %}
+                                <span class="badge badge-{% if project.status == 'coming_soon' %}info{% elif project.status == 'booking_open' %}success{% elif project.status == 'under_construction' %}warning{% elif project.status == 'completed' %}secondary{% else %}danger{% endif %}">
+                                    {{ project.get_status_display }}
                                 </span>
                             </td>
                             <td>
                                 <div class="table-actions">
                                     <a href="{% url 'project_edit' project.pk %}" class="btn btn-secondary btn-sm">Edit</a>
+                                    {% if can_delete %}
                                     <a href="{% url 'project_delete' project.pk %}" class="btn btn-danger btn-sm">Delete</a>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>
@@ -191,7 +173,9 @@
                                     <a href="{% url 'booking_create' %}?plot_id={{ plot.pk }}" class="btn btn-success btn-sm">Book</a>
                                     {% endif %}
                                     <a href="{% url 'plot_edit' plot.pk %}" class="btn btn-secondary btn-sm">Edit</a>
+                                    {% if can_delete %}
                                     <a href="{% url 'plot_delete' plot.pk %}" class="btn btn-danger btn-sm">Delete</a>
+                                    {% endif %}
                                 </div>
                             </td>
                         </tr>

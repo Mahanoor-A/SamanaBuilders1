@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load payment_tags %}
 
 {% block title %}Receipt {{ receipt.receipt_number }} - Samana Builders ERP{% endblock %}
 
@@ -13,25 +14,7 @@
         </div>
     </div>
 
-    <aside class="sidebar no-print">
-        <div class="sidebar-brand"><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
-        <nav class="sidebar-nav">
-            <div class="nav-section">Main Menu</div>
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a></li>
-                <li class="nav-item"><a href="{% url 'customers' %}" class="nav-link"><span class="nav-icon">👥</span> Customers</a></li>
-                <li class="nav-item"><a href="{% url 'properties' %}" class="nav-link"><span class="nav-icon">🏗️</span> Properties</a></li>
-                <li class="nav-item"><a href="{% url 'bookings' %}" class="nav-link"><span class="nav-icon">📋</span> Bookings</a></li>
-                <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link"><span class="nav-icon">💰</span> Payments</a></li>
-            </ul>
-            <div class="nav-divider"></div>
-            <div class="nav-section">Administration</div>
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="{% url 'profile' %}" class="nav-link"><span class="nav-icon">⚙️</span> Preferences</a></li>
-            </ul>
-        </nav>
-        <div class="sidebar-footer"><a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a></div>
-    </aside>
+    {% include 'includes/sidebar.html' with sidebar_class="no-print" %}
 
     <main class="main-content">
         <div class="page-header no-print">
@@ -163,24 +146,24 @@
                     <div class="receipt-section-title">Payment Method Details</div>
                     <table class="receipt-info-table">
                         {% if payment.payment_method == 'cash' %}
-                        <tr><td class="info-label">Received By</td><td class="info-value">{{ payment.method_data.received_by|default:payment.created_by.get_full_name }}</td></tr>
+                        <tr><td class="info-label">Received By</td><td class="info-value">{{ payment.method_data|get_item:'received_by'|default:payment.created_by.get_full_name }}</td></tr>
                         {% elif payment.payment_method == 'cheque' %}
-                        <tr><td class="info-label">Bank Name</td><td class="info-value">{{ payment.bank_name|default:payment.method_data.bank_name|default:"—" }}</td></tr>
-                        <tr><td class="info-label">Cheque Number</td><td class="info-value">{{ payment.cheque_number|default:payment.method_data.cheque_number|default:"—" }}</td></tr>
-                        <tr><td class="info-label">Cheque Date</td><td class="info-value">{{ payment.cheque_date|date:"d M Y"|default:payment.method_data.cheque_date|default:"—" }}</td></tr>
+                        <tr><td class="info-label">Bank Name</td><td class="info-value">{{ payment.bank_name|default:payment.method_data|get_item:'bank_name'|default:"—" }}</td></tr>
+                        <tr><td class="info-label">Cheque Number</td><td class="info-value">{{ payment.cheque_number|default:payment.method_data|get_item:'cheque_number'|default:"—" }}</td></tr>
+                        <tr><td class="info-label">Cheque Date</td><td class="info-value">{{ payment.cheque_date|date:"d M Y"|default:payment.method_data|get_item:'cheque_date'|default:"—" }}</td></tr>
                         {% elif payment.payment_method == 'bank_transfer' %}
-                        <tr><td class="info-label">Company Account</td><td class="info-value">{{ payment.method_data.company_account_title|default:"—" }} ({{ payment.method_data.company_account_number|default:"—" }})</td></tr>
-                        <tr><td class="info-label">Sender</td><td class="info-value">{{ payment.method_data.sender_account_name|default:"—" }}</td></tr>
-                        <tr><td class="info-label">Reference</td><td class="info-value">{{ payment.reference_number|default:payment.method_data.reference_number|default:"—" }}</td></tr>
+                        <tr><td class="info-label">Company Account</td><td class="info-value">{{ payment.method_data|get_item:'company_account_title'|default:"—" }} ({{ payment.method_data|get_item:'company_account_number'|default:"—" }})</td></tr>
+                        <tr><td class="info-label">Sender</td><td class="info-value">{{ payment.method_data|get_item:'sender_account_name'|default:"—" }}</td></tr>
+                        <tr><td class="info-label">Reference</td><td class="info-value">{{ payment.reference_number|default:payment.method_data|get_item:'reference_number'|default:"—" }}</td></tr>
                         {% elif payment.payment_method == 'jazzcash' or payment.payment_method == 'easypaisa' %}
-                        <tr><td class="info-label">Transaction ID</td><td class="info-value">{{ payment.method_data.transaction_id|default:"—" }}</td></tr>
-                        <tr><td class="info-label">Customer Mobile</td><td class="info-value">{{ payment.method_data.customer_mobile|default:"—" }}</td></tr>
+                        <tr><td class="info-label">Transaction ID</td><td class="info-value">{{ payment.method_data|get_item:'transaction_id'|default:"—" }}</td></tr>
+                        <tr><td class="info-label">Customer Mobile</td><td class="info-value">{{ payment.method_data|get_item:'customer_mobile'|default:"—" }}</td></tr>
                         {% elif payment.payment_method == 'raast' %}
-                        <tr><td class="info-label">Transaction ID</td><td class="info-value">{{ payment.method_data.transaction_id|default:"—" }}</td></tr>
-                        <tr><td class="info-label">Customer Raast ID</td><td class="info-value">{{ payment.method_data.customer_raast_id|default:"—" }}</td></tr>
+                        <tr><td class="info-label">Transaction ID</td><td class="info-value">{{ payment.method_data|get_item:'transaction_id'|default:"—" }}</td></tr>
+                        <tr><td class="info-label">Customer Raast ID</td><td class="info-value">{{ payment.method_data|get_item:'customer_raast_id'|default:"—" }}</td></tr>
                         {% elif payment.payment_method == 'online' %}
-                        <tr><td class="info-label">Gateway</td><td class="info-value">{{ payment.method_data.gateway_name|default:"—" }}</td></tr>
-                        <tr><td class="info-label">Transaction ID</td><td class="info-value">{{ payment.method_data.transaction_id|default:"—" }}</td></tr>
+                        <tr><td class="info-label">Gateway</td><td class="info-value">{{ payment.method_data|get_item:'gateway_name'|default:"—" }}</td></tr>
+                        <tr><td class="info-label">Transaction ID</td><td class="info-value">{{ payment.method_data|get_item:'transaction_id'|default:"—" }}</td></tr>
                         {% endif %}
                         {% if payment.notes %}
                         <tr><td class="info-label">Notes</td><td class="info-value">{{ payment.notes }}</td></tr>
@@ -202,12 +185,9 @@
                     </div>
                 </div>
 
-                <div class="receipt-stamp">
-                    <div class="stamp-text">SAMANA BUILDERS</div>
-                </div>
-
                 <div class="receipt-notice">
-                    This is a computer-generated receipt. For any queries, please contact the accounts department.
+                    <div class="receipt-contact">Office No. 207, 2nd Floor, Shayan Iconic Tower | Plot No. 5-A | Delhi Mercantile Cooperative Society | Karachi, Pakistan</div>
+                    <div class="receipt-email">info@samanabuilders.com</div>
                 </div>
             </div>
         </div>
@@ -399,28 +379,6 @@
     font-size: 11px;
     color: #64748b;
 }
-.receipt-stamp {
-    position: absolute;
-    bottom: 60px;
-    right: 50px;
-    width: 140px;
-    height: 140px;
-    border: 3px solid rgba(30, 64, 175, 0.15);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transform: rotate(-15deg);
-    opacity: 0.3;
-    pointer-events: none;
-}
-.stamp-text {
-    font-size: 14px;
-    font-weight: 800;
-    color: #1e40af;
-    text-align: center;
-    line-height: 1.3;
-}
 .receipt-notice {
     text-align: center;
     font-size: 11px;
@@ -429,13 +387,23 @@
     padding-top: 16px;
     border-top: 1px solid #e2e8f0;
 }
+.receipt-contact {
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.5;
+}
+.receipt-email {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 3px;
+    font-weight: 600;
+}
 
 @media print {
     .no-print { display: none !important; }
     body { background: #fff; }
     .receipt-wrapper { padding: 0; max-width: 100%; }
     .receipt { border: none; border-radius: 0; padding: 20px 30px; box-shadow: none; }
-    .receipt-stamp { opacity: 0.2; }
     @page { margin: 15mm; }
 }
 </style>

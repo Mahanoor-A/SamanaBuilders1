@@ -3,11 +3,19 @@ from django.contrib.auth.models import User
 
 
 class Project(models.Model):
+    STATUS_CHOICES = [
+        ('coming_soon', 'Coming Soon'),
+        ('booking_open', 'Booking Open'),
+        ('under_construction', 'Under Construction'),
+        ('completed', 'Completed'),
+        ('inactive', 'Inactive'),
+    ]
+
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     location = models.CharField(max_length=200)
     total_plots = models.PositiveIntegerField(default=0)
-    is_active = models.BooleanField(default=True)
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='booking_open')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

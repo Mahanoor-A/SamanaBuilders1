@@ -4,7 +4,6 @@ from decimal import Decimal
 from datetime import date
 from .models import Payment, Receipt
 from .forms import PaymentForm
-from .serializers import PaymentVerificationSerializer
 from customers.models import Customer
 from properties.models import Project, Plot
 from bookings.models import Booking
@@ -33,7 +32,8 @@ class PaymentFormTest(TestCase):
             'booking': self.booking.pk,
             'amount': '100000',
             'payment_date': date.today().isoformat(),
-            'payment_method': 'cash'
+            'payment_method': 'cash',
+            'payment_type': 'down_payment'
         }
         form = PaymentForm(data=form_data)
         self.assertTrue(form.is_valid())
@@ -84,56 +84,72 @@ class PaymentViewTest(TestCase):
             'booking': self.booking.pk,
             'amount': '100000',
             'payment_date': date.today().isoformat(),
-            'payment_method': 'cash'
+            'payment_method': 'cash',
+            'payment_type': 'down_payment'
         })
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Payment.objects.count(), 1)
-    
-    def test_payment_verify_view(self):
-        payment = Payment.objects.create(
-            booking=self.booking,
-            amount=Decimal('100000'),
-            payment_date=date.today(),
-            payment_method='cash',
-            created_by=self.user
-        )
-        response = self.client.get(f'/payments/{payment.pk}/verify/')
-        self.assertEqual(response.status_code, 200)
-    
-    def test_payment_verification_post(self):
-        payment = Payment.objects.create(
-            booking=self.booking,
-            amount=Decimal('100000'),
-            payment_date=date.today(),
-            payment_method='cash',
-            created_by=self.user
-        )
-        response = self.client.post(f'/payments/{payment.pk}/verify/', {
-            'action': 'verify',
-            'notes': 'Payment verified'
-        })
-        self.assertEqual(response.status_code, 302)
-        
-        payment.refresh_from_db()
+
+        payment = Payment.objects.get()
         self.assertEqual(payment.status, 'verified')
-        
-        # Check booking advance updated
+
         self.booking.refresh_from_db()
         self.assertEqual(self.booking.advance_paid, Decimal('100000'))
-    
-    def test_payment_rejection(self):
-        payment = Payment.objects.create(
+
+
+class ReceiptTest(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user('testuser', 'test@example.com', 'testpass123', is_superuser=True)
+        self.client.login(username='testuser', password='testpass123')
+        self.customer = Customer.objects.create(
+            first_name='Ahmed', last_name='Khan',
+            phone='+92-300-1234567', cnic='35202-1234567-1',
+            created_by=self.user
+        )
+        self.project = Project.objects.create(name='Test', location='Lahore')
+        self.plot = Plot.objects.create(
+            plot_number='A-101', project=self.project,
+            size_marla=Decimal('5.00'), price=Decimal('5000000')
+        )
+        self.booking = Booking.objects.create(
+            customer=self.customer, plot=self.plot,
+            total_amount=Decimal('5000000'), created_by=self.user
+        )
+        self.payment = Payment.objects.create(
             booking=self.booking,
             amount=Decimal('100000'),
             payment_date=date.today(),
-            payment_method='cash',
+            payment_method='bank_transfer',
+            reference_number='',
+            method_data={},
+            status='verified',
             created_by=self.user
         )
-        response = self.client.post(f'/payments/{payment.pk}/verify/', {
-            'action': 'reject',
-            'notes': 'Invalid payment'
-        })
-        self.assertEqual(response.status_code, 302)
-        
-        payment.refresh_from_db()
-        self.assertEqual(payment.status, 'rejected')
+
+    def test_receipt_number_sequential(self):
+        r1 = Receipt.objects.create(payment=self.payment, generated_by=self.user)
+        r2 = Receipt.objects.create(payment=self.payment, generated_by=self.user)
+        self.assertNotEqual(r1.receipt_number, r2.receipt_number)
+        self.assertTrue(r1.receipt_number.endswith('00001') or r2.receipt_number.endswith('00001'))
+
+    def test_receipt_number_unique(self):
+        r1 = Receipt.objects.create(payment=self.payment, generated_by=self.user)
+        r2 = Receipt.objects.create(payment=self.payment, generated_by=self.user)
+        self.assertNotEqual(r1.receipt_number, r2.receipt_number)
+
+    def test_receipt_renders_with_empty_method_data(self):
+        receipt = Receipt.objects.create(payment=self.payment, generated_by=self.user)
+        response = self.client.get(f'/receipts/{receipt.pk}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, receipt.receipt_number)
+        self.assertContains(response, 'info@samanabuilders.com')
+        self.assertNotContains(response, 'computer-generated')
+
+    def test_receipt_renders_with_method_data(self):
+        self.payment.method_data = {'company_account_title': 'Samana', 'company_account_number': '012345'}
+        self.payment.save()
+        receipt = Receipt.objects.create(payment=self.payment, generated_by=self.user)
+        response = self.client.get(f'/receipts/{receipt.pk}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Samana')

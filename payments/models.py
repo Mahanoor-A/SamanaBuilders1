@@ -29,6 +29,10 @@ class Payment(models.Model):
         ('down_payment', 'Down Payment'),
         ('installment', 'Installment'),
         ('full_payment', 'Full Payment'),
+        ('advance', 'Advance'),
+        ('final_payment', 'Final Payment'),
+        ('late_fee', 'Late Fee'),
+        ('adjustment', 'Adjustment'),
         ('other', 'Other'),
     ]
     
@@ -121,7 +125,7 @@ class Refund(models.Model):
 class Receipt(models.Model):
     receipt_id = models.CharField(max_length=20, unique=True, editable=False)
     payment = models.ForeignKey(Payment, on_delete=models.CASCADE, related_name='receipts')
-    receipt_number = models.CharField(max_length=50, blank=True)
+    receipt_number = models.CharField(max_length=50, blank=True, unique=True)
     receipt_date = models.DateField(default=None, null=True, blank=True)
     generated_at = models.DateTimeField(auto_now_add=True)
     generated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
@@ -138,32 +142,35 @@ class Receipt(models.Model):
                 self.receipt_id = f'RCP-{str(last_num + 1).zfill(5)}'
             else:
                 self.receipt_id = 'RCP-00001'
-        
-        if not self.receipt_number:
-            from datetime import date
-            today = date.today()
-            if today.month >= 7:
-                fy_start = today.year
-                fy_end = today.year + 1
-            else:
-                fy_start = today.year - 1
-                fy_end = today.year
-            fy_start_date = date(fy_start, 7, 1)
-            fy_end_date = date(fy_end, 6, 30)
-            fy_count = Receipt.objects.filter(
-                receipt_date__gte=fy_start_date,
-                receipt_date__lte=fy_end_date
-            ).count()
-            fy_short = f'{str(fy_start)[2:]}-{str(fy_end)[2:]}'
-            self.receipt_number = f'RCP-FY{fy_short}/{str(fy_count + 1).zfill(5)}'
-        
+
         if not self.receipt_date:
             if self.payment and self.payment.payment_date:
                 self.receipt_date = self.payment.payment_date
             else:
                 from datetime import date
                 self.receipt_date = date.today()
-        
+
+        if not self.receipt_number:
+            from datetime import date
+            ref_date = self.receipt_date or date.today()
+            if ref_date.month >= 7:
+                fy_start = ref_date.year
+                fy_end = ref_date.year + 1
+            else:
+                fy_start = ref_date.year - 1
+                fy_end = ref_date.year
+            fy_short = f'{str(fy_start)[2:]}-{str(fy_end)[2:]}'
+            prefix = f'RCP-FY{fy_short}/'
+            last = Receipt.objects.filter(receipt_number__startswith=prefix).order_by('-receipt_number').first()
+            if last:
+                try:
+                    next_num = int(last.receipt_number.rsplit('/', 1)[1]) + 1
+                except (ValueError, IndexError):
+                    next_num = 1
+            else:
+                next_num = 1
+            self.receipt_number = f'{prefix}{str(next_num).zfill(5)}'
+
         super().save(*args, **kwargs)
     
     def __str__(self):

@@ -5,13 +5,13 @@ from .models import Project, ProjectPhase, Plot, PlotFeature
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
-        fields = ['name', 'description', 'location', 'total_plots', 'is_active']
+        fields = ['name', 'description', 'location', 'total_plots', 'status']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': ' '}),
             'location': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
             'total_plots': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': ' '}),
-            'is_active': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
         }
 
 
@@ -71,7 +71,7 @@ class PlotForm(forms.ModelForm):
 
 class PlotBulkCreateForm(forms.Form):
     project = forms.ModelChoiceField(
-        queryset=Project.objects.filter(is_active=True),
+        queryset=Project.objects.exclude(status='inactive'),
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     block = forms.CharField(

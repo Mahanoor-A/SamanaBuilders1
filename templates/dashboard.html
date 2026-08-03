@@ -17,68 +17,7 @@
     </div>
 
     <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-brand">
-            <div class="brand-text">
-                <h2>Samana Builders</h2>
-                <p>Real Estate ERP</p>
-            </div>
-        </div>
-        <nav class="sidebar-nav">
-            <div class="nav-section">Main Menu</div>
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="{% url 'dashboard' %}" class="nav-link active">
-                        <span class="nav-icon">📊</span> Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{% url 'customers' %}" class="nav-link">
-                        <span class="nav-icon">👥</span> Customers
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{% url 'properties' %}" class="nav-link">
-                        <span class="nav-icon">🏗️</span> Properties
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{% url 'bookings' %}" class="nav-link">
-                        <span class="nav-icon">📋</span> Bookings
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{% url 'payments' %}" class="nav-link">
-                        <span class="nav-icon">💰</span> Payments
-                    </a>
-                </li>
-            </ul>
-            <div class="nav-divider"></div>
-            <div class="nav-section">Administration</div>
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="{% url 'users' %}" class="nav-link">
-                        <span class="nav-icon">👤</span> Users
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{% url 'profile' %}" class="nav-link">
-                        <span class="nav-icon">⚙️</span> Preferences
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{% url 'audit_logs' %}" class="nav-link">
-                        <span class="nav-icon">📝</span> Audit Logs
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        <div class="sidebar-footer">
-            <a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;">
-                <span class="nav-icon">🚪</span> Logout
-            </a>
-        </div>
-    </aside>
+    {% include 'includes/sidebar.html' %}
 
     <!-- Main Content -->
     <main class="main-content">
@@ -117,6 +56,7 @@
         </div>
 
         <!-- Stats Row 2 -->
+        {% if can_view_payments %}
         <div class="stats-grid">
             <div class="stat-card animate-fade-up stagger-5">
                 <div class="stat-icon green">💰</div>
@@ -139,6 +79,7 @@
                 <div class="stat-label">Overdue Installments</div>
             </div>
         </div>
+        {% endif %}
 
         <!-- Quick Actions & Revenue Progress -->
         <div class="charts-grid-2col">
@@ -154,62 +95,49 @@
                     <a href="{% url 'booking_create' %}" class="btn btn-success btn-sm action-btn">
                         📋 + New Booking
                     </a>
+                    {% if can_view_payments %}
                     <a href="{% url 'payment_create' %}" class="btn btn-warning btn-sm action-btn">
                         💰 Record Payment
                     </a>
+                    {% endif %}
                     <a href="{% url 'plot_create' %}" class="btn btn-secondary btn-sm action-btn">
                         📐 + Add Plot
                     </a>
                 </div>
             </div>
 
-            <!-- Revenue Progress -->
+            <!-- Payment Status -->
+            {% if can_view_payments %}
             <div class="card animate-fade-up stagger-4">
                 <div class="card-header">
-                    <h3>📊 Revenue Overview</h3>
+                    <h3>🧾 Payment Status</h3>
                 </div>
-                <div style="margin-bottom:16px;">
-                    <div class="progress-label">
-                        <span>Monthly Target</span>
-                        <span>Rs. {{ monthly_revenue|default:0|floatformat:0 }} / Rs. {{ monthly_target|default:1000000|floatformat:0 }}</span>
-                    </div>
-                    <div class="progress-bar">
-                        {% widthratio monthly_revenue|default:0 monthly_target|default:1000000 100 as rev_pct %}
-                        <div class="progress-fill green" style="width:{% if rev_pct > 100 %}100{% else %}{{ rev_pct }}{% endif %}%;"></div>
-                    </div>
-                </div>
-                <div style="margin-bottom:16px;">
-                    <div class="progress-label">
-                        <span>Plots Sold</span>
-                        <span>{{ plots_sold|default:0 }} / {{ total_plots|default:0 }}</span>
-                    </div>
-                    <div class="progress-bar">
-                        {% widthratio plots_sold|default:0 total_plots|default:1 100 as sold_pct %}
-                        <div class="progress-fill" style="width:{% if sold_pct > 100 %}100{% else %}{{ sold_pct }}{% endif %}%;"></div>
-                    </div>
-                </div>
-                <div>
-                    <div class="progress-label">
-                        <span>Collection Rate</span>
-                        <span>{{ collection_rate|default:0 }}%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill amber" style="width:{{ collection_rate|default:0 }}%;"></div>
-                    </div>
+                <div class="chart-container" style="min-height:220px; display:flex; align-items:center; justify-content:center;">
+                    <canvas id="paymentStatusChart" style="max-width:220px; max-height:220px;"></canvas>
                 </div>
             </div>
+            {% endif %}
         </div>
 
         <!-- Charts Area -->
         <div class="charts-grid-2col">
+            {% if can_view_payments %}
             <div class="card animate-fade-up stagger-5">
                 <div class="card-header">
-                    <h3>📈 Monthly Revenue Trend</h3>
+                    <h3>📈 Revenue Trend</h3>
+                    <div class="card-actions">
+                        <div class="revenue-period" style="display:flex; gap:4px;">
+                            <button type="button" class="btn btn-sm btn-ghost revenue-period-btn" data-period="week">Weekly</button>
+                            <button type="button" class="btn btn-sm btn-primary revenue-period-btn active" data-period="month">Monthly</button>
+                            <button type="button" class="btn btn-sm btn-ghost revenue-period-btn" data-period="year">Yearly</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="revenueChart"></canvas>
                 </div>
             </div>
+            {% endif %}
             <div class="card animate-fade-up stagger-6">
                 <div class="card-header">
                     <h3>📊 Booking Status</h3>
@@ -222,6 +150,7 @@
 
         <!-- Payment Method & Revenue by Project -->
         <div class="charts-grid-2col">
+            {% if can_view_payments %}
             <div class="card animate-fade-up stagger-7">
                 <div class="card-header">
                     <h3>💳 Payment Methods</h3>
@@ -230,12 +159,33 @@
                     <canvas id="paymentMethodChart" style="max-width:260px; max-height:260px;"></canvas>
                 </div>
             </div>
+            {% endif %}
             <div class="card animate-fade-up stagger-8">
                 <div class="card-header">
                     <h3>🏗️ Plots by Project</h3>
                 </div>
                 <div class="chart-container" style="min-height:260px;">
                     <canvas id="projectRevenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Installment & Plot Status -->
+        <div class="charts-grid-2col">
+            <div class="card animate-fade-up stagger-7">
+                <div class="card-header">
+                    <h3>📅 Installment Status</h3>
+                </div>
+                <div class="chart-container" style="height:260px; display:flex; align-items:center; justify-content:center;">
+                    <canvas id="installmentChart" style="max-width:260px; max-height:260px;"></canvas>
+                </div>
+            </div>
+            <div class="card animate-fade-up stagger-8">
+                <div class="card-header">
+                    <h3>🏷️ Plot Status</h3>
+                </div>
+                <div class="chart-container" style="height:260px; display:flex; align-items:center; justify-content:center;">
+                    <canvas id="plotStatusChart" style="max-width:260px; max-height:260px;"></canvas>
                 </div>
             </div>
         </div>
@@ -290,6 +240,7 @@
         </div>
 
         <!-- Recent Payments -->
+        {% if can_view_payments %}
         <div class="card animate-fade-up stagger-7">
             <div class="card-header">
                 <h3>💰 Recent Payments</h3>
@@ -337,6 +288,7 @@
                 {% endif %}
             </div>
         </div>
+        {% endif %}
     </main>
 </div>
 
@@ -414,63 +366,95 @@ document.addEventListener('DOMContentLoaded', function() {
         boxPadding: 4,
     };
 
-    {% if monthly_revenue_data %}
-    new Chart(document.getElementById('revenueChart'), {
-        type: 'line',
-        data: {
-            labels: [{% for m in monthly_revenue_data %}'{{ m.label }}'{% if not forloop.last %},{% endif %}{% endfor %}],
-            datasets: [{
-                data: [{% for m in monthly_revenue_data %}{{ m.amount|floatformat:0 }}{% if not forloop.last %},{% endif %}{% endfor %}],
-                borderColor: c.blue,
-                backgroundColor: function(ctx) {
-                    var g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 180);
-                    g.addColorStop(0, 'rgba(59,130,246,0.25)');
-                    g.addColorStop(1, 'rgba(59,130,246,0.01)');
-                    return g;
+    {% if can_view_payments %}
+    var revenuePeriodColors = {
+        'week': { base: c.emerald, light: 'rgba(16,185,129,0.15)', solid: 'rgba(16,185,129,0.9)' },
+        'month': { base: c.blue, light: 'rgba(59,130,246,0.15)', solid: 'rgba(59,130,246,0.9)' },
+        'year': { base: c.violet, light: 'rgba(139,92,246,0.15)', solid: 'rgba(139,92,246,0.9)' },
+    };
+    var revenueChart = null;
+
+    function revenueBarColor(ctx, period) {
+        var col = revenuePeriodColors[period] || revenuePeriodColors.month;
+        if (!ctx.chart.chartArea) return col.base;
+        var g = ctx.chart.ctx.createLinearGradient(0, ctx.chart.chartArea.bottom, 0, ctx.chart.chartArea.top);
+        g.addColorStop(0, col.light);
+        g.addColorStop(1, col.solid);
+        return g;
+    }
+
+    function renderRevenueChart(labels, amounts, period) {
+        var canvas = document.getElementById('revenueChart');
+        if (!canvas) return;
+        if (!revenueChart) {
+            revenueChart = new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{ data: [], borderWidth: 0, borderRadius: 6, barPercentage: 0.65, categoryPercentage: 0.8 }]
                 },
-                fill: true,
-                tension: 0.3,
-                pointBackgroundColor: c.blue,
-                pointRadius: 4,
-                pointHoverRadius: 7,
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: c.blue,
-                pointHoverBorderWidth: 3,
-                borderWidth: 2.5,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            animation: anim,
-            plugins: {
-                legend: { display: false },
-                tooltip: Object.assign({}, tip, {
-                    callbacks: {
-                        label: function(ctx) { return 'Revenue: Rs. ' + Number(ctx.raw).toLocaleString(); }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    animation: anim,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: Object.assign({}, tip, {
+                            callbacks: {
+                                label: function(ctx) { return 'Revenue: Rs. ' + Number(ctx.raw).toLocaleString(); }
+                            }
+                        })
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            border: { display: false },
+                            grid: { color: colors.border + '50', drawTicks: false },
+                            ticks: {
+                                color: colors.text,
+                                maxTicksLimit: 5,
+                                font: { size: 11 },
+                                callback: function(v) { return 'Rs.' + (v/1000).toFixed(0) + 'k'; }
+                            }
+                        },
+                        x: {
+                            border: { display: false },
+                            grid: { display: false },
+                            ticks: { color: colors.text, font: { size: 11, weight: '600' } }
+                        }
                     }
-                })
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    border: { display: false },
-                    grid: { color: colors.border + '50', drawTicks: false },
-                    ticks: {
-                        color: colors.text,
-                        maxTicksLimit: 5,
-                        font: { size: 11 },
-                        callback: function(v) { return 'Rs.' + (v/1000).toFixed(0) + 'k'; }
-                    }
-                },
-                x: {
-                    border: { display: false },
-                    grid: { display: false },
-                    ticks: { color: colors.text, font: { size: 11, weight: '600' } }
                 }
-            }
+            });
         }
+        revenueChart.data.labels = labels;
+        revenueChart.data.datasets[0].data = amounts;
+        revenueChart.data.datasets[0].backgroundColor = function(ctx) { return revenueBarColor(ctx, period); };
+        revenueChart.update();
+    }
+
+    function loadRevenueTrend(period) {
+        document.querySelectorAll('.revenue-period-btn').forEach(function(btn) {
+            btn.classList.toggle('btn-primary', btn.dataset.period === period);
+            btn.classList.toggle('btn-ghost', btn.dataset.period !== period);
+            btn.classList.toggle('active', btn.dataset.period === period);
+        });
+        fetch('{% url 'revenue_trend_data' %}?period=' + period, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) { renderRevenueChart(data.labels, data.amounts, period); })
+            .catch(function() {});
+    }
+
+    document.querySelectorAll('.revenue-period-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() { loadRevenueTrend(btn.dataset.period); });
     });
+
+    {% if monthly_revenue_data %}
+    renderRevenueChart(
+        [{% for m in monthly_revenue_data %}'{{ m.label }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        [{% for m in monthly_revenue_data %}{{ m.amount|floatformat:0 }}{% if not forloop.last %},{% endif %}{% endfor %}],
+        'month'
+    );
+    {% endif %}
     {% endif %}
 
     {% if booking_status_data %}
@@ -480,7 +464,7 @@ document.addEventListener('DOMContentLoaded', function() {
             labels: [{% for b in booking_status_data %}'{{ b.label }}'{% if not forloop.last %},{% endif %}{% endfor %}],
             datasets: [{
                 data: [{% for b in booking_status_data %}{{ b.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
-                backgroundColor: ['#10b981','#3b82f6','#f59e0b','#ef4444'],
+                backgroundColor: [{% for b in booking_status_data %}'{{ b.color }}'{% if not forloop.last %},{% endif %}{% endfor %}],
                 borderWidth: 0,
                 hoverOffset: 10,
             }]
@@ -527,7 +511,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     {% endif %}
 
-    {% if payment_method_data %}
+    {% if can_view_payments and payment_method_data %}
     new Chart(document.getElementById('paymentMethodChart'), {
         type: 'doughnut',
         data: {
@@ -608,6 +592,178 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         }
+    });
+    {% endif %}
+
+    {% if can_view_payments and payment_status_data %}
+    var paymentStatusColors = {
+        'Verified': '#10b981',
+        'Pending Verification': '#f59e0b',
+        'Under Clearing': '#3b82f6',
+        'Rejected': '#ef4444',
+        'Bounced': '#f43f5e',
+        'Reversed': '#64748b',
+        'Partially Applied': '#8b5cf6',
+        'Draft': '#94a3b8',
+    };
+    new Chart(document.getElementById('paymentStatusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: [{% for s in payment_status_data %}'{{ s.status|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                data: [{% for s in payment_status_data %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                backgroundColor: [{% for s in payment_status_data %}(paymentStatusColors['{{ s.status|escapejs }}'] || '#94a3b8'){% if not forloop.last %},{% endif %}{% endfor %}],
+                borderWidth: 0,
+                hoverOffset: 10,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '72%',
+            animation: Object.assign({}, anim, { animateRotate: true }),
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { padding: 10, usePointStyle: true, color: colors.text, font: { size: 10 }, boxWidth: 8 }
+                },
+                tooltip: Object.assign({}, tip, {
+                    callbacks: {
+                        label: function(ctx) {
+                            var t = ctx.dataset.data.reduce(function(a,b){return a+b},0);
+                            var p = t > 0 ? ((ctx.raw / t) * 100).toFixed(1) : 0;
+                            return ' ' + ctx.label + ': ' + ctx.raw + ' (' + p + '%)';
+                        }
+                    }
+                })
+            }
+        },
+        plugins: [{
+            id: 'paymentStatusCenterText',
+            beforeDraw: function(chart) {
+                var w = chart.width, h = chart.height, ctx = chart.ctx;
+                ctx.restore();
+                var total = chart.data.datasets[0].data.reduce(function(a,b){return a+b},0);
+                var fs = Math.round(h / 8);
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = '700 ' + fs + 'px sans-serif';
+                ctx.fillStyle = c.blue;
+                ctx.fillText(total, w / 2, h / 2 - 4);
+                ctx.font = '500 ' + Math.round(fs / 3) + 'px sans-serif';
+                ctx.fillStyle = colors.text;
+                ctx.fillText('Payments', w / 2, h / 2 + fs - 2);
+                ctx.save();
+            }
+        }]
+    });
+    {% endif %}
+
+    {% if installment_status_data %}
+    new Chart(document.getElementById('installmentChart'), {
+        type: 'doughnut',
+        data: {
+            labels: [{% for s in installment_status_data %}'{{ s.label }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                data: [{% for s in installment_status_data %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                backgroundColor: [{% for s in installment_status_data %}'{{ s.color }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                borderWidth: 0,
+                hoverOffset: 10,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '72%',
+            animation: Object.assign({}, anim, { animateRotate: true }),
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { padding: 14, usePointStyle: true, color: colors.text, font: { size: 11 }, boxWidth: 8 }
+                },
+                tooltip: Object.assign({}, tip, {
+                    callbacks: {
+                        label: function(ctx) {
+                            var t = ctx.dataset.data.reduce(function(a,b){return a+b},0);
+                            var p = t > 0 ? ((ctx.raw / t) * 100).toFixed(1) : 0;
+                            return ' ' + ctx.label + ': ' + ctx.raw + ' (' + p + '%)';
+                        }
+                    }
+                })
+            }
+        },
+        plugins: [{
+            id: 'installmentCenterText',
+            beforeDraw: function(chart) {
+                var w = chart.width, h = chart.height, ctx = chart.ctx;
+                ctx.restore();
+                var total = chart.data.datasets[0].data.reduce(function(a,b){return a+b},0);
+                var fs = Math.round(h / 8);
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = '700 ' + fs + 'px sans-serif';
+                ctx.fillStyle = c.emerald;
+                ctx.fillText(total, w / 2, h / 2 - 4);
+                ctx.font = '500 ' + Math.round(fs / 3) + 'px sans-serif';
+                ctx.fillStyle = colors.text;
+                ctx.fillText('Installments', w / 2, h / 2 + fs - 2);
+                ctx.save();
+            }
+        }]
+    });
+    {% endif %}
+
+    {% if plot_status_data %}
+    new Chart(document.getElementById('plotStatusChart'), {
+        type: 'doughnut',
+        data: {
+            labels: [{% for s in plot_status_data %}'{{ s.label }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                data: [{% for s in plot_status_data %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                backgroundColor: [{% for s in plot_status_data %}'{{ s.color }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                borderWidth: 0,
+                hoverOffset: 10,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: '72%',
+            animation: Object.assign({}, anim, { animateRotate: true }),
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { padding: 14, usePointStyle: true, color: colors.text, font: { size: 11 }, boxWidth: 8 }
+                },
+                tooltip: Object.assign({}, tip, {
+                    callbacks: {
+                        label: function(ctx) {
+                            var t = ctx.dataset.data.reduce(function(a,b){return a+b},0);
+                            var p = t > 0 ? ((ctx.raw / t) * 100).toFixed(1) : 0;
+                            return ' ' + ctx.label + ': ' + ctx.raw + ' (' + p + '%)';
+                        }
+                    }
+                })
+            }
+        },
+        plugins: [{
+            id: 'plotCenterText',
+            beforeDraw: function(chart) {
+                var w = chart.width, h = chart.height, ctx = chart.ctx;
+                ctx.restore();
+                var total = chart.data.datasets[0].data.reduce(function(a,b){return a+b},0);
+                var fs = Math.round(h / 8);
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = '700 ' + fs + 'px sans-serif';
+                ctx.fillStyle = c.blue;
+                ctx.fillText(total, w / 2, h / 2 - 4);
+                ctx.font = '500 ' + Math.round(fs / 3) + 'px sans-serif';
+                ctx.fillStyle = colors.text;
+                ctx.fillText('Plots', w / 2, h / 2 + fs - 2);
+                ctx.save();
+            }
+        }]
     });
     {% endif %}
 });

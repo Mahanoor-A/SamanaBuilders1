@@ -11,7 +11,7 @@ class ProjectFormTest(TestCase):
             'name': 'Test Project',
             'location': 'Lahore',
             'total_plots': 100,
-            'is_active': True
+            'status': 'booking_open'
         }
         form = ProjectForm(data=form_data)
         self.assertTrue(form.is_valid())
@@ -30,6 +30,7 @@ class PlotFormTest(TestCase):
             'plot_type': 'residential',
             'size_marla': '5.00',
             'price': '5000000',
+            'holding_deposit': '0',
             'status': 'available'
         }
         form = PlotForm(data=form_data)
@@ -42,6 +43,7 @@ class PlotFormTest(TestCase):
             'plot_type': 'residential',
             'size_marla': '5.00',
             'price': '-100',
+            'holding_deposit': '0',
             'status': 'available'
         }
         form = PlotForm(data=form_data)
@@ -72,7 +74,7 @@ class PropertyViewTest(TestCase):
             'name': 'New Project',
             'location': 'Karachi',
             'total_plots': 50,
-            'is_active': True
+            'status': 'coming_soon'
         })
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Project.objects.count(), 2)
@@ -88,6 +90,7 @@ class PropertyViewTest(TestCase):
             'plot_type': 'commercial',
             'size_marla': '10.00',
             'price': '10000000',
+            'holding_deposit': '0',
             'status': 'available'
         })
         self.assertEqual(response.status_code, 302)
@@ -108,3 +111,18 @@ class PropertyViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'A-101')
         self.assertNotContains(response, 'A-102')
+    
+    def test_available_plots_count_in_context(self):
+        Plot.objects.create(
+            plot_number='A-101', project=self.project,
+            size_marla=Decimal('5.00'), price=Decimal('5000000'),
+            status='available'
+        )
+        Plot.objects.create(
+            plot_number='A-102', project=self.project,
+            size_marla=Decimal('5.00'), price=Decimal('5000000'),
+            status='booked'
+        )
+        response = self.client.get('/properties/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['available_plots_count'], 1)

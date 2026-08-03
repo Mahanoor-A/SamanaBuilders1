@@ -14,14 +14,13 @@ class UserProfile(models.Model):
     ROLE_CHOICES = [
         ('super_admin', 'Super Admin'),
         ('admin', 'Admin'),
-        ('staff', 'Staff'),
         ('sales', 'Sales'),
         ('accounts', 'Accounts'),
         ('management', 'Management'),
     ]
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='staff')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='sales')
     theme = models.CharField(max_length=30, choices=THEME_CHOICES, default='professional-blue')
     phone = models.CharField(max_length=20, blank=True)
     cnic = models.CharField(max_length=15, blank=True)

@@ -901,7 +901,8 @@
             transform: none;
         }
         .floating-group .form-control:focus + label,
-        .floating-group .form-control:not(:placeholder-shown) + label {
+        .floating-group .form-control:not(:placeholder-shown) + label,
+        .floating-group.filled label {
             top: 6px;
             transform: translateY(0);
             font-size: 11px;
@@ -909,7 +910,8 @@
             color: var(--primary);
         }
         .floating-group textarea.form-control:focus + label,
-        .floating-group textarea.form-control:not(:placeholder-shown) + label {
+        .floating-group textarea.form-control:not(:placeholder-shown) + label,
+        .floating-group.filled label {
             top: 6px;
         }
 
@@ -1494,7 +1496,8 @@
         // ============================================================
         (function() {
             var serverTheme = '{{ user_theme|default:"professional-blue" }}';
-            var savedTheme = localStorage.getItem('samana-theme') || serverTheme;
+            var isAuthed = {% if user.is_authenticated %}true{% else %}false{% endif %};
+            var savedTheme = isAuthed ? serverTheme : (localStorage.getItem('samana-theme') || serverTheme);
             document.documentElement.setAttribute('data-theme', savedTheme);
 
             document.querySelectorAll('.theme-btn').forEach(function(btn) {
@@ -1767,6 +1770,21 @@
         function formatCurrency(amount) {
             return 'Rs. ' + Number(amount).toLocaleString('en-IN');
         }
+
+        // ============================================================
+        // FLOATING LABEL FALLBACK (reliable across all browsers)
+        // ============================================================
+        function syncFloatingLabels() {
+            document.querySelectorAll('.floating-group').forEach(function(group) {
+                var control = group.querySelector('input, textarea, select');
+                if (!control) return;
+                group.classList.toggle('filled', control.value.trim() !== '');
+            });
+        }
+        document.addEventListener('input', syncFloatingLabels);
+        document.addEventListener('change', syncFloatingLabels);
+        document.addEventListener('DOMContentLoaded', syncFloatingLabels);
+        if (document.readyState !== 'loading') syncFloatingLabels();
 
         console.log('Samana Builders ERP — Theme System Active');
         console.log('Current theme:', document.documentElement.getAttribute('data-theme'));

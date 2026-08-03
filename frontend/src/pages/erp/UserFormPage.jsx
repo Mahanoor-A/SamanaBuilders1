@@ -197,7 +197,6 @@ export default function UserFormPage() {
                     <option value="user">User</option>
                     <option value="admin">Admin</option>
                     <option value="manager">Manager</option>
-                    <option value="staff">Staff</option>
                   </select>
                   <label className="absolute left-4 top-2 text-xs text-primary flex items-center gap-1.5">
                     <Shield className="w-3 h-3" /> Role

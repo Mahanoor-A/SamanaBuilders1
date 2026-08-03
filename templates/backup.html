@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}DB Backup - Samana Builders ERP{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+    <div class="top-bar">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <span class="top-bar-title">DB Backup</span>
+        <div class="top-bar-actions">
+        </div>
+    </div>
+
+    {% include 'includes/sidebar.html' %}
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Database Backup</h1>
+            <div class="page-actions">
+                <a href="{% url 'backup_download' %}" class="btn btn-primary btn-sm">⬇ Download Backup (ZIP)</a>
+            </div>
+        </div>
+
+        <div class="card animate-fade-up">
+            <div class="card-header">
+                <h3>💾 Full System Backup</h3>
+            </div>
+            <div style="font-size:14px; color:var(--text-secondary); line-height:1.8;">
+                <p>Creates a complete ZIP archive containing:</p>
+                <ul style="padding-left:20px; margin-top:6px;">
+                    <li><strong>Full database</strong> — every table exported as a CSV file</li>
+                    <li><strong>Media filenames against each customer</strong> — <code>customers_media.csv</code> maps every uploaded document, image, payment attachment and receipt PDF to its customer record</li>
+                    <li><strong>All uploaded media files</strong> — original files from the media folder</li>
+                    <li><strong>Media manifest</strong> — index linking every stored file to its owning record</li>
+                </ul>
+                <p style="margin-top:12px;">The archive is saved in <code>backups/</code> and downloaded to your machine.</p>
+            </div>
+        </div>
+
+        {% if last_backups %}
+        <div class="card animate-fade-up">
+            <div class="card-header">
+                <h3>🕒 Recent Backups</h3>
+                <span class="badge badge-info">{{ last_backups|length }} saved</span>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Filename</th>
+                            <th>Size</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for backup in last_backups %}
+                        <tr>
+                            <td><strong>{{ backup.name }}</strong></td>
+                            <td>{{ backup.size }} bytes</td>
+                            <td>{{ backup.time|date:"d M Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+</div>
+{% endblock %}

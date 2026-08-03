@@ -28,7 +28,7 @@ class UserCreateSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
     first_name = serializers.CharField(max_length=30)
     last_name = serializers.CharField(max_length=30)
-    role = serializers.ChoiceField(choices=['super_admin', 'admin', 'staff'])
+    role = serializers.ChoiceField(choices=['super_admin', 'admin', 'sales', 'accounts', 'management'])
     phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
     cnic = serializers.CharField(max_length=15, required=False, allow_blank=True)
 
@@ -38,7 +38,7 @@ class UserCreateSerializer(serializers.Serializer):
         return value
 
     def create(self, validated_data):
-        role = validated_data.pop('role', 'staff')
+        role = validated_data.pop('role', 'sales')
         phone = validated_data.pop('phone', '')
         cnic = validated_data.pop('cnic', '')
         password = validated_data.pop('password')

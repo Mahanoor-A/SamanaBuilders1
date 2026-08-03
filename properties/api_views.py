@@ -23,8 +23,8 @@ class IsAdminOrSuperAdmin(permissions.BasePermission):
         return False
 
 
-class ReadOnlyForStaff(permissions.BasePermission):
-    """Staff can view but not modify."""
+class ReadOnlyForLowerRoles(permissions.BasePermission):
+    """Lower roles can view but not modify."""
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
@@ -33,27 +33,27 @@ class ReadOnlyForStaff(permissions.BasePermission):
         if request.user.is_superuser:
             return True
         if hasattr(request.user, 'profile'):
-            return request.user.profile.role in ['super_admin', 'admin']
+            return request.user.profile.role in ['super_admin', 'admin', 'management']
         return False
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    permission_classes = [ReadOnlyForStaff]
+    permission_classes = [ReadOnlyForLowerRoles]
     
     def get_queryset(self):
         qs = super().get_queryset()
-        is_active = self.request.query_params.get('is_active')
-        if is_active is not None:
-            qs = qs.filter(is_active=is_active.lower() in ['true', '1'])
+        status = self.request.query_params.get('status')
+        if status:
+            qs = qs.filter(status=status)
         return qs
 
 
 class ProjectPhaseViewSet(viewsets.ModelViewSet):
     queryset = ProjectPhase.objects.all()
     serializer_class = ProjectPhaseSerializer
-    permission_classes = [ReadOnlyForStaff]
+    permission_classes = [ReadOnlyForLowerRoles]
     
     def get_queryset(self):
         qs = super().get_queryset()
@@ -66,7 +66,7 @@ class ProjectPhaseViewSet(viewsets.ModelViewSet):
 class PlotViewSet(viewsets.ModelViewSet):
     queryset = Plot.objects.select_related('project', 'phase').prefetch_related('features').all()
     serializer_class = PlotSerializer
-    permission_classes = [ReadOnlyForStaff]
+    permission_classes = [ReadOnlyForLowerRoles]
     
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -126,7 +126,7 @@ class PlotViewSet(viewsets.ModelViewSet):
 class PlotFeatureViewSet(viewsets.ModelViewSet):
     queryset = PlotFeature.objects.all()
     serializer_class = PlotFeatureSerializer
-    permission_classes = [ReadOnlyForStaff]
+    permission_classes = [ReadOnlyForLowerRoles]
 
 
 class PriceHistoryViewSet(viewsets.ReadOnlyModelViewSet):

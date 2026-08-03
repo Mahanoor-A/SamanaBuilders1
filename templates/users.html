@@ -1,45 +1,27 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Users - Samana Builders ERP{% endblock %}
+{% block title %}Manage Users - Samana Builders ERP{% endblock %}
 
 {% block content %}
 <div class="app-layout">
     <div class="sidebar-overlay" onclick="closeSidebar()"></div>
     <div class="top-bar">
         <button class="hamburger" onclick="toggleSidebar()">☰</button>
-        <span class="top-bar-title">Users</span>
+        <span class="top-bar-title">Manage Users</span>
         <div class="top-bar-actions">
         </div>
     </div>
 
-    <aside class="sidebar">
-        <div class="sidebar-brand"><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
-        <nav class="sidebar-nav">
-            <div class="nav-section">Main Menu</div>
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a></li>
-                <li class="nav-item"><a href="{% url 'customers' %}" class="nav-link"><span class="nav-icon">👥</span> Customers</a></li>
-                <li class="nav-item"><a href="{% url 'properties' %}" class="nav-link"><span class="nav-icon">🏗️</span> Properties</a></li>
-                <li class="nav-item"><a href="{% url 'bookings' %}" class="nav-link"><span class="nav-icon">📋</span> Bookings</a></li>
-                <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link"><span class="nav-icon">💰</span> Payments</a></li>
-            </ul>
-            <div class="nav-divider"></div>
-            <div class="nav-section">Administration</div>
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="{% url 'users' %}" class="nav-link active"><span class="nav-icon">👤</span> Users</a></li>
-                <li class="nav-item"><a href="{% url 'profile' %}" class="nav-link"><span class="nav-icon">⚙️</span> Preferences</a></li>
-                <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link"><span class="nav-icon">📝</span> Audit Logs</a></li>
-            </ul>
-        </nav>
-        <div class="sidebar-footer"><a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a></div>
-    </aside>
+    {% include 'includes/sidebar.html' %}
 
     <main class="main-content">
         <div class="page-header">
             <h1>User Management</h1>
             <div class="page-actions">
+                {% if can_manage_users %}
                 <a href="{% url 'user_create' %}" class="btn btn-primary btn-sm">+ Add User</a>
+                {% endif %}
             </div>
         </div>
 
@@ -73,26 +55,49 @@
                 <table class="sortable">
                     <thead>
                         <tr>
-                            <th>Username</th>
-                            <th>Full Name</th>
+                            <th>User</th>
                             <th>Email</th>
                             <th>Role</th>
                             <th>Status</th>
+                            <th>Created</th>
                             <th>Last Login</th>
+                            {% if can_manage_users %}
                             <th class="no-sort">Actions</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
                         {% for user in users %}
                         <tr>
-                            <td><strong>{{ user.username }}</strong></td>
-                            <td>{{ user.get_full_name|default:"-" }}</td>
+                            <td>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <div class="user-avatar" style="width:34px; height:34px; font-size:13px; flex-shrink:0;">
+                                        {{ user.first_name|first|default:user.username|first|upper }}{{ user.last_name|first|upper }}
+                                    </div>
+                                    <div>
+                                        <strong>{{ user.get_full_name|default:user.username }}</strong>
+                                        {% if user == request.user %}<span class="badge badge-info" style="margin-left:4px;">You</span>{% endif %}
+                                        <div style="font-size:12px; color:var(--text-secondary);">@{{ user.username }}</div>
+                                    </div>
+                                </div>
+                            </td>
                             <td>{{ user.email|default:"-" }}</td>
                             <td>
                                 {% if user.profile %}
-                                <span class="badge badge-{% if user.profile.role == 'super_admin' %}danger{% elif user.profile.role == 'admin' %}warning{% else %}info{% endif %}">
-                                    {{ user.profile.get_role_display }}
-                                </span>
+                                    {% if can_manage_users and user.profile.role != 'super_admin' %}
+                                    <form method="post" action="{% url 'user_role_update' user.pk %}" style="display:inline-block; margin:0;">
+                                        {% csrf_token %}
+                                        <select name="role" class="form-control role-select" onchange="this.form.submit()" style="padding:4px 8px; height:30px; font-size:12px; width:auto; min-width:110px; display:inline-block;">
+                                            {% for value, label in role_choices %}
+                                            <option value="{{ value }}" {% if user.profile.role == value %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </form>
+                                    {% else %}
+                                    <span class="badge badge-{% if user.profile.role == 'super_admin' %}danger{% elif user.profile.role == 'admin' %}warning{% elif user.profile.role == 'management' %}info{% elif user.profile.role == 'accounts' %}success{% else %}secondary{% endif %}">
+                                        {{ user.profile.get_role_display }}
+                                    </span>
+                                    {% endif %}
                                 {% else %}
                                 <span class="badge badge-secondary">No Role</span>
                                 {% endif %}
@@ -102,14 +107,20 @@
                                     {% if user.is_active %}Active{% else %}Inactive{% endif %}
                                 </span>
                             </td>
+                            <td>{{ user.date_joined|date:"d M Y"|default:"-" }}</td>
                             <td>{{ user.last_login|date:"d M Y H:i"|default:"Never" }}</td>
+                            {% if can_manage_users %}
                             <td>
                                 <div class="table-actions">
-                                    {% if request.user.is_superuser %}
-                                    <a href="{% url 'user_edit' user.pk %}" class="btn btn-secondary btn-sm">Edit</a>
+                                    <a href="{% url 'user_edit' user.pk %}" class="btn btn-secondary btn-sm" title="Edit (including change password)">✏️ Edit</a>
+                                    {% if user != request.user and user.profile.role != 'super_admin' %}
+                                    <a href="{% url 'user_deactivate' user.pk %}" class="btn btn-{% if user.is_active %}danger{% else %}success{% endif %} btn-sm">
+                                        {% if user.is_active %}Deactivate{% else %}Activate{% endif %}
+                                    </a>
                                     {% endif %}
                                 </div>
                             </td>
+                            {% endif %}
                         </tr>
                         {% endfor %}
                     </tbody>

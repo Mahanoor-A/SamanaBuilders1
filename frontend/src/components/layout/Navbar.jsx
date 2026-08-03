@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Menu, X, Phone } from 'lucide-react';
 import ThemeSwitcher from './ThemeSwitcher';
+import { ERP_LOGIN_URL } from '../../config';
 
 const navLinks = [
   { name: 'Home', href: '#home' },
@@ -98,6 +99,14 @@ export default function Navbar() {
                 <Phone className="w-4 h-4" />
                 0800-12345
               </a>
+              <a
+                href={ERP_LOGIN_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-5 py-2.5 rounded-full bg-[#0c1f33] text-white text-sm font-semibold hover:bg-gold transition-colors duration-200"
+              >
+                Staff Login
+              </a>
               <button
                 onClick={() => scrollTo('#contact')}
                 className="px-5 py-2.5 rounded-full bg-[#0c1f33] text-white text-sm font-semibold hover:bg-gold transition-colors duration-200"
@@ -143,6 +152,14 @@ export default function Navbar() {
           </div>
           <div className="absolute bottom-12 flex flex-col items-center gap-4">
             <ThemeSwitcher iconOnly />
+            <a
+              href={ERP_LOGIN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-8 py-3 rounded-full bg-primary text-white text-base font-semibold hover:bg-primary-light transition-colors duration-200"
+            >
+              Staff Login
+            </a>
             <button
               onClick={() => scrollTo('#contact')}
               className="px-8 py-3 rounded-full bg-primary text-white text-base font-semibold hover:bg-primary-light transition-colors duration-200"

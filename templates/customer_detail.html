@@ -14,31 +14,7 @@
         </div>
     </div>
 
-    <aside class="sidebar">
-        <div class="sidebar-brand">
-            <div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div>
-        </div>
-        <nav class="sidebar-nav">
-            <div class="nav-section">Main Menu</div>
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link"><span class="nav-icon">📊</span> Dashboard</a></li>
-                <li class="nav-item"><a href="{% url 'customers' %}" class="nav-link active"><span class="nav-icon">👥</span> Customers</a></li>
-                <li class="nav-item"><a href="{% url 'properties' %}" class="nav-link"><span class="nav-icon">🏗️</span> Properties</a></li>
-                <li class="nav-item"><a href="{% url 'bookings' %}" class="nav-link"><span class="nav-icon">📋</span> Bookings</a></li>
-                <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link"><span class="nav-icon">💰</span> Payments</a></li>
-            </ul>
-            <div class="nav-divider"></div>
-            <div class="nav-section">Administration</div>
-            <ul class="nav-menu">
-                <li class="nav-item"><a href="{% url 'users' %}" class="nav-link"><span class="nav-icon">👤</span> Users</a></li>
-                <li class="nav-item"><a href="{% url 'profile' %}" class="nav-link"><span class="nav-icon">⚙️</span> Preferences</a></li>
-                <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link"><span class="nav-icon">📝</span> Audit Logs</a></li>
-            </ul>
-        </nav>
-        <div class="sidebar-footer">
-            <a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a>
-        </div>
-    </aside>
+    {% include 'includes/sidebar.html' %}
 
     <main class="main-content">
         <div class="page-header">
@@ -80,9 +56,17 @@
         <!-- Quick Actions -->
         <div class="card animate-fade-up stagger-1" style="padding:16px 20px;">
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                {% if can_view_payments %}
                 <a href="{% url 'payment_create' %}" class="btn btn-primary btn-sm">💰 Record Payment</a>
+                {% endif %}
                 <a href="{% url 'booking_create' %}?customer_id={{ customer.pk }}" class="btn btn-success btn-sm">📋 New Booking</a>
-                <a href="{% url 'payments' %}?search={{ customer.full_name|urlencode }}" class="btn btn-secondary btn-sm">💳 View Payments</a>
+                {% if can_view_payments %}
+                {% if latest_payment %}
+                <a href="{% url 'payment_detail' latest_payment.pk %}" class="btn btn-secondary btn-sm">💳 View Payments</a>
+                {% else %}
+                <a href="{% url 'payments' %}?customer={{ customer.pk }}" class="btn btn-secondary btn-sm">💳 View Payments</a>
+                {% endif %}
+                {% endif %}
             </div>
         </div>
 
@@ -162,6 +146,56 @@
             </div>
         </div>
 
+        <!-- Payment History -->
+        {% if can_view_payments %}
+        <div class="card animate-fade-up stagger-4" id="payments-history">
+            <div class="card-header">
+                <h3>💳 Payment History</h3>
+                <span class="badge badge-info">{{ payments|length }} payment{{ payments|length|pluralize }}</span>
+            </div>
+            {% if payments %}
+            <div class="table-container">
+                <table class="sortable">
+                    <thead>
+                        <tr>
+                            <th>Payment ID</th>
+                            <th>Booking</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th class="no-sort">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td><strong>{{ payment.payment_id }}</strong></td>
+                            <td>{{ payment.booking.booking_id }}</td>
+                            <td>Rs. {{ payment.amount|floatformat:0|intcomma }}</td>
+                            <td>{{ payment.get_payment_method_display }}</td>
+                            <td>{{ payment.payment_date|date:"d M Y" }}</td>
+                            <td>
+                                <span class="badge badge-{% if payment.status == 'verified' %}success{% elif payment.status == 'pending' or payment.status == 'under_clearing' %}warning{% elif payment.status == 'rejected' or payment.status == 'bounced' or payment.status == 'reversed' %}danger{% else %}info{% endif %}">
+                                    {{ payment.get_status_display }}
+                                </span>
+                            </td>
+                            <td><a href="{% url 'payment_detail' payment.pk %}" class="btn btn-secondary btn-sm">View</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state" style="padding:32px 16px;">
+                <div class="empty-icon">💳</div>
+                <h3>No Payments Yet</h3>
+                <p>No payments have been recorded for this customer.</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
         <!-- Notes -->
         {% if customer.notes %}
         <div class="card animate-fade-up stagger-4">
@@ -222,7 +256,9 @@
                 <h3 style="color:var(--accent-red);">⚠️ Danger Zone</h3>
             </div>
             <p style="font-size:14px; color:var(--text-secondary); margin-bottom:16px;">Permanently delete this customer and all associated data. This action cannot be undone.</p>
+            {% if can_delete %}
             <a href="{% url 'customer_delete' customer.pk %}" class="btn btn-danger btn-sm">🗑️ Delete Customer</a>
+            {% endif %}
         </div>
     </main>
 </div>

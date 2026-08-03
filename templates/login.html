@@ -3,6 +3,29 @@
 
 {% block title %}Login - Samana Builders ERP{% endblock %}
 
+{% block extra_head %}
+<style>
+    .login-card .floating-group .form-control {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+    }
+    .login-card .floating-group .form-control:hover {
+        border-color: #94a3b8;
+    }
+    .login-card .floating-group .form-control:focus {
+        background: #ffffff;
+        border-color: var(--border-focus);
+        box-shadow: 0 0 0 3px var(--primary-bg);
+    }
+    .login-card .floating-group label {
+        background: #f1f5f9;
+    }
+    .login-card .floating-group .form-control:focus + label {
+        background: #ffffff;
+    }
+</style>
+{% endblock %}
+
 {% block body_start %}
 <div class="theme-switcher-fixed" style="position:fixed; top:20px; right:20px; z-index:9999; display:flex; gap:4px; background:var(--bg-card); padding:6px; border-radius:24px; box-shadow:var(--shadow-md); border:1px solid var(--border);">
     <button class="theme-btn" data-theme="professional-blue" title="Professional Blue"></button>
@@ -20,7 +43,6 @@
         <div class="login-header" style="background:var(--gradient-header); padding:40px 40px 32px; text-align:center; color:white; position:relative; overflow:hidden;">
             <div style="position:absolute; top:-20px; right:-20px; width:120px; height:120px; background:rgba(255,255,255,0.05); border-radius:50%; animation:float 6s ease-in-out infinite;"></div>
             <div style="position:absolute; bottom:-30px; left:-30px; width:160px; height:160px; background:rgba(255,255,255,0.03); border-radius:50%; animation:float 8s ease-in-out infinite reverse;"></div>
-            <div class="logo" style="width:80px; height:80px; background:rgba(255,255,255,0.15); backdrop-filter:blur(8px); border-radius:20px; margin:0 auto 20px; display:flex; align-items:center; justify-content:center; font-size:32px; color:white; font-weight:800; animation:bounceIn 0.8s ease; border:2px solid rgba(255,255,255,0.2);">SB</div>
             <h2 style="font-size:24px; margin-bottom:4px; font-weight:700; animation:fadeInUp 0.6s ease 0.2s both;">Samana Builders</h2>
             <p style="font-size:14px; opacity:0.8; animation:fadeInUp 0.6s ease 0.3s both;">Real Estate Management System</p>
         </div>

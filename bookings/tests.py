@@ -90,6 +90,49 @@ class BookingViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Bookings')
     
+    def test_booking_stats_context(self):
+        Booking.objects.create(
+            customer=self.customer, plot=self.plot,
+            total_amount=Decimal('5000000'), status='confirmed', created_by=self.user
+        )
+        plot2 = Plot.objects.create(
+            plot_number='A-102', project=self.project,
+            size_marla=Decimal('5.00'), price=Decimal('3000000')
+        )
+        Booking.objects.create(
+            customer=self.customer, plot=plot2,
+            total_amount=Decimal('3000000'), status='pending', created_by=self.user
+        )
+        response = self.client.get('/bookings/')
+        self.assertEqual(response.context['confirmed_count'], 1)
+        self.assertEqual(response.context['pending_count'], 1)
+        self.assertEqual(response.context['total_amount'], Decimal('8000000'))
+        self.assertEqual(len(response.context['bookings']), 2)
+    
+    def test_booking_search_and_status_filter(self):
+        Booking.objects.create(
+            customer=self.customer, plot=self.plot,
+            total_amount=Decimal('5000000'), status='confirmed', created_by=self.user
+        )
+        plot2 = Plot.objects.create(
+            plot_number='A-102', project=self.project,
+            size_marla=Decimal('5.00'), price=Decimal('3000000')
+        )
+        Booking.objects.create(
+            customer=self.customer, plot=plot2,
+            total_amount=Decimal('3000000'), status='pending', created_by=self.user
+        )
+        response = self.client.get('/bookings/?search=A-101')
+        self.assertEqual(len(response.context['bookings']), 1)
+        self.assertEqual(response.context['total_amount'], Decimal('5000000'))
+        self.assertEqual(response.context['confirmed_count'], 1)
+        
+        response = self.client.get('/bookings/?status=pending')
+        self.assertEqual(len(response.context['bookings']), 1)
+        self.assertEqual(response.context['pending_count'], 1)
+        self.assertEqual(response.context['confirmed_count'], 0)
+        self.assertEqual(response.context['total_amount'], Decimal('3000000'))
+    
     def test_booking_create_view(self):
         response = self.client.get('/bookings/create/')
         self.assertEqual(response.status_code, 200)

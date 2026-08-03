@@ -5,14 +5,17 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Sum, Count, Q
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import TruncMonth, TruncWeek, TruncYear
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 from .models import UserProfile, AuditLog
 from .forms import UserForm, UserProfileForm, CreateUserForm, UserEditForm
-from .permissions import role_required, super_admin_required, admin_or_above, staff_or_above
+from .permissions import (
+    role_required, super_admin_required, admin_or_above,
+    management_or_above, finance_or_above, payments_access, get_user_role,
+)
 from customers.models import Customer
 from properties.models import Project, Plot
 from bookings.models import Booking, Installment
@@ -89,7 +92,7 @@ def dashboard_view(request):
         if amt > max_amount:
             max_amount = amt
         monthly_revenue_data.append({
-            'label': entry['month'].strftime('%b'),
+            'label': entry['month'].strftime('%b %Y'),
             'amount': amt,
         })
     for item in monthly_revenue_data:
@@ -97,8 +100,9 @@ def dashboard_view(request):
     
     # Booking stats
     pending_bookings = Booking.objects.filter(status='pending').count()
-    active_bookings = Booking.objects.filter(status__in=['confirmed', 'active']).count()
+    active_bookings = Booking.objects.filter(status='active').count()
     confirmed_bookings = Booking.objects.filter(status='confirmed').count()
+    completed_bookings = Booking.objects.filter(status='completed').count()
     cancelled_bookings = Booking.objects.filter(status='cancelled').count()
     
     # Payment stats
@@ -110,9 +114,24 @@ def dashboard_view(request):
     booked_plots = Plot.objects.filter(status='booked').count()
     sold_plots = Plot.objects.filter(status='sold').count()
     
+    plot_status_data = [
+        {'label': 'Available', 'count': available_plots, 'color': '#10b981'},
+        {'label': 'Booked', 'count': booked_plots, 'color': '#3b82f6'},
+        {'label': 'Sold', 'count': sold_plots, 'color': '#f59e0b'},
+    ]
+    
     # Installment stats
     overdue_installments = Installment.objects.filter(status='overdue').count()
     paid_installments = Installment.objects.filter(status='paid').count()
+    pending_installments = Installment.objects.filter(status='pending').count()
+    partial_installments = Installment.objects.filter(status='partial').count()
+    
+    installment_status_data = [
+        {'label': 'Paid', 'count': paid_installments, 'color': '#10b981'},
+        {'label': 'Overdue', 'count': overdue_installments, 'color': '#ef4444'},
+        {'label': 'Pending', 'count': pending_installments, 'color': '#f59e0b'},
+        {'label': 'Partial', 'count': partial_installments, 'color': '#3b82f6'},
+    ]
     
     # Collection rate
     total_installment_amount = Installment.objects.aggregate(total=Sum('amount'))['total'] or 1
@@ -146,15 +165,40 @@ def dashboard_view(request):
     
     # Booking status for doughnut
     booking_status_data = [
-        {'label': 'Confirmed', 'count': confirmed_bookings, 'color': '#10b981'},
+        {'label': 'Completed', 'count': completed_bookings, 'color': '#10b981'},
         {'label': 'Active', 'count': active_bookings, 'color': '#3b82f6'},
         {'label': 'Pending', 'count': pending_bookings, 'color': '#f59e0b'},
         {'label': 'Cancelled', 'count': cancelled_bookings, 'color': '#ef4444'},
     ]
     
+    # Booking sources
+    source_data = (
+        Booking.objects.values('source')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    source_labels = dict(Booking.SOURCE_CHOICES)
+    booking_source_data = [
+        {'source': source_labels.get(s['source'], s['source']), 'count': s['count']}
+        for s in source_data
+    ]
+    
+    # Payment status breakdown (ERP verification workflow)
+    payment_status_qs = (
+        Payment.objects.values('status')
+        .annotate(count=Count('id'))
+        .order_by('-count')
+    )
+    payment_status_labels = dict(Payment.STATUS_CHOICES)
+    payment_status_data = [
+        {'status': payment_status_labels.get(p['status'], p['status']), 'count': p['count']}
+        for p in payment_status_qs
+    ]
+    
     # Monthly target (20% above average monthly revenue)
     months_with_data = len(monthly_revenue_data) or 1
     monthly_target = round((float(total_revenue) / max(months_with_data, 1)) * 1.2, -4)
+    target_remaining = max(monthly_target - float(monthly_revenue), 0)
     
     # Staff vs admin dashboard
     user_role = None
@@ -167,7 +211,7 @@ def dashboard_view(request):
         'active_customers': Customer.objects.filter(is_active=True).count(),
         
         # Projects / Properties
-        'total_projects': Project.objects.filter(is_active=True).count(),
+        'total_projects': Project.objects.exclude(status='inactive').count(),
         'total_plots': Plot.objects.count(),
         'available_plots': available_plots,
         'booked_plots': booked_plots,
@@ -179,6 +223,7 @@ def dashboard_view(request):
         'pending_bookings': pending_bookings,
         'active_bookings': active_bookings,
         'confirmed_bookings': confirmed_bookings,
+        'completed_bookings': completed_bookings,
         'cancelled_bookings': cancelled_bookings,
         
         # Payments
@@ -188,6 +233,7 @@ def dashboard_view(request):
         'total_revenue': total_revenue,
         'monthly_revenue': monthly_revenue,
         'monthly_target': monthly_target,
+        'target_remaining': target_remaining,
         
         # Installments
         'overdue_installments': overdue_installments,
@@ -199,6 +245,10 @@ def dashboard_view(request):
         'booking_status_data': booking_status_data,
         'payment_method_data': payment_method_data,
         'plots_by_project_data': plots_by_project_data,
+        'installment_status_data': installment_status_data,
+        'plot_status_data': plot_status_data,
+        'booking_source_data': booking_source_data,
+        'payment_status_data': payment_status_data,
         
         # Recent records
         'recent_bookings': Booking.objects.select_related('customer', 'plot').order_by('-created_at')[:5],
@@ -208,6 +258,56 @@ def dashboard_view(request):
         'user_role': user_role,
     }
     return render(request, 'dashboard.html', context)
+
+
+@login_required
+@finance_or_above
+def revenue_trend_view(request):
+    """JSON endpoint for the revenue trend chart (week / month / year)."""
+    period = request.GET.get('period', 'month')
+    today = timezone.now().date()
+
+    qs = Payment.objects.filter(status='verified')
+
+    labels = []
+    amounts = []
+
+    if period == 'week':
+        start = today - timedelta(days=49)
+        data = (
+            qs.filter(payment_date__gte=start)
+            .annotate(bucket=TruncWeek('payment_date'))
+            .values('bucket')
+            .annotate(total=Sum('amount'))
+            .order_by('bucket')
+        )
+        for entry in data:
+            labels.append(entry['bucket'].strftime('%d %b'))
+            amounts.append(float(entry['total']))
+    elif period == 'year':
+        data = (
+            qs.annotate(bucket=TruncYear('payment_date'))
+            .values('bucket')
+            .annotate(total=Sum('amount'))
+            .order_by('bucket')
+        )
+        for entry in data:
+            labels.append(entry['bucket'].strftime('%Y'))
+            amounts.append(float(entry['total']))
+    else:
+        start = today - timedelta(days=180)
+        data = (
+            qs.filter(payment_date__gte=start)
+            .annotate(bucket=TruncMonth('payment_date'))
+            .values('bucket')
+            .annotate(total=Sum('amount'))
+            .order_by('bucket')
+        )
+        for entry in data:
+            labels.append(entry['bucket'].strftime('%b %Y'))
+            amounts.append(float(entry['total']))
+
+    return JsonResponse({'labels': labels, 'amounts': amounts})
 
 
 # ─── CUSTOMERS ───────────────────────────────────────────────────────────────────
@@ -230,6 +330,8 @@ def customers_view(request):
         'customers': customers,
         'search': search,
         'total_count': Customer.objects.count(),
+        'active_count': Customer.objects.filter(is_active=True).count(),
+        'customers_with_bookings': Customer.objects.filter(bookings__isnull=False).distinct().count(),
     }
     return render(request, 'customers.html', context)
 
@@ -280,7 +382,7 @@ def customer_edit_view(request, pk):
 
 
 @login_required
-@admin_or_above
+@management_or_above
 def customer_delete_view(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     if request.method == 'POST':
@@ -301,9 +403,16 @@ def customer_delete_view(request, pk):
 def customer_detail_view(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     bookings = customer.bookings.select_related('plot', 'plot__project').all()
+    payments = (
+        Payment.objects.filter(booking__customer=customer)
+        .select_related('booking', 'booking__plot')
+        .order_by('-payment_date', '-created_at')
+    )
     context = {
         'customer': customer,
         'bookings': bookings,
+        'payments': payments,
+        'latest_payment': payments.first(),
     }
     return render(request, 'customer_detail.html', context)
 
@@ -320,6 +429,7 @@ def properties_view(request):
     
     if project_filter:
         plots = plots.filter(project_id=project_filter)
+        projects = projects.filter(pk=project_filter)
     if status_filter:
         plots = plots.filter(status=status_filter)
     
@@ -328,6 +438,7 @@ def properties_view(request):
         'plots': plots,
         'project_filter': project_filter,
         'status_filter': status_filter,
+        'available_plots_count': plots.filter(status='available').count(),
     }
     return render(request, 'properties.html', context)
 
@@ -376,7 +487,7 @@ def project_edit_view(request, pk):
 
 
 @login_required
-@admin_or_above
+@management_or_above
 def project_delete_view(request, pk):
     project = get_object_or_404(Project, pk=pk)
     if request.method == 'POST':
@@ -437,7 +548,7 @@ def plot_edit_view(request, pk):
 
 
 @login_required
-@admin_or_above
+@management_or_above
 def plot_delete_view(request, pk):
     plot = get_object_or_404(Plot, pk=pk)
     if request.method == 'POST':
@@ -460,13 +571,25 @@ def plot_delete_view(request, pk):
 def bookings_view(request):
     bookings = Booking.objects.select_related('customer', 'plot', 'plot__project').all()
     status_filter = request.GET.get('status', '')
+    search = request.GET.get('search', '').strip()
     
     if status_filter:
         bookings = bookings.filter(status=status_filter)
+    if search:
+        bookings = bookings.filter(
+            Q(booking_id__icontains=search) |
+            Q(customer__first_name__icontains=search) |
+            Q(customer__last_name__icontains=search) |
+            Q(plot__plot_number__icontains=search)
+        )
     
     context = {
         'bookings': bookings,
         'status_filter': status_filter,
+        'search': search,
+        'confirmed_count': bookings.filter(status='confirmed').count(),
+        'pending_count': bookings.filter(status='pending').count(),
+        'total_amount': bookings.aggregate(total=Sum('total_amount'))['total'] or 0,
     }
     return render(request, 'bookings.html', context)
 
@@ -548,7 +671,7 @@ def booking_edit_view(request, pk):
 
 
 @login_required
-@admin_or_above
+@management_or_above
 def booking_delete_view(request, pk):
     booking = get_object_or_404(Booking, pk=pk)
     if request.method == 'POST':
@@ -572,7 +695,7 @@ def booking_delete_view(request, pk):
 # ─── BOOKING TRANSFER ──────────────────────────────────────────────────────────
 
 @login_required
-@admin_or_above
+@management_or_above
 def booking_transfer_view(request, pk):
     from bookings.models import BookingTransfer
     
@@ -652,42 +775,50 @@ def reservation_create_view(request):
 # ─── PAYMENTS ────────────────────────────────────────────────────────────────────
 
 @login_required
+@payments_access  # sales has no access to payment details; staff keeps legacy view access
 def payments_view(request):
     payments = Payment.objects.select_related('booking', 'booking__customer').all()
     status_filter = request.GET.get('status', '')
     method_filter = request.GET.get('method', '')
     search = request.GET.get('search', '')
+    customer_id = request.GET.get('customer', '')
     
     if status_filter:
         payments = payments.filter(status=status_filter)
     if method_filter:
         payments = payments.filter(payment_method=method_filter)
+    if customer_id:
+        payments = payments.filter(booking__customer_id=customer_id)
     if search:
         payments = payments.filter(
             Q(payment_id__icontains=search) |
             Q(booking__booking_id__icontains=search) |
-            Q(booking__customer__full_name__icontains=search)
+            Q(booking__customer__first_name__icontains=search) |
+            Q(booking__customer__last_name__icontains=search)
         )
     
-    payments = payments.select_related('booking', 'booking__customer', 'booking__plot', 'verified_by')
-    
-    verified_count = payments.filter(status='verified').count()
-    pending_count = payments.filter(status='pending').count()
-    rejected_count = payments.filter(status='rejected').count()
-    
+    payments = payments.select_related('booking', 'booking__customer', 'booking__plot', 'verified_by').prefetch_related('receipts')
+
+    today = timezone.localdate()
+    month_start = today.replace(day=1)
+    total_amount = payments.aggregate(total=Sum('amount'))['total'] or 0
+    month_amount = payments.filter(payment_date__gte=month_start).aggregate(total=Sum('amount'))['total'] or 0
+
     context = {
         'payments': payments,
         'status_filter': status_filter,
         'method_filter': method_filter,
         'search': search,
-        'verified_count': verified_count,
-        'pending_count': pending_count,
-        'rejected_count': rejected_count,
+        'customer_filter': Customer.objects.filter(pk=customer_id).first() if customer_id else None,
+        'total_count': payments.count(),
+        'total_amount': total_amount,
+        'month_amount': month_amount,
     }
     return render(request, 'payments.html', context)
 
 
 @login_required
+@payments_access
 def payment_create_view(request):
     from payments.forms import PaymentForm
     from payments.models import Receipt, PaymentAttachment
@@ -703,8 +834,29 @@ def payment_create_view(request):
         if form.is_valid():
             payment = form.save(commit=False)
             payment.created_by = request.user
+            payment.status = 'verified'
+            payment.verified_by = request.user
+            payment.verified_at = timezone.now()
             payment.save()
-            
+
+            # Update installment if linked
+            if payment.installment:
+                installment = payment.installment
+                installment.paid_amount += payment.amount
+                if installment.paid_amount >= installment.amount:
+                    installment.status = 'paid'
+                    installment.paid_date = payment.payment_date
+                else:
+                    installment.status = 'partial'
+                installment.save()
+
+            # Update booking advance
+            booking = payment.booking
+            booking.advance_paid += payment.amount
+            if booking.remaining_balance <= 0:
+                booking.status = 'completed'
+            booking.save()
+
             # Auto-generate receipt
             receipt = Receipt.objects.create(
                 payment=payment,
@@ -739,7 +891,7 @@ def payment_create_view(request):
                 object_id=payment.payment_id,
                 description=f'Created payment {payment.payment_id} for booking {payment.booking.booking_id}'
             )
-            messages.success(request, f'Payment {payment.payment_id} created successfully! Receipt {receipt.receipt_number} generated.')
+            messages.success(request, f'Payment {payment.payment_id} recorded successfully! Receipt {receipt.receipt_number} generated.')
             return redirect('payments')
     else:
         form = PaymentForm()
@@ -747,7 +899,7 @@ def payment_create_view(request):
             form.fields['booking'].initial = pre_filled_booking.id
             form.fields['booking'].widget.attrs['disabled'] = True
     
-    projects = Project.objects.filter(is_active=True)
+    projects = Project.objects.exclude(status='inactive')
     plots = Plot.objects.all()
     bookings = Booking.objects.filter(status__in=['pending', 'confirmed', 'active']).select_related('customer', 'plot', 'plot__project')
     
@@ -762,64 +914,7 @@ def payment_create_view(request):
 
 
 @login_required
-@admin_or_above  # Only admin/super_admin can verify payments
-def payment_verify_view(request, pk):
-    from payments.forms import PaymentVerificationForm
-    
-    payment = get_object_or_404(Payment, pk=pk)
-    
-    if request.method == 'POST':
-        form = PaymentVerificationForm(request.POST)
-        if form.is_valid():
-            action = form.cleaned_data['action']
-            notes = form.cleaned_data['notes']
-            
-            if action == 'verify':
-                payment.status = 'verified'
-                payment.verified_by = request.user
-                payment.verified_at = timezone.now()
-                payment.notes = notes
-                
-                # Update installment if linked
-                if payment.installment:
-                    installment = payment.installment
-                    installment.paid_amount += payment.amount
-                    if installment.paid_amount >= installment.amount:
-                        installment.status = 'paid'
-                        installment.paid_date = payment.payment_date
-                    else:
-                        installment.status = 'partial'
-                    installment.save()
-                
-                # Update booking advance
-                booking = payment.booking
-                booking.advance_paid += payment.amount
-                if booking.remaining_balance <= 0:
-                    booking.status = 'completed'
-                booking.save()
-                
-                messages.success(request, f'Payment {payment.payment_id} verified successfully!')
-            else:
-                payment.status = 'rejected'
-                payment.verified_by = request.user
-                payment.verified_at = timezone.now()
-                payment.notes = notes
-                messages.warning(request, f'Payment {payment.payment_id} rejected.')
-            
-            payment.save()
-            AuditLog.objects.create(
-                user=request.user, action='update', model_name='Payment',
-                object_id=payment.payment_id,
-                description=f'{action.title()} payment {payment.payment_id}'
-            )
-            return redirect('payments')
-    else:
-        form = PaymentVerificationForm()
-    
-    return render(request, 'payment_verify.html', {'form': form, 'payment': payment})
-
-
-@login_required
+@payments_access
 def payment_detail_view(request, pk):
     payment = get_object_or_404(Payment.objects.select_related(
         'booking', 'booking__customer', 'booking__plot', 'booking__plot__project',
@@ -850,35 +945,25 @@ def payment_detail_view(request, pk):
     
     all_attachments = payment.attachments.all()
     
+    customer_payments = (
+        Payment.objects.filter(booking__customer=payment.booking.customer)
+        .select_related('booking')
+        .order_by('-payment_date', '-created_at')
+    )
+    
     return render(request, 'payment_detail.html', {
         'payment': payment,
         'installments': installments,
         'payment_summary': payment_summary,
         'attachments': all_attachments,
+        'customer_payments': customer_payments,
     })
-
-
-@login_required
-@admin_or_above  # Only admin/super_admin can delete payments
-def payment_delete_view(request, pk):
-    payment = get_object_or_404(Payment, pk=pk)
-    if request.method == 'POST':
-        payment_id = payment.payment_id
-        payment.delete()
-        AuditLog.objects.create(
-            user=request.user, action='delete', model_name='Payment',
-            object_id=payment_id,
-            description=f'Deleted payment {payment_id}'
-        )
-        messages.success(request, f'Payment {payment_id} deleted successfully!')
-        return redirect('payments')
-    
-    return render(request, 'confirm_delete.html', {'object': payment, 'title': 'Delete Payment', 'cancel_url': 'payments'})
 
 
 # ─── RECEIPTS ─────────────────────────────────────────────────────────────────────
 
 @login_required
+@payments_access
 def receipt_detail_view(request, pk):
     from payments.models import Receipt
     from payments.utils import amount_in_words
@@ -904,22 +989,28 @@ def receipt_detail_view(request, pk):
     })
 
 
-# ─── USERS (admin/super_admin only) ──────────────────────────────────────────────
+# ─── USERS (admin/super_admin only; management read-only) ──────────────────────────
 
 @login_required
-@admin_or_above
+@management_or_above
 def users_view(request):
-    users = User.objects.select_related('profile').all()
-    return render(request, 'users.html', {'users': users})
+    users = User.objects.select_related('profile').order_by('-date_joined')
+    role_choices = [(k, v) for k, v in UserProfile.ROLE_CHOICES if k != 'super_admin']
+    return render(request, 'users.html', {
+        'users': users,
+        'role_choices': role_choices,
+        'active_count': User.objects.filter(is_active=True).count(),
+        'admin_count': User.objects.filter(profile__role__in=['super_admin', 'admin']).count(),
+    })
 
 
 @login_required
 @admin_or_above
 def user_create_view(request):
     from .forms import CreateUserForm
-    
+
     if request.method == 'POST':
-        form = CreateUserForm(request.POST)
+        form = CreateUserForm(request.POST, actor=request.user)
         if form.is_valid():
             user = User.objects.create_user(
                 username=form.cleaned_data['username'],
@@ -943,7 +1034,7 @@ def user_create_view(request):
             return redirect('users')
     else:
         form = CreateUserForm()
-    
+
     return render(request, 'user_form.html', {'form': form, 'title': 'Create New User'})
 
 
@@ -951,34 +1042,97 @@ def user_create_view(request):
 @admin_or_above
 def user_edit_view(request, pk):
     user = get_object_or_404(User.objects.select_related('profile'), pk=pk)
-    
+    actor_role = get_user_role(request)
+    target_role = getattr(getattr(user, 'profile', None), 'role', None)
+
+    if target_role == 'super_admin' and actor_role != 'super_admin':
+        messages.error(request, 'Only a Super Admin can edit a Super Admin account.')
+        return redirect('users')
+
     if request.method == 'POST':
         form = UserEditForm(request.POST, instance=user)
         if form.is_valid():
-            form.save()
+            new_role = form.cleaned_data['role']
+
+            if user == request.user and new_role != target_role:
+                form.add_error('role', 'You cannot change your own role.')
+            elif (
+                target_role == 'super_admin'
+                and new_role != 'super_admin'
+                and User.objects.filter(is_active=True, profile__role='super_admin').count() <= 1
+            ):
+                form.add_error('role', 'Cannot change the role of the last active Super Admin.')
+            else:
+                password_changed = bool(form.cleaned_data.get('new_password'))
+                form.save()
+                AuditLog.objects.create(
+                    user=request.user, action='update', model_name='User',
+                    object_id=user.username,
+                    description=f'Updated user {user.username}' + (' and changed password' if password_changed else '')
+                )
+                messages.success(request, f'User {user.username} updated successfully!')
+                return redirect('users')
+    else:
+        form = UserEditForm(instance=user)
+
+    return render(request, 'user_form.html', {'form': form, 'title': f'Edit User: {user.username}', 'user': user})
+
+
+@login_required
+@admin_or_above
+def user_role_update_view(request, pk):
+    """Inline role dropdown update from the Manage Users list."""
+    user = get_object_or_404(User.objects.select_related('profile'), pk=pk)
+    allowed = [k for k, _ in UserProfile.ROLE_CHOICES if k != 'super_admin']
+
+    if request.method == 'POST':
+        role = request.POST.get('role', '')
+        if user == request.user:
+            messages.error(request, 'You cannot change your own role.')
+        elif not hasattr(user, 'profile'):
+            messages.error(request, f'User {user.username} has no profile.')
+        elif getattr(user.profile, 'role', None) == 'super_admin':
+            messages.error(request, 'Super Admin roles cannot be changed.')
+        elif role not in allowed:
+            messages.error(request, 'Invalid role selected.')
+        else:
+            old_role = user.profile.get_role_display()
+            user.profile.role = role
+            user.profile.save()
             AuditLog.objects.create(
                 user=request.user, action='update', model_name='User',
                 object_id=user.username,
-                description=f'Updated user {user.username}'
+                description=f'Changed role of {user.username} from {old_role} to {user.profile.get_role_display()}'
             )
-            messages.success(request, f'User {user.username} updated successfully!')
-            return redirect('users')
-    else:
-        form = UserEditForm(instance=user)
-    
-    return render(request, 'user_form.html', {'form': form, 'title': f'Edit User: {user.username}', 'user': user})
+            messages.success(request, f'Role updated for {user.username}.')
+    return redirect('users')
 
 
 @login_required
 @admin_or_above
 def user_deactivate_view(request, pk):
     user = get_object_or_404(User, pk=pk)
-    
+    actor_role = get_user_role(request)
+    target_role = getattr(getattr(user, 'profile', None), 'role', None)
+
     # Prevent self-deactivation
     if user == request.user:
         messages.error(request, 'You cannot deactivate your own account.')
         return redirect('users')
-    
+
+    # Only a super admin may deactivate another super admin
+    if target_role == 'super_admin' and actor_role != 'super_admin':
+        messages.error(request, 'Only a Super Admin can deactivate another Super Admin.')
+        return redirect('users')
+
+    # Never lock out the last active super admin
+    if (
+        target_role == 'super_admin' and user.is_active
+        and User.objects.filter(is_active=True, profile__role='super_admin').count() <= 1
+    ):
+        messages.error(request, 'Cannot deactivate the last active Super Admin.')
+        return redirect('users')
+
     if request.method == 'POST':
         user.is_active = not user.is_active
         user.save()
@@ -990,7 +1144,7 @@ def user_deactivate_view(request, pk):
         )
         messages.success(request, f'User {user.username} {status} successfully!')
         return redirect('users')
-    
+
     return render(request, 'confirm_delete.html', {
         'object': user,
         'title': f'{"Deactivate" if user.is_active else "Activate"} User',
@@ -1002,7 +1156,7 @@ def user_deactivate_view(request, pk):
 # ─── AUDIT LOGS ──────────────────────────────────────────────────────────────────
 
 @login_required
-@admin_or_above
+@management_or_above
 def audit_logs_view(request):
     logs = AuditLog.objects.select_related('user').all()[:100]
     return render(request, 'audit_logs.html', {'logs': logs})
@@ -1061,3 +1215,54 @@ def save_theme_view(request):
             return JsonResponse({'status': 'ok', 'theme': theme})
     
     return JsonResponse({'status': 'error'}, status=400)
+
+
+# ─── DB BACKUP (admin/super_admin only) ──────────────────────────────────────────
+
+@login_required
+@admin_or_above
+def backup_view(request):
+    from pathlib import Path
+    from datetime import datetime
+    from django.conf import settings
+
+    backup_dir = Path(settings.BASE_DIR) / 'backups'
+    last_backups = []
+    if backup_dir.exists():
+        files = sorted(backup_dir.glob('samana_backup_*.zip'), reverse=True)[:5]
+        for f in files:
+            last_backups.append({
+                'name': f.name,
+                'size': f.stat().st_size,
+                'time': datetime.fromtimestamp(f.stat().st_mtime),
+            })
+
+    return render(request, 'backup.html', {'last_backups': last_backups})
+
+
+@login_required
+@admin_or_above
+def backup_download_view(request):
+    import io
+    from pathlib import Path
+    from django.conf import settings
+    from django.http import FileResponse
+    from .backup import build_backup_zip
+
+    data = build_backup_zip()
+    filename = f"samana_backup_{timezone.now().strftime('%Y%m%d_%H%M%S')}.zip"
+
+    backup_dir = Path(settings.BASE_DIR) / 'backups'
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    (backup_dir / filename).write_bytes(data)
+
+    AuditLog.objects.create(
+        user=request.user, action='backup', model_name='Database',
+        object_id=filename,
+        description=f'Database backup downloaded: {filename}'
+    )
+    messages.success(request, f'Backup created successfully: {filename}')
+
+    response = FileResponse(io.BytesIO(data), as_attachment=True, filename=filename)
+    response['Cache-Control'] = 'no-store'
+    return response

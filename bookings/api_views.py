@@ -21,7 +21,7 @@ from .serializers import (
 
 
 class IsStaffOrAbove(permissions.BasePermission):
-    """Allow all three levels for read, only admin+ for write."""
+    """Allow read for all authenticated, write for admin+."""
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
@@ -30,16 +30,16 @@ class IsStaffOrAbove(permissions.BasePermission):
         if request.user.is_superuser:
             return True
         if hasattr(request.user, 'profile'):
-            return request.user.profile.role in ['super_admin', 'admin', 'staff']
+            return request.user.profile.role in ['super_admin', 'admin', 'management', 'sales']
         return False
     
     def has_object_permission(self, request, view, obj):
-        # Staff can view, but not delete
+        # Lower roles can view, but not delete
         if request.method == 'DELETE':
             if request.user.is_superuser:
                 return True
             if hasattr(request.user, 'profile'):
-                return request.user.profile.role in ['super_admin', 'admin']
+                return request.user.profile.role in ['super_admin', 'admin', 'management']
             return False
         return True
 

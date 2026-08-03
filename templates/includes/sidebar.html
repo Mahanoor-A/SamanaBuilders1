@@ -1,0 +1,32 @@
+{% with url_name=request.resolver_match.url_name %}
+<aside class="sidebar{% if sidebar_class %} {{ sidebar_class }}{% endif %}">
+    <div class="sidebar-brand"><div class="brand-text"><h2>Samana Builders</h2><p>Real Estate ERP</p></div></div>
+    <nav class="sidebar-nav">
+        <div class="nav-section">Main Menu</div>
+        <ul class="nav-menu">
+            <li class="nav-item"><a href="{% url 'dashboard' %}" class="nav-link{% if url_name == 'dashboard' %} active{% endif %}"><span class="nav-icon">📊</span> Dashboard</a></li>
+            <li class="nav-item"><a href="{% url 'customers' %}" class="nav-link{% if url_name == 'customers' or url_name == 'customer_create' or url_name == 'customer_edit' or url_name == 'customer_detail' %} active{% endif %}"><span class="nav-icon">👥</span> Customers</a></li>
+            <li class="nav-item"><a href="{% url 'properties' %}" class="nav-link{% if url_name == 'properties' or url_name == 'project_create' or url_name == 'project_edit' or url_name == 'plot_create' or url_name == 'plot_edit' or url_name == 'reservation_create' %} active{% endif %}"><span class="nav-icon">🏗️</span> Properties</a></li>
+            <li class="nav-item"><a href="{% url 'bookings' %}" class="nav-link{% if url_name == 'bookings' or url_name == 'booking_create' or url_name == 'booking_edit' or url_name == 'booking_detail' or url_name == 'booking_transfer' %} active{% endif %}"><span class="nav-icon">📋</span> Bookings</a></li>
+            {% if can_view_payments %}
+            <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link{% if url_name == 'payments' or url_name == 'payment_create' or url_name == 'payment_detail' or url_name == 'receipt_detail' %} active{% endif %}"><span class="nav-icon">💰</span> Payments</a></li>
+            {% endif %}
+        </ul>
+        <div class="nav-divider"></div>
+        <div class="nav-section">Administration</div>
+        <ul class="nav-menu">
+            {% if can_view_users %}
+            <li class="nav-item"><a href="{% url 'users' %}" class="nav-link{% if url_name == 'users' or url_name == 'user_create' or url_name == 'user_edit' or url_name == 'user_role_update' %} active{% endif %}"><span class="nav-icon">👤</span> Manage Users</a></li>
+            {% endif %}
+            {% if can_backup %}
+            <li class="nav-item"><a href="{% url 'backup' %}" class="nav-link{% if url_name == 'backup' %} active{% endif %}"><span class="nav-icon">💾</span> DB Backup</a></li>
+            {% endif %}
+            {% if can_audit %}
+            <li class="nav-item"><a href="{% url 'audit_logs' %}" class="nav-link{% if url_name == 'audit_logs' %} active{% endif %}"><span class="nav-icon">📝</span> Audit Logs</a></li>
+            {% endif %}
+            <li class="nav-item"><a href="{% url 'profile' %}" class="nav-link{% if url_name == 'profile' %} active{% endif %}"><span class="nav-icon">⚙️</span> Preferences</a></li>
+        </ul>
+    </nav>
+    <div class="sidebar-footer"><a href="{% url 'logout' %}" class="nav-link" style="padding:8px 0;"><span class="nav-icon">🚪</span> Logout</a></div>
+</aside>
+{% endwith %}

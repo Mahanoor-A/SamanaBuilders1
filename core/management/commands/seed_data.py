@@ -41,7 +41,7 @@ class Command(BaseCommand):
             {'username': 'umar', 'email': 'umar@samana.com', 'password': 'admin123',
              'first_name': 'Umar', 'last_name': 'Hassan', 'role': 'accounts', 'phone': '+92-300-4444444'},
             {'username': 'sara', 'email': 'sara@samana.com', 'password': 'admin123',
-             'first_name': 'Sara', 'last_name': 'Ahmed', 'role': 'staff', 'phone': '+92-300-5555555'},
+             'first_name': 'Sara', 'last_name': 'Ahmed', 'role': 'sales', 'phone': '+92-300-5555555'},
             {'username': 'zain', 'email': 'zain@samana.com', 'password': 'admin123',
              'first_name': 'Zain', 'last_name': 'Malik', 'role': 'management', 'phone': '+92-300-6666666'},
         ]
