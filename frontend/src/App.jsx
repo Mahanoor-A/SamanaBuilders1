@@ -15,8 +15,12 @@ import PaymentFormPage from './pages/erp/PaymentFormPage';
 import PaymentDetailPage from './pages/erp/PaymentDetailPage';
 import UsersPage from './pages/erp/UsersPage';
 import UserFormPage from './pages/erp/UserFormPage';
+import CustomersPage from './pages/erp/CustomersPage';
+import CustomerFormPage from './pages/erp/CustomerFormPage';
 import AuditLogsPage from './pages/erp/AuditLogsPage';
 import LoginPage from './pages/erp/LoginPage';
+import CustomerPortalLayout from './pages/portal/CustomerPortalLayout';
+import CustomerPortalDashboard from './pages/portal/CustomerPortalDashboard';
 
 function CorporateLayout() {
   return (
@@ -56,7 +60,12 @@ export default function App() {
           <Route path="users" element={<UsersPage />} />
           <Route path="users/new" element={<UserFormPage />} />
           <Route path="users/:id/edit" element={<UserFormPage />} />
+          <Route path="customers" element={<CustomersPage />} />
+          <Route path="customers/new" element={<CustomerFormPage />} />
           <Route path="audit-logs" element={<AuditLogsPage />} />
+        </Route>
+        <Route path="/portal" element={<CustomerPortalLayout />}>
+          <Route index element={<CustomerPortalDashboard />} />
         </Route>
       </Routes>
     </BrowserRouter>

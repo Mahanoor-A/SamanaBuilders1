@@ -1,7 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from api.views import csrf_token, api_login, api_logout, current_user, portal_dashboard
 from core.api_views import UserViewSet, AuditLogViewSet, ProfileViewSet
-from customers.api_views import CustomerViewSet, CustomerLedgerEntryViewSet
+from customers.api_views import (
+    CustomerViewSet, CustomerLedgerEntryViewSet, CustomerProfileCreateView
+)
 from properties.api_views import (
     ProjectViewSet, ProjectPhaseViewSet, PlotViewSet,
     PlotFeatureViewSet, PriceHistoryViewSet
@@ -50,5 +53,16 @@ router.register(r'payment-allocations', PaymentAllocationViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+
+    # Auth
+    path('auth/csrf/', csrf_token, name='api_csrf'),
+    path('auth/login/', api_login, name='api_login'),
+    path('auth/logout/', api_logout, name='api_logout'),
+    path('auth/me/', current_user, name='api_me'),
+
+    # Customer portal login creation + portal data
+    path('customer-profiles/', CustomerProfileCreateView.as_view(), name='customer_profile_create'),
+    path('portal/', portal_dashboard, name='portal_dashboard'),
+
     path('auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]

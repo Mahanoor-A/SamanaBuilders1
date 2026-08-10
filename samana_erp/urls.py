@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from core import views as core_views
@@ -9,7 +9,6 @@ urlpatterns = [
     path('api/', include('api.urls')),
     
     # Authentication
-    path('', core_views.login_view, name='login'),
     path('login/', core_views.login_view, name='login'),
     path('logout/', core_views.logout_view, name='logout'),
     
@@ -20,6 +19,7 @@ urlpatterns = [
     # Customers
     path('customers/', core_views.customers_view, name='customers'),
     path('customers/create/', core_views.customer_create_view, name='customer_create'),
+    path('customers/create-profile/', core_views.customer_profile_create_view, name='customer_profile_create'),
     path('customers/<int:pk>/', core_views.customer_detail_view, name='customer_detail'),
     path('customers/<int:pk>/edit/', core_views.customer_edit_view, name='customer_edit'),
     path('customers/<int:pk>/delete/', core_views.customer_delete_view, name='customer_delete'),
@@ -59,6 +59,9 @@ urlpatterns = [
     path('users/<int:pk>/toggle-active/', core_views.user_deactivate_view, name='user_deactivate'),
     path('audit-logs/', core_views.audit_logs_view, name='audit_logs'),
 
+    # Expenses
+    path('expenses/', include('expenses.urls')),
+
     # Backup
     path('backup/', core_views.backup_view, name='backup'),
     path('backup/download/', core_views.backup_download_view, name='backup_download'),
@@ -66,6 +69,10 @@ urlpatterns = [
     # Profile
     path('profile/', core_views.profile_view, name='profile'),
     path('api/save-theme/', core_views.save_theme_view, name='save_theme'),
+
+    # React SPA (corporate site + /erp + /portal sections). Served last so it never
+    # shadows API, admin, static, media, or ERP template routes.
+    re_path(r'^(?:(?:erp|portal)(?:/.*)?)?$', core_views.spa_view, name='spa_index'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

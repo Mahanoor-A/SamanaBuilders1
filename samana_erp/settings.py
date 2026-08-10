@@ -38,17 +38,20 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'corsheaders',
     'rest_framework',
     'core',
     'customers',
     'properties',
     'bookings',
     'payments',
+    'expenses',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -124,7 +127,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+    ('frontend', BASE_DIR / 'frontend' / 'dist'),
+]
+
+# CORS: allows the React dev server (5173) to talk to the Django API.
+# Same-origin requests (single-server build) do not need CORS.
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 # Media files
 MEDIA_URL = '/media/'

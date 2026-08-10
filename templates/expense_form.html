@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - Samana Builders ERP{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <div class="top-bar">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <span class="top-bar-title">{{ title }}</span>
+        <div class="top-bar-actions"></div>
+    </div>
+
+    {% include 'includes/sidebar.html' %}
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>{{ title }}</h1>
+            <div class="page-actions">
+                <a href="{% url 'expenses' %}" class="btn btn-secondary btn-sm">← Back to Expenses</a>
+            </div>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-error animate-slide-right">
+            <span>⚠️</span>
+            <span>{{ form.non_field_errors }}</span>
+        </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="card animate-fade-up">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border);">
+                    <div style="width:48px; height:48px; border-radius:12px; background:var(--primary-bg); display:flex; align-items:center; justify-content:center; font-size:24px;">🧾</div>
+                    <div>
+                        <h3 style="font-size:16px; font-weight:600; color:var(--text-primary);">Expense Details</h3>
+                        <p style="font-size:13px; color:var(--text-secondary);">Record a company expense against a project</p>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="floating-group">
+                        {{ form.project }}
+                        <label for="{{ form.project.id_for_label }}">Project <span style="color:var(--accent-red);">*</span></label>
+                        {% if form.project.errors %}
+                        <div class="form-error">{% for error in form.project.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="floating-group">
+                        {{ form.expense_type }}
+                        <label for="{{ form.expense_type.id_for_label }}">Expense Type <span style="color:var(--accent-red);">*</span></label>
+                        {% if form.expense_type.errors %}
+                        <div class="form-error">{% for error in form.expense_type.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="floating-group">
+                        {{ form.amount }}
+                        <label for="{{ form.amount.id_for_label }}">Amount (Rs.) <span style="color:var(--accent-red);">*</span></label>
+                        {% if form.amount.errors %}
+                        <div class="form-error">{% for error in form.amount.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="floating-group">
+                        {{ form.expense_date }}
+                        <label for="{{ form.expense_date.id_for_label }}">Expense Date <span style="color:var(--accent-red);">*</span></label>
+                        {% if form.expense_date.errors %}
+                        <div class="form-error">{% for error in form.expense_date.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="floating-group">
+                        {{ form.description }}
+                        <label for="{{ form.description.id_for_label }}">Description <span style="color:var(--accent-red);">*</span></label>
+                        {% if form.description.errors %}
+                        <div class="form-error">{% for error in form.description.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="floating-group">
+                        {{ form.paid_to }}
+                        <label for="{{ form.paid_to.id_for_label }}">Paid To (Vendor)</label>
+                        {% if form.paid_to.errors %}
+                        <div class="form-error">{% for error in form.paid_to.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card animate-fade-up stagger-1" style="border:none; background:transparent; box-shadow:none; padding:0;">
+                <div class="btn-group" style="justify-content:flex-end;">
+                    <a href="{% url 'expenses' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">
+                        <span class="spinner"></span>
+                        <span class="btn-text">{% if mode == 'edit' %}Save Changes{% else %}Add Expense{% endif %}</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </main>
+</div>
+{% endblock %}

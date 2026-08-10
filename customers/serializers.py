@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.contrib.auth.models import User
 from .models import Customer, CustomerLedgerEntry
 
 
@@ -73,6 +74,41 @@ class CustomerCreateSerializer(serializers.ModelSerializer):
         if not re.match(pattern, value):
             raise serializers.ValidationError('Enter a valid phone number (10-15 digits)')
         return value
+
+
+class CustomerProfileCreateSerializer(serializers.Serializer):
+    """Create a Django login linked to an existing Customer."""
+    username = serializers.CharField(max_length=150)
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, min_length=6)
+    confirm_password = serializers.CharField(write_only=True)
+    customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all())
+
+    def validate_username(self, value):
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError('Username already exists')
+        return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('Email is already in use')
+        return value
+
+    def validate(self, attrs):
+        if attrs['password'] != attrs['confirm_password']:
+            raise serializers.ValidationError({'confirm_password': 'Passwords do not match'})
+        return attrs
+
+    def create(self, validated_data):
+        customer = validated_data['customer']
+        validated_data.pop('confirm_password')
+        password = validated_data.pop('password')
+        user = User(username=validated_data['username'], email=validated_data['email'])
+        user.set_password(password)
+        user.save()
+        customer.user = user
+        customer.save(update_fields=['user'])
+        return user
 
 
 class CustomerDetailSerializer(serializers.ModelSerializer):

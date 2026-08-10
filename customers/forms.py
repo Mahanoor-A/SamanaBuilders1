@@ -1,6 +1,7 @@
 import re
 from django import forms
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 from .models import Customer, CustomerLedgerEntry
 
 
@@ -51,6 +52,60 @@ class CustomerForm(forms.ModelForm):
         if phone:
             validate_phone(phone)
         return phone
+
+
+class CustomerProfileForm(forms.Form):
+    """Create a Django login linked to an existing Customer."""
+    customer = forms.ModelChoiceField(
+        queryset=Customer.objects.filter(is_active=True),
+        label='Customer',
+        widget=forms.Select(attrs={'class': 'form-control', 'placeholder': ' '}),
+    )
+    username = forms.CharField(
+        max_length=150, label='Username',
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+    )
+    email = forms.EmailField(
+        label='Email',
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+    )
+    password = forms.CharField(
+        label='Password', min_length=6,
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+    )
+    confirm_password = forms.CharField(
+        label='Confirm Password',
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+    )
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if User.objects.filter(username=username).exists():
+            raise ValidationError('Username already exists')
+        return username
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise ValidationError('Email is already in use')
+        return email
+
+    def clean(self):
+        cleaned = super().clean()
+        password = cleaned.get('password')
+        confirm = cleaned.get('confirm_password')
+        if password and confirm and password != confirm:
+            self.add_error('confirm_password', ValidationError('Passwords do not match'))
+        return cleaned
+
+    def save(self):
+        customer = self.cleaned_data['customer']
+        user = User(username=self.cleaned_data['username'], email=self.cleaned_data['email'])
+        user.set_password(self.cleaned_data['password'])
+        user.save()
+        customer.user = user
+        customer.save(update_fields=['user'])
+        return user
 
 
 class CustomerLedgerEntryForm(forms.ModelForm):

@@ -1,12 +1,14 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from django.db import models as db_models
 from django.shortcuts import get_object_or_404
 from .models import Customer, CustomerLedgerEntry
 from .serializers import (
     CustomerSerializer, CustomerDetailSerializer,
     CustomerLedgerEntrySerializer, CustomerCreateSerializer,
+    CustomerProfileCreateSerializer,
 )
 
 
@@ -116,6 +118,34 @@ class CustomerViewSet(viewsets.ModelViewSet):
         bookings = customer.bookings.select_related('plot', 'plot__project').all()
         serializer = BookingSerializer(bookings, many=True)
         return Response(serializer.data)
+
+
+class CustomerProfileCreateView(APIView):
+    """Admin creates a customer portal login linked to an existing Customer."""
+    permission_classes = [IsAdminOrSuperAdmin]
+
+    def post(self, request):
+        serializer = CustomerProfileCreateSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        user = serializer.save()
+        customer = serializer.validated_data['customer']
+
+        from core.models import AuditLog
+        AuditLog.objects.create(
+            user=request.user, action='create', model_name='CustomerProfile',
+            object_id=customer.customer_id,
+            description=f'Created customer profile for {customer.customer_id} ({user.username})'
+        )
+
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'customer_id': customer.customer_id,
+            'full_name': customer.full_name,
+        }, status=status.HTTP_201_CREATED)
 
 
 class CustomerLedgerEntryViewSet(viewsets.ModelViewSet):

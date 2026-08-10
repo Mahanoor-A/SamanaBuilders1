@@ -4,6 +4,8 @@ const api = axios.create({
   baseURL: '/api/',
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
+  xsrfCookieName: 'csrftoken',
+  xsrfHeaderName: 'X-CSRFToken',
 });
 
 api.interceptors.response.use(
@@ -20,7 +22,26 @@ export const projectService = {
 };
 
 export const customerService = {
+  getAll: (params) => api.get('/customers/', { params }),
+  getById: (id) => api.get(`/customers/${id}/`),
   create: (data) => api.post('/customers/', data),
+  update: (id, data) => api.put(`/customers/${id}/`, data),
+  delete: (id) => api.delete(`/customers/${id}/`),
+};
+
+export const customerProfileAPI = {
+  create: (data) => api.post('/customer-profiles/', data),
+};
+
+export const authAPI = {
+  init: () => api.get('/auth/csrf/'),
+  login: (data) => api.post('/auth/login/', data),
+  logout: () => api.post('/auth/logout/'),
+  me: () => api.get('/auth/me/'),
+};
+
+export const portalAPI = {
+  dashboard: () => api.get('/portal/'),
 };
 
 export const plotService = {

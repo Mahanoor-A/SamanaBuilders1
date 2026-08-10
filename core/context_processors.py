@@ -1,4 +1,4 @@
-from .permissions import get_user_role, MANAGEMENT_ROLES, ADMIN_ROLES, PAYMENTS_ACCESS_ROLES
+from .permissions import get_user_role, MANAGEMENT_ROLES, ADMIN_ROLES, PAYMENTS_ACCESS_ROLES, FINANCE_ROLES
 
 
 def user_theme_processor(request):
@@ -16,6 +16,7 @@ def erp_context(request):
     return {
         'user_role': role,
         'can_view_payments': role in PAYMENTS_ACCESS_ROLES,
+        'can_view_expenses': role in FINANCE_ROLES,
         'can_manage_users': role in ADMIN_ROLES,
         'can_view_users': role in MANAGEMENT_ROLES,
         'can_backup': role in ADMIN_ROLES,

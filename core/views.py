@@ -22,9 +22,18 @@ from bookings.models import Booking, Installment
 from payments.models import Payment
 
 
+def _post_login_target(user):
+    """Customers (non-staff) go to the React customer portal; staff go to the ERP dashboard."""
+    if user.is_staff or hasattr(user, 'profile'):
+        return 'dashboard'
+    if Customer.objects.filter(user=user).exists():
+        return '/portal'
+    return 'dashboard'
+
+
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('dashboard')
+        return redirect(_post_login_target(request.user))
     
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
@@ -43,7 +52,7 @@ def login_view(request):
                 ip_address=request.META.get('REMOTE_ADDR')
             )
             messages.success(request, f'Welcome back, {user.get_full_name() or user.username}!')
-            return redirect('dashboard')
+            return redirect(_post_login_target(user))
         else:
             messages.error(request, 'Invalid username or password.')
     else:
@@ -357,6 +366,33 @@ def customer_create_view(request):
         form = CustomerForm()
     
     return render(request, 'customer_form.html', {'form': form, 'title': 'Add New Customer'})
+
+
+@login_required
+@admin_or_above
+def customer_profile_create_view(request):
+    """Create a customer portal login linked to an existing Customer."""
+    from customers.forms import CustomerProfileForm
+
+    if request.method == 'POST':
+        form = CustomerProfileForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            customer = form.cleaned_data['customer']
+            AuditLog.objects.create(
+                user=request.user, action='create', model_name='CustomerProfile',
+                object_id=customer.customer_id,
+                description=f'Created customer profile for {customer.customer_id} ({user.username})'
+            )
+            messages.success(request, f'Portal login created for {customer.full_name} (username: {user.username}).')
+            return redirect('customers')
+    else:
+        form = CustomerProfileForm()
+
+    return render(request, 'customer_profile_form.html', {
+        'form': form,
+        'title': 'Create Customer Profile',
+    })
 
 
 @login_required
@@ -1266,3 +1302,17 @@ def backup_download_view(request):
     response = FileResponse(io.BytesIO(data), as_attachment=True, filename=filename)
     response['Cache-Control'] = 'no-store'
     return response
+
+
+def spa_view(request):
+    from pathlib import Path
+    from django.conf import settings
+    from django.http import HttpResponse
+
+    index_path = Path(settings.BASE_DIR) / 'frontend' / 'dist' / 'index.html'
+    if not index_path.exists():
+        return HttpResponse(
+            'Frontend build not found. Run "npm run build" in the frontend/ directory.',
+            status=503,
+        )
+    return HttpResponse(index_path.read_text(encoding='utf-8'), content_type='text/html')

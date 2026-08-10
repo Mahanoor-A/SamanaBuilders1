@@ -11,6 +11,9 @@
             {% if can_view_payments %}
             <li class="nav-item"><a href="{% url 'payments' %}" class="nav-link{% if url_name == 'payments' or url_name == 'payment_create' or url_name == 'payment_detail' or url_name == 'receipt_detail' %} active{% endif %}"><span class="nav-icon">💰</span> Payments</a></li>
             {% endif %}
+            {% if can_view_expenses %}
+            <li class="nav-item"><a href="{% url 'expenses' %}" class="nav-link{% if url_name == 'expenses' or url_name == 'expense_create' or url_name == 'expense_edit' or url_name == 'expense_delete' %} active{% endif %}"><span class="nav-icon">🧾</span> Expenses</a></li>
+            {% endif %}
         </ul>
         <div class="nav-divider"></div>
         <div class="nav-section">Administration</div>
