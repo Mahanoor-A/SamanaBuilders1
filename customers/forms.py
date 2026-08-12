@@ -2,33 +2,36 @@ import re
 from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
-from .models import Customer, CustomerLedgerEntry
+from .models import Customer, CustomerLedgerEntry, format_cnic, format_phone
 
 
 def validate_cnic(value):
     pattern = r'^\d{5}-\d{7}-\d{1}$'
     if not re.match(pattern, value):
-        raise ValidationError('CNIC format must be XXXXX-XXXXXXX-X')
+        raise ValidationError('CNIC must be in format 37405-0235722-4')
 
 
 def validate_phone(value):
-    pattern = r'^\+?[\d\-]{10,15}$'
+    pattern = r'^\+92-\d{3}-\d{7}$'
     if not re.match(pattern, value):
-        raise ValidationError('Enter a valid phone number (10-15 digits)')
+        raise ValidationError('Phone must be in format +92-300-1234567')
 
 
 class CustomerForm(forms.ModelForm):
     class Meta:
         model = Customer
         fields = ['first_name', 'last_name', 'email', 'phone', 'alternate_phone',
-                  'cnic', 'address', 'city', 'notes', 'document', 'image', 'is_active']
+                  'cnic', 'occupation', 'occupation_other', 'address', 'city',
+                  'notes', 'document', 'image', 'is_active']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
             'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
             'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': ' '}),
-            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
-            'alternate_phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
-            'cnic': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+92-300-1234567'}),
+            'alternate_phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+92-300-1234567'}),
+            'cnic': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '37405-0235722-4'}),
+            'occupation': forms.Select(attrs={'class': 'form-control', 'placeholder': ' '}),
+            'occupation_other': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': ' '}),
             'city': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': ' '}),
@@ -39,19 +42,32 @@ class CustomerForm(forms.ModelForm):
 
     def clean_cnic(self):
         cnic = self.cleaned_data.get('cnic')
+        if cnic:
+            cnic = format_cnic(cnic)
         validate_cnic(cnic)
         return cnic
 
     def clean_phone(self):
         phone = self.cleaned_data.get('phone')
+        if phone:
+            phone = format_phone(phone)
         validate_phone(phone)
         return phone
 
     def clean_alternate_phone(self):
         phone = self.cleaned_data.get('alternate_phone')
         if phone:
+            phone = format_phone(phone)
             validate_phone(phone)
         return phone
+
+    def clean(self):
+        cleaned = super().clean()
+        occupation = cleaned.get('occupation')
+        other = cleaned.get('occupation_other')
+        if occupation == 'other' and not (other and other.strip()):
+            self.add_error('occupation_other', 'Please specify your occupation.')
+        return cleaned
 
 
 class CustomerProfileForm(forms.Form):

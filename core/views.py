@@ -11,7 +11,7 @@ from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
 from .models import UserProfile, AuditLog
-from .forms import UserForm, UserProfileForm, CreateUserForm, UserEditForm
+from .forms import UserForm, UserProfileForm, CreateUserForm, UserEditForm, RestoreBackupForm
 from .permissions import (
     role_required, super_admin_required, admin_or_above,
     management_or_above, finance_or_above, payments_access, get_user_role,
@@ -1273,7 +1273,11 @@ def backup_view(request):
                 'time': datetime.fromtimestamp(f.stat().st_mtime),
             })
 
-    return render(request, 'backup.html', {'last_backups': last_backups})
+    restore_form = RestoreBackupForm()
+    return render(request, 'backup.html', {
+        'last_backups': last_backups,
+        'restore_form': restore_form,
+    })
 
 
 @login_required
@@ -1304,15 +1308,214 @@ def backup_download_view(request):
     return response
 
 
-def spa_view(request):
+def _perform_restore(request, data, name):
+    from .backup import restore_from_backup
+    try:
+        summary = restore_from_backup(data)
+    except Exception as exc:
+        AuditLog.objects.create(
+            user=request.user, action='restore', model_name='Database',
+            object_id=name, description=f'Restore FAILED: {exc}',
+        )
+        messages.error(request, f'Restore failed: {exc}')
+        return False
+
+    AuditLog.objects.create(
+        user=request.user, action='restore', model_name='Database',
+        object_id=name,
+        description='Database restored: {} rows across {} tables, {} media files'.format(
+            summary['total_rows'], len(summary['tables']), summary['media_files']),
+    )
+    messages.success(
+        request,
+        'Database restored successfully: {} rows across {} tables, {} media files.'.format(
+            summary['total_rows'], len(summary['tables']), summary['media_files']),
+    )
+    return True
+
+
+def _restore_blocked(request, name):
+    """Basic guard against duplicate restores in quick succession (non-DEBUG)."""
+    from django.conf import settings
+    if settings.DEBUG:
+        return False
+    user_ip = request.META.get('HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR'))
+    return AuditLog.objects.filter(
+        user=request.user, action='restore', object_id=name,
+        description__icontains=(user_ip or ''),
+        created_at__gte=timezone.now() - timedelta(seconds=60),
+    ).exists()
+
+
+@login_required
+@admin_or_above
+def backup_restore_latest_view(request):
     from pathlib import Path
     from django.conf import settings
-    from django.http import HttpResponse
 
-    index_path = Path(settings.BASE_DIR) / 'frontend' / 'dist' / 'index.html'
-    if not index_path.exists():
-        return HttpResponse(
-            'Frontend build not found. Run "npm run build" in the frontend/ directory.',
-            status=503,
+    if request.method != 'POST':
+        return redirect('backup')
+
+    backup_dir = Path(settings.BASE_DIR) / 'backups'
+    if not backup_dir.exists():
+        messages.error(request, 'No backups found in the backups folder. Create a backup first.')
+        return redirect('backup')
+
+    files = sorted(backup_dir.glob('samana_backup_*.zip'), reverse=True)
+    if not files:
+        messages.error(request, 'No backups found in the backups folder. Create a backup first.')
+        return redirect('backup')
+
+    latest = files[0]
+    name = latest.name
+
+    if _restore_blocked(request, name):
+        messages.error(request, 'Restore already in progress. Please wait and try again shortly.')
+        return redirect('backup')
+
+    with latest.open('rb') as fh:
+        data = fh.read()
+    _perform_restore(request, data, name)
+    return redirect('backup')
+
+
+@login_required
+@admin_or_above
+def backup_restore_upload_view(request):
+    from django.core.files.uploadedfile import InMemoryUploadedFile
+
+    if request.method != 'POST':
+        return redirect('backup')
+
+    form = RestoreBackupForm(request.POST, request.FILES)
+    if not form.is_valid():
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(request, error)
+        return redirect('backup')
+
+    upload = form.cleaned_data['backup_file']
+    if isinstance(upload, InMemoryUploadedFile):
+        data = upload.read()
+    else:
+        data = upload.file.read()
+
+    name = getattr(upload, 'name', 'uploaded_backup.zip')
+    if _restore_blocked(request, name):
+        messages.error(request, 'Restore already in progress. Please wait and try again shortly.')
+        return redirect('backup')
+
+    _perform_restore(request, data, name)
+    return redirect('backup')
+
+
+# ─── CORPORATE SITE + CUSTOMER PORTAL (Django templates) ─────────────────────
+
+def corporate_home_view(request):
+    return render(request, 'corporate/home.html', {})
+
+
+def lead_submit_view(request):
+    from .models import Lead
+    if request.method != 'POST':
+        return redirect('corporate_home')
+
+    name = request.POST.get('name', '').strip()
+    email = request.POST.get('email', '').strip()
+    phone = request.POST.get('phone', '').strip()
+    source = request.POST.get('lead_type', 'hero')
+    if source not in dict(Lead.LEAD_SOURCE_CHOICES):
+        source = 'hero'
+
+    if not name and not email and not phone:
+        messages.error(request, 'Please provide at least your name or email.')
+        return redirect('corporate_home')
+
+    Lead.objects.create(name=name, email=email, phone=phone, source=source)
+    if request.user.is_authenticated:
+        AuditLog.objects.create(
+            user=request.user, action='create', model_name='Lead',
+            description=f'{source} lead received from website'
         )
-    return HttpResponse(index_path.read_text(encoding='utf-8'), content_type='text/html')
+    messages.success(request, 'Thank you! Our team will get in touch with you soon.')
+    return redirect('corporate_home')
+
+
+@login_required
+def portal_view(request):
+    from django.db.models import Sum
+
+    customer = Customer.objects.filter(user=request.user).first()
+    if customer is None:
+        messages.error(request, 'No customer profile is linked to this account.')
+        return redirect('dashboard')
+
+    active_statuses = ['pending', 'confirmed', 'active']
+    bookings_qs = customer.bookings.select_related('plot', 'plot__project').all()
+    active_bookings = [b for b in bookings_qs if b.status in active_statuses]
+    total_amount = sum((b.total_amount for b in active_bookings), 0)
+    total_paid = Payment.objects.filter(booking__customer=customer, status='verified').aggregate(
+        total=Sum('amount'))['total'] or 0
+
+    payments = (
+        Payment.objects.filter(booking__customer=customer)
+        .select_related('booking')
+        .order_by('-payment_date', '-created_at')
+    )
+
+    bookings_payload = []
+    installments = []
+    for b in bookings_qs:
+        plan = getattr(b, 'installment_plan', None)
+        plan_installments = list(plan.installments.all().order_by('installment_number')) if plan else []
+        installments.extend(plan_installments)
+        bookings_payload.append({
+            'booking_id': b.booking_id,
+            'plot_number': b.plot.plot_number,
+            'project': b.plot.project.name if b.plot.project else None,
+            'total_amount': float(b.total_amount),
+            'advance_paid': float(b.advance_paid),
+            'remaining_balance': float(b.remaining_balance),
+            'status': b.status,
+        })
+
+    installment_payload = [{
+        'booking_id': ins.plan.booking.booking_id,
+        'installment_number': ins.installment_number,
+        'due_date': ins.due_date,
+        'amount': float(ins.amount),
+        'late_fee': float(ins.late_fee),
+        'paid_amount': float(ins.paid_amount),
+        'remaining_amount': float(ins.remaining_amount),
+        'status': ins.status,
+    } for ins in installments]
+
+    pending_installments = [i for i in installment_payload if i['status'] == 'pending']
+    overdue_installments = [i for i in installment_payload if i['status'] == 'overdue']
+    next_due = min(pending_installments + overdue_installments, key=lambda i: i['due_date']) \
+        if (pending_installments or overdue_installments) else None
+
+    payments_payload = [{
+        'payment_id': p.payment_id,
+        'booking_id': p.booking.booking_id,
+        'amount': float(p.amount),
+        'payment_date': p.payment_date,
+        'payment_method': p.get_payment_method_display(),
+        'status': p.status,
+    } for p in payments]
+
+    context = {
+        'customer': customer,
+        'summary': {
+            'total_bookings': bookings_qs.count(),
+            'total_paid': float(total_paid),
+            'remaining_balance': float(total_amount - total_paid),
+            'pending_installments': len(pending_installments),
+            'overdue_installments': len(overdue_installments),
+            'next_due': next_due,
+        },
+        'bookings': bookings_payload,
+        'payments': payments_payload,
+        'installments': installment_payload,
+    }
+    return render(request, 'portal/dashboard.html', context)

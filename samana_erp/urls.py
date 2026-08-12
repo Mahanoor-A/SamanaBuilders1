@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path, include, re_path
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from core import views as core_views
@@ -65,14 +65,19 @@ urlpatterns = [
     # Backup
     path('backup/', core_views.backup_view, name='backup'),
     path('backup/download/', core_views.backup_download_view, name='backup_download'),
+    path('backup/restore/latest/', core_views.backup_restore_latest_view, name='backup_restore_latest'),
+    path('backup/restore/upload/', core_views.backup_restore_upload_view, name='backup_restore_upload'),
     
     # Profile
     path('profile/', core_views.profile_view, name='profile'),
     path('api/save-theme/', core_views.save_theme_view, name='save_theme'),
 
-    # React SPA (corporate site + /erp + /portal sections). Served last so it never
-    # shadows API, admin, static, media, or ERP template routes.
-    re_path(r'^(?:(?:erp|portal)(?:/.*)?)?$', core_views.spa_view, name='spa_index'),
+    # Customer Portal (Django template)
+    path('portal/', core_views.portal_view, name='portal'),
+
+    # Corporate website (Django templates). Served last so it only matches the bare root path.
+    path('', core_views.corporate_home_view, name='corporate_home'),
+    path('lead/submit/', core_views.lead_submit_view, name='lead_submit'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

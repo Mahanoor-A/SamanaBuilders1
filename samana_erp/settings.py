@@ -129,7 +129,6 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
-    ('frontend', BASE_DIR / 'frontend' / 'dist'),
 ]
 
 # CORS: allows the React dev server (5173) to talk to the Django API.

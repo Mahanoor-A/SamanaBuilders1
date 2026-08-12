@@ -1,8 +1,36 @@
+import re
 from django.db import models
 from django.contrib.auth.models import User
 
 
+def format_phone(value):
+    digits = re.sub(r'\D', '', value or '')
+    if not digits:
+        return value
+    if digits.startswith('92') and len(digits) == 12:
+        local = digits[2:]
+    elif digits.startswith('0') and len(digits) == 11:
+        local = digits[1:]
+    else:
+        local = digits
+    if len(local) == 10:
+        return f"+92-{local[:3]}-{local[3:]}"
+    return value
+
+
+def format_cnic(value):
+    digits = re.sub(r'\D', '', value or '')
+    if len(digits) == 13:
+        return f"{digits[:5]}-{digits[5:12]}-{digits[12:]}"
+    return value
+
+
 class Customer(models.Model):
+    OCCUPATION_CHOICES = [
+        ('business', 'Business'),
+        ('salaried', 'Salaried'),
+        ('other', 'Other'),
+    ]
     customer_id = models.CharField(max_length=20, unique=True, editable=False)
     user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True)
     first_name = models.CharField(max_length=100)
@@ -11,6 +39,8 @@ class Customer(models.Model):
     phone = models.CharField(max_length=20)
     alternate_phone = models.CharField(max_length=20, blank=True)
     cnic = models.CharField(max_length=15, unique=True)
+    occupation = models.CharField(max_length=20, choices=OCCUPATION_CHOICES, blank=True)
+    occupation_other = models.CharField(max_length=100, blank=True)
     address = models.TextField(blank=True)
     city = models.CharField(max_length=100, blank=True)
     notes = models.TextField(blank=True)
@@ -38,6 +68,24 @@ class Customer(models.Model):
     def full_name(self):
         return f"{self.first_name} {self.last_name}"
     
+    @property
+    def formatted_phone(self):
+        return format_phone(self.phone)
+
+    @property
+    def formatted_alternate_phone(self):
+        return format_phone(self.alternate_phone)
+
+    @property
+    def formatted_cnic(self):
+        return format_cnic(self.cnic)
+
+    @property
+    def occupation_display_value(self):
+        if self.occupation == 'other':
+            return self.occupation_other.strip() or 'Other'
+        return dict(self.OCCUPATION_CHOICES).get(self.occupation, '')
+
     @property
     def total_bookings(self):
         return self.bookings.count()

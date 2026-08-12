@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
+from django.core.validators import FileExtensionValidator
 from .models import UserProfile
 
 
@@ -93,6 +94,21 @@ class CreateUserForm(forms.Form):
         if User.objects.filter(username=username).exists():
             raise forms.ValidationError('Username already exists')
         return username
+
+
+class RestoreBackupForm(forms.Form):
+    backup_file = forms.FileField(
+        label='Backup ZIP file',
+        help_text='Upload a previously downloaded Samana backup ZIP file.',
+        validators=[FileExtensionValidator(['zip'])],
+        widget=forms.ClearableFileInput(attrs={'class': 'form-control'})
+    )
+
+    def clean_backup_file(self):
+        uploaded = self.cleaned_data.get('backup_file')
+        if uploaded and uploaded.size == 0:
+            raise forms.ValidationError('The uploaded file appears to be empty.')
+        return uploaded
 
 
 class UserEditForm(forms.ModelForm):

@@ -69,7 +69,7 @@
                         <div class="form-error">{% for error in form.email.errors %}{{ error }}{% endfor %}</div>
                         {% endif %}
                     </div>
-                    <div class="floating-group">
+                    <div class="floating-group fmt-field">
                         {{ form.cnic }}
                         <label for="{{ form.cnic.id_for_label }}">CNIC Number <span style="color:var(--accent-red);">*</span></label>
                         {% if form.cnic.errors %}
@@ -79,18 +79,35 @@
                 </div>
 
                 <div class="form-row">
-                    <div class="floating-group">
+                    <div class="floating-group fmt-field">
                         {{ form.phone }}
                         <label for="{{ form.phone.id_for_label }}">Phone Number <span style="color:var(--accent-red);">*</span></label>
                         {% if form.phone.errors %}
                         <div class="form-error">{% for error in form.phone.errors %}{{ error }}{% endfor %}</div>
                         {% endif %}
                     </div>
-                    <div class="floating-group">
+                    <div class="floating-group fmt-field">
                         {{ form.alternate_phone }}
                         <label for="{{ form.alternate_phone.id_for_label }}">Alternate Phone</label>
                         {% if form.alternate_phone.errors %}
                         <div class="form-error">{% for error in form.alternate_phone.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="floating-group">
+                        {{ form.occupation }}
+                        <label for="{{ form.occupation.id_for_label }}">Occupation</label>
+                        {% if form.occupation.errors %}
+                        <div class="form-error">{% for error in form.occupation.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="floating-group" id="occupationOtherGroup" style="display:none;">
+                        {{ form.occupation_other }}
+                        <label for="{{ form.occupation_other.id_for_label }}">Please Specify Occupation</label>
+                        {% if form.occupation_other.errors %}
+                        <div class="form-error">{% for error in form.occupation_other.errors %}{{ error }}{% endfor %}</div>
                         {% endif %}
                     </div>
                 </div>
@@ -236,6 +253,20 @@
 {% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    var occupationSelect = document.getElementById('id_occupation');
+    var otherGroup = document.getElementById('occupationOtherGroup');
+
+    function toggleOccupationOther() {
+        if (occupationSelect && otherGroup) {
+            otherGroup.style.display = occupationSelect.value === 'other' ? 'block' : 'none';
+        }
+    }
+
+    if (occupationSelect) {
+        occupationSelect.addEventListener('change', toggleOccupationOther);
+        toggleOccupationOther();
+    }
+
     var imageInput = document.getElementById('id_image');
     var docInput = document.getElementById('id_document');
 
@@ -352,6 +383,22 @@ document.addEventListener('DOMContentLoaded', function() {
         background: var(--primary);
         color: white;
         border-color: var(--primary);
+    }
+    .floating-group.fmt-field label {
+        top: 6px;
+        transform: translateY(0);
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+    .floating-group.fmt-field .form-control:focus + label {
+        color: var(--primary);
+    }
+    .floating-group.fmt-field input::placeholder {
+        color: var(--text-secondary);
+        opacity: 0.6;
+        font-size: 13px;
+        letter-spacing: 0.3px;
     }
 </style>
 {% endblock %}

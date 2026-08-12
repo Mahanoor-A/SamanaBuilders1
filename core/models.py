@@ -90,6 +90,26 @@ class ApprovalRequest(models.Model):
     reviewed_at = models.DateTimeField(null=True, blank=True)
 
 
+class Lead(models.Model):
+    LEAD_SOURCE_CHOICES = [
+        ('hero', 'Hero Enquiry'),
+        ('strip', 'Launch Strip'),
+        ('newsletter', 'Newsletter Subscribe'),
+    ]
+    name = models.CharField(max_length=100, blank=True)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+    source = models.CharField(max_length=20, choices=LEAD_SOURCE_CHOICES, default='hero')
+    is_contacted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name or self.email or self.phone} - {self.get_source_display()}"
+
+    class Meta:
+        ordering = ['-created_at']
+
+
 class AuditLog(models.Model):
     ACTION_CHOICES = [
         ('create', 'Create'),

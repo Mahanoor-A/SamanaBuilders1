@@ -84,6 +84,7 @@
                             <th>Name</th>
                             <th>Phone</th>
                             <th>CNIC</th>
+                            <th>Occupation</th>
                             <th>City</th>
                             <th>Status</th>
                             <th>Created</th>
@@ -95,8 +96,9 @@
                         <tr>
                             <td><strong>{{ customer.customer_id }}</strong></td>
                             <td>{{ customer.full_name }}</td>
-                            <td>{{ customer.phone }}</td>
-                            <td>{{ customer.cnic }}</td>
+                            <td>{{ customer.formatted_phone }}</td>
+                            <td>{{ customer.formatted_cnic }}</td>
+                            <td>{{ customer.occupation_display_value|default:"-" }}</td>
                             <td>{{ customer.city|default:"-" }}</td>
                             <td>
                                 <span class="badge badge-{% if customer.is_active %}success{% else %}danger{% endif %}">

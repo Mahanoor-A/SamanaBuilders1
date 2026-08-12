@@ -67,6 +67,75 @@
             </div>
         </div>
         {% endif %}
+
+        <!-- Restore -->
+        <div class="card animate-fade-up" style="border:1px solid var(--accent-red);">
+            <div class="card-header">
+                <h3 style="color:var(--accent-red);">♻️ Restore Database</h3>
+            </div>
+            <div style="font-size:14px; color:var(--text-secondary); line-height:1.8;">
+                <p><strong>Warning:</strong> Restoring overwrites all current data. If you have flushed and created
+                a new super admin, restoring your backup ZIP will bring your original data (customers, bookings,
+                payments, users and media files) back.</p>
+            </div>
+            <div style="display:grid; gap:18px; margin-top:14px;">
+                <div style="background:rgba(255,244,244,0.9); padding:16px; border-radius:10px; border:1px solid rgba(239,68,68,0.15);">
+                    <h4 style="margin:0 0 8px;">Restore Most Recent Backup</h4>
+                    <p style="margin:0; font-size:13px; color:var(--text-secondary);">
+                        Uses the latest ZIP file stored in <code>backups/</code> on the server.
+                    </p>
+                    <form method="post" action="{% url 'backup_restore_latest' %}"
+                          onsubmit="return confirm('This will REPLACE all current data with the latest saved backup. Continue?');"
+                          style="margin-top:12px;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary btn-sm" id="restoreLatestBtn">
+                            <span class="spinner"></span>
+                            <span class="btn-text">♻️ Restore Latest Backup</span>
+                        </button>
+                    </form>
+                </div>
+
+                <div style="background:rgba(244,249,255,0.95); padding:16px; border-radius:10px; border:1px solid rgba(59,130,246,0.15);">
+                    <h4 style="margin:0 0 8px; color:var(--primary);">Upload Backup ZIP</h4>
+                    <p style="margin:0; font-size:13px; color:var(--text-secondary);">
+                        Upload a backup file exported from this system to restore the database and media files.
+                    </p>
+                    <form method="post" action="{% url 'backup_restore_upload' %}" enctype="multipart/form-data"
+                          onsubmit="return confirm('This will REPLACE all current data with the uploaded backup file. Continue?');"
+                          style="margin-top:14px; display:grid; gap:12px;">
+                        {% csrf_token %}
+                        <label class="form-label" for="id_backup_file" style="font-weight:600;">Backup ZIP file</label>
+                        {{ restore_form.backup_file }}
+                        <button type="submit" class="btn btn-secondary btn-sm" id="restoreUploadBtn">
+                            <span class="spinner"></span>
+                            <span class="btn-text">📁 Upload and Restore</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </main>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var formEl = document.querySelector('form[action$="/backup/restore/latest/"]');
+    var btnEl = document.getElementById('restoreLatestBtn');
+    if (!formEl || !btnEl) return;
+    formEl.addEventListener('submit', function() {
+        btnEl.disabled = true;
+        btnEl.classList.add('loading');
+        var spinner = btnEl.querySelector('.spinner');
+        if (spinner) spinner.style.display = 'inline-block';
+        var text = btnEl.querySelector('.btn-text');
+        if (text) text.textContent = 'Restoring...';
+    });
+});
+</script>
+<style>
+    #restoreBtn.loading { opacity: 0.7; pointer-events: none; }
+    #restoreBtn .spinner { display: none; }
+</style>
 {% endblock %}

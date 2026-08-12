@@ -1,0 +1,189 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Samana Builders &amp; Developers | Premium Real Estate in Pakistan{% endblock %}</title>
+  <meta name="description" content="Samana Builders &amp; Developers - Pakistan's trusted real estate developer. Premium residential and commercial projects in Islamabad, Lahore and Karachi.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/corporate.css' %}">
+</head>
+<body>
+
+  <!-- ================= NAVBAR ================= -->
+  <header class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="#home" class="brand"><span class="samana">Samana</span> <span class="builders">Builders</span></a>
+
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#home" data-section="home">Home</a>
+        <a href="#about" data-section="about">About</a>
+        <a href="#services" data-section="services">Services</a>
+        <a href="#projects" data-section="projects">Projects</a>
+        <a href="#contact" data-section="contact">Contact</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="nav-phone" href="tel:+923001234567">+92-300-1234567</a>
+        <a class="nav-staff-login" href="{% url 'login' %}">Staff Login</a>
+        <a href="#contact" class="btn btn-gold btn-book">Book Now</a>
+        <button class="hamburger" id="hamburger" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MOBILE MENU ================= -->
+  <div class="mobile-menu" id="mobile-menu">
+    <div class="mobile-menu-content">
+      <a href="#home">Home</a>
+      <a href="#about">About</a>
+      <a href="#services">Services</a>
+      <a href="#projects">Projects</a>
+      <a href="#contact">Contact</a>
+      <a href="tel:+923001234567">+92-300-1234567</a>
+      <a class="btn btn-outline" href="{% url 'login' %}">Staff Login</a>
+      <a class="btn btn-gold" href="#contact">Book Now</a>
+    </div>
+  </div>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="footer">
+    <div class="footer-grid">
+
+      <div class="footer-about">
+        <a href="#home" class="brand"><span class="samana">Samana</span> <span class="builders">Builders</span></a>
+        <p class="footer-tagline">Building Trust, Building the Life You Deserve &mdash; premium real estate developments across Pakistan since 2011.</p>
+        <div class="footer-social">
+          <a href="#" aria-label="Facebook">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
+          <a href="#" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5"/><circle cx="12" cy="12" r="4"/><line x1="17.4" y1="6.6" x2="17.4" y2="6.6" stroke-linecap="round"/></svg>
+          </a>
+          <a href="#" aria-label="X (Twitter)">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.9 2H22l-8.1 9.2L23 22h-7.2l-5.2-6.9L4.8 22H1.8l8.6-9.8L1 2h7.4l4.7 6.4L18.9 2z"/></svg>
+          </a>
+          <a href="#" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 .01 5 2.5 2.5 0 0 1-.01-5zM3 9h4v12H3zM9 9h3.7v1.7h.1c.5-1 1.8-2 3.6-2 3.9 0 4.6 2.5 4.6 5.8V21h-4v-5.5c0-1.3 0-3-1.9-3s-2.1 1.4-2.1 3V21H9z"/></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h4 class="footer-heading">Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="#home">Home</a></li>
+          <li><a href="#about">About Us</a></li>
+          <li><a href="#projects">Projects</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#contact">Contact</a></li>
+          <li><a href="{% url 'login' %}">Staff Login</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4 class="footer-heading">Our Services</h4>
+        <ul class="footer-links">
+          <li><a href="#services">Residential</a></li>
+          <li><a href="#services">Commercial</a></li>
+          <li><a href="#services">Interior Design</a></li>
+          <li><a href="#services">Property Management</a></li>
+          <li><a href="#services">Investment Consulting</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4 class="footer-heading">Contact Us</h4>
+        <ul class="footer-contact">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7-5.4-7-11a7 7 0 0 1 14 0c0 5.6-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            <span>Office No. 207, 2nd Floor, Shayan Iconic Tower, Plot No. 5-A, Delhi Mercantile Cooperative Society, Karachi, Pakistan</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 2 .6 2.9a2 2 0 0 1-.4 1.8L8 9.6a16 16 0 0 0 6 6l1.2-1.3a2 2 0 0 1 1.8-.4c1 .3 1.9.5 2.9.6a2 2 0 0 1 1.7 2z"/></svg>
+            <a href="tel:+923001234567">+92-300-1234567</a>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+            <a href="mailto:info@samanabuilders.com">info@samanabuilders.com</a>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <span>Mon - Sat: 9:00 AM - 6:00 PM</span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; {% now "Y" %} Samana Builders &amp; Developers. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- ================= NAVBAR / MENU / SCROLL JS ================= -->
+  <script>
+    (function () {
+      var navbar = document.getElementById('navbar');
+      var hamburger = document.getElementById('hamburger');
+      var mobileMenu = document.getElementById('mobile-menu');
+
+      function onScroll() {
+        if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 40);
+      }
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+
+      function toggleMenu(force) {
+        if (!mobileMenu || !hamburger) return;
+        var open = typeof force === 'boolean' ? force : !mobileMenu.classList.contains('open');
+        mobileMenu.classList.toggle('open', open);
+        hamburger.classList.toggle('open', open);
+        document.body.style.overflow = open ? 'hidden' : '';
+      }
+      if (hamburger) hamburger.addEventListener('click', function () { toggleMenu(); });
+
+      // Smooth scroll for in-page anchors (with fixed-navbar offset)
+      document.querySelectorAll('a[href^="#"]').forEach(function (link) {
+        link.addEventListener('click', function (e) {
+          var href = link.getAttribute('href');
+          if (!href || href === '#') return;
+          var target = document.querySelector(href);
+          if (!target) return;
+          e.preventDefault();
+          var y = target.getBoundingClientRect().top + window.pageYOffset - 72;
+          window.scrollTo({ top: y, behavior: 'smooth' });
+          toggleMenu(false);
+          if (history.replaceState) history.replaceState(null, '', href);
+        });
+      });
+
+      // Highlight the active nav link as the user scrolls
+      var sections = document.querySelectorAll('section[id]');
+      var navLinks = document.querySelectorAll('.nav-links a[data-section]');
+      if ('IntersectionObserver' in window && sections.length) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              navLinks.forEach(function (l) {
+                l.classList.toggle('active', l.getAttribute('data-section') === entry.target.id);
+              });
+            }
+          });
+        }, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+        sections.forEach(function (s) { io.observe(s); });
+      }
+    })();
+  </script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,11 +1,13 @@
 import csv
 import io
 import zipfile
+from datetime import date, datetime, time
+from decimal import Decimal
 from pathlib import Path
 
 from django.apps import apps
 from django.conf import settings
-from django.db import models
+from django.db import connection, models, transaction
 from django.utils import timezone
 
 
@@ -18,6 +20,9 @@ def _serialize(value):
         return value.isoformat()
     if isinstance(value, models.Model):
         return str(value.pk)
+    if isinstance(value, (dict, list)):
+        import json
+        return json.dumps(value)
     return str(value)
 
 
@@ -115,3 +120,214 @@ def build_backup_zip():
             f"Media Root: {settings.MEDIA_ROOT}\n",
         )
     return buf.getvalue()
+
+
+# ─── RESTORE ──────────────────────────────────────────────────────────────────
+
+_NUMERIC = (models.IntegerField, models.AutoField, models.BigAutoField,
+            models.SmallIntegerField, models.BigIntegerField,
+            models.PositiveIntegerField, models.PositiveSmallIntegerField,
+            models.PositiveBigIntegerField)
+
+
+def _convert(raw, field):
+    """Convert a single CSV cell string into the Python type the field expects."""
+    if raw == '':
+        if isinstance(field, (models.CharField, models.TextField, models.FileField,
+                              models.ImageField, models.BinaryField)):
+            return ''
+        return None
+    if isinstance(field, _NUMERIC):
+        try:
+            return int(raw)
+        except (TypeError, ValueError):
+            return None
+    if isinstance(field, models.BooleanField):
+        return raw in ('1', 'true', 'True', '1.0')
+    if isinstance(field, models.DateTimeField):
+        return datetime.fromisoformat(raw.replace('Z', '+00:00'))
+    if isinstance(field, models.DateField):
+        return date.fromisoformat(raw)
+    if isinstance(field, models.TimeField):
+        return time.fromisoformat(raw)
+    if isinstance(field, (models.DecimalField, models.FloatField)):
+        try:
+            return Decimal(raw) if isinstance(field, models.DecimalField) else float(raw)
+        except (TypeError, ValueError, ArithmeticError):
+            return None
+    if isinstance(field, models.JSONField):
+        return raw
+    return raw
+
+
+def _field_by_column(model):
+    """Map db column name -> model concrete field."""
+    return {f.column: f for f in model._meta.concrete_fields}
+
+
+def _restore_table(model, header, rows):
+    """Insert CSV rows for one table. Returns number of rows inserted."""
+    field_by_name = {f.name: f for f in model._meta.concrete_fields}
+    fields = [field_by_name[h] for h in header if h in field_by_name]
+    if not fields:
+        return 0
+    columns = [f.column for f in fields]
+
+    vendor = connection.vendor
+    if vendor == 'sqlite':
+        placeholder = '?'
+    else:
+        placeholder = '%s'
+
+    sql = 'INSERT INTO {table} ({cols}) VALUES ({ph})'.format(
+        table=model._meta.db_table,
+        cols=', '.join('"' + c + '"' if vendor in ('postgresql', 'sqlite') else '`' + c + '`' for c in columns),
+        ph=', '.join([placeholder] * len(columns)),
+    )
+
+    params = []
+    for row in rows:
+        p = [(_convert(row.get(f.name, ''), f)) for f in fields]
+        params.append(p)
+
+    with connection.cursor() as cursor:
+        cursor.executemany(sql, params)
+    return len(params)
+
+
+def _dependency_order(model_by_table):
+    """Topological order so parents (FK targets) are inserted before children."""
+    tables = list(model_by_table)
+    table_to_model = model_by_table
+    deps = {}
+    for table, model in table_to_model.items():
+        d = set()
+        for f in model._meta.concrete_fields:
+            if isinstance(f, models.ForeignKey) and f.related_model:
+                target = f.related_model._meta.db_table
+                if target in table_to_model and target != table:
+                    d.add(target)
+        deps[table] = d
+
+    ordered = []
+    temp = set()
+    perm = set()
+
+    def visit(tbl):
+        if tbl in perm:
+            return
+        if tbl in temp:
+            return
+        temp.add(tbl)
+        for dep in deps.get(tbl, ()):
+            if dep in table_to_model:
+                visit(dep)
+        temp.discard(tbl)
+        perm.add(tbl)
+        ordered.append(tbl)
+
+    for t in tables:
+        visit(t)
+    return ordered
+
+
+def _reset_sequences(models_restored):
+    vendor = connection.vendor
+    with connection.cursor() as cursor:
+        for model in models_restored:
+            pk = model._meta.pk
+            if not pk or not isinstance(pk, models.AutoField):
+                continue
+            table = model._meta.db_table
+            try:
+                if vendor == 'sqlite':
+                    cursor.execute('SELECT COALESCE(MAX("{}"), 0) FROM "{}"'.format(pk.column, table))
+                    max_id = cursor.fetchone()[0] or 0
+                    existing = cursor.execute(
+                        'SELECT seq FROM sqlite_sequence WHERE name = ?', (table,)
+                    ).fetchone()
+                    if existing:
+                        cursor.execute('UPDATE sqlite_sequence SET seq = ? WHERE name = ?', (max_id, table))
+                    else:
+                        cursor.execute('INSERT INTO sqlite_sequence (name, seq) VALUES (?, ?)', (table, max_id))
+                elif vendor == 'postgresql':
+                    max_id = cursor.execute(
+                        'SELECT COALESCE(MAX("{0}"), 0) FROM "{1}"'.format(pk.column, table)
+                    ).fetchone()[0] or 0
+                    cursor.execute(
+                        'SELECT setval(pg_get_serial_sequence(%s, %s), %s, true)',
+                        (table, pk.column, max_id or 1),
+                    )
+            except Exception:
+                continue
+
+
+def restore_from_backup(data):
+    """Restore the entire database + media from a created backup ZIP.
+
+    Returns a dict with a summary of what was restored.
+    """
+    with zipfile.ZipFile(io.BytesIO(data)) as zf:
+        csv_names = [n for n in zf.namelist()
+                     if n.startswith('database/') and n.endswith('.csv')]
+        model_by_file = {}
+        model_by_table = {}
+        all_models = list(apps.get_models())
+        for name in csv_names:
+            table = Path(name).stem
+            for model in all_models:
+                if model._meta.db_table == table:
+                    model_by_file[name] = model
+                    model_by_table[table] = model
+                    break
+
+        order = _dependency_order(model_by_table)
+
+        restored_counts = {}
+        with transaction.atomic():
+            # Wipe existing rows for the tables we are restoring (reverse of insert order)
+            for table in reversed(order):
+                model = model_by_table[table]
+                with connection.cursor() as cursor:
+                    cursor.execute('DELETE FROM "{0}"'.format(model._meta.db_table))
+
+            for table in order:
+                model = model_by_table[table]
+                name = 'database/{}.csv'.format(table)
+                if name not in zf.namelist():
+                    continue
+                with zf.open(name, 'r') as fh:
+                    raw = io.TextIOWrapper(fh, encoding='utf-8', newline='')
+                    reader = csv.reader(raw)
+                    try:
+                        header = next(reader)
+                    except StopIteration:
+                        continue
+                    rows = []
+                    for line in reader:
+                        if not line or all(v == '' for v in line):
+                            continue
+                        rows.append(dict(zip(header, line)))
+                if rows:
+                    restored_counts[table] = _restore_table(model, header, rows)
+
+            _reset_sequences(list(model_by_table.values()))
+
+            # Restore media files
+            media_root = Path(settings.MEDIA_ROOT)
+            media_root.mkdir(parents=True, exist_ok=True)
+            media_written = 0
+            for name in zf.namelist():
+                if name.startswith('media/') and not name.endswith('/'):
+                    rel = Path(name).relative_to('media')
+                    dest = media_root / rel
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    with zf.open(name) as src, dest.open('wb') as out:
+                        out.write(src.read())
+                    media_written += 1
+
+    return {
+        'tables': restored_counts,
+        'total_rows': sum(restored_counts.values()),
+        'media_files': media_written,
+    }

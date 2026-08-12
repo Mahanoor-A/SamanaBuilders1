@@ -80,12 +80,12 @@
                 <div class="detail-grid" style="grid-template-columns:1fr;">
                     <div class="detail-item" style="padding:12px 0; border-bottom:1px solid var(--border);">
                         <div class="detail-label">Phone Number</div>
-                        <div class="detail-value" style="font-size:15px;">{{ customer.phone }}</div>
+                        <div class="detail-value" style="font-size:15px;">{{ customer.formatted_phone }}</div>
                     </div>
                     {% if customer.alternate_phone %}
                     <div class="detail-item" style="padding:12px 0; border-bottom:1px solid var(--border);">
                         <div class="detail-label">Alternate Phone</div>
-                        <div class="detail-value" style="font-size:15px;">{{ customer.alternate_phone }}</div>
+                        <div class="detail-value" style="font-size:15px;">{{ customer.formatted_alternate_phone }}</div>
                     </div>
                     {% endif %}
                     <div class="detail-item" style="padding:12px 0; border-bottom:1px solid var(--border);">
@@ -94,8 +94,14 @@
                     </div>
                     <div class="detail-item" style="padding:12px 0;">
                         <div class="detail-label">CNIC Number</div>
-                        <div class="detail-value" style="font-size:15px; font-family:monospace;">{{ customer.cnic }}</div>
+                        <div class="detail-value" style="font-size:15px; font-family:monospace;">{{ customer.formatted_cnic }}</div>
                     </div>
+                    {% if customer.occupation_display_value %}
+                    <div class="detail-item" style="padding:12px 0;">
+                        <div class="detail-label">Occupation</div>
+                        <div class="detail-value" style="font-size:15px;">{{ customer.occupation_display_value }}</div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
