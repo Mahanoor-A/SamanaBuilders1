@@ -5,8 +5,9 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db.models import Sum, Count, Q
+from django.db import transaction
 from django.db.models.functions import TruncMonth, TruncWeek, TruncYear
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from datetime import timedelta
 from decimal import Decimal
@@ -16,10 +17,11 @@ from .permissions import (
     role_required, super_admin_required, admin_or_above,
     management_or_above, finance_or_above, payments_access, get_user_role,
 )
-from customers.models import Customer
+from customers.models import Customer, CustomerNominee
 from properties.models import Project, Plot
 from bookings.models import Booking, Installment
 from payments.models import Payment
+from expenses.models import Expense
 
 
 def _post_login_target(user):
@@ -79,31 +81,31 @@ def dashboard_view(request):
     
     verified_payments_qs = Payment.objects.filter(status='verified')
     
-    # Revenue stats
+    # Revenue = simple sum of all verified payments
     total_revenue = verified_payments_qs.aggregate(total=Sum('amount'))['total'] or 0
+    
+    # Monthly revenue
     monthly_revenue = verified_payments_qs.filter(
         payment_date__gte=month_start
     ).aggregate(total=Sum('amount'))['total'] or 0
     
-    # Monthly revenue trend (last 6 months)
-    six_months_ago = today - timedelta(days=180)
-    monthly_data = (
-        verified_payments_qs.filter(payment_date__gte=six_months_ago)
+    # Monthly revenue trend (last 12 months)
+    twelve_months_ago = today - timedelta(days=365)
+    
+    payment_monthly = (
+        verified_payments_qs.filter(payment_date__gte=twelve_months_ago)
         .annotate(month=TruncMonth('payment_date'))
         .values('month')
         .annotate(total=Sum('amount'))
         .order_by('month')
     )
-    monthly_revenue_data = []
-    max_amount = 1
-    for entry in monthly_data:
-        amt = float(entry['total'])
-        if amt > max_amount:
-            max_amount = amt
-        monthly_revenue_data.append({
-            'label': entry['month'].strftime('%b %Y'),
-            'amount': amt,
-        })
+    
+    monthly_revenue_data = [
+        {'label': entry['month'].strftime('%b %Y'), 'amount': float(entry['total'])}
+        for entry in payment_monthly
+    ]
+    
+    max_amount = max([item['amount'] for item in monthly_revenue_data]) if monthly_revenue_data else 1
     for item in monthly_revenue_data:
         item['pct'] = round((item['amount'] / max_amount) * 100, 1)
     
@@ -319,6 +321,95 @@ def revenue_trend_view(request):
     return JsonResponse({'labels': labels, 'amounts': amounts})
 
 
+@login_required
+@finance_or_above
+def financial_reports_view(request):
+    """Project-wise revenue and financial reports."""
+    from payments.models import Receipt
+    from django.db.models.functions import TruncMonth
+    
+    today = timezone.now().date()
+    month_start = today.replace(day=1)
+    year_start = today.replace(month=1, day=1)
+    
+    # Project-wise revenue
+    projects = Project.objects.exclude(status='inactive')
+    project_revenue = []
+    for project in projects:
+        verified_payments = Payment.objects.filter(
+            status='verified',
+            booking__plot__project=project
+        )
+        total_revenue = verified_payments.aggregate(total=Sum('amount'))['total'] or 0
+        year_revenue = verified_payments.filter(payment_date__gte=year_start).aggregate(total=Sum('amount'))['total'] or 0
+        month_revenue = verified_payments.filter(payment_date__gte=month_start).aggregate(total=Sum('amount'))['total'] or 0
+        total_bookings = Booking.objects.filter(plot__project=project).count()
+        active_bookings = Booking.objects.filter(plot__project=project, status__in=['active', 'confirmed', 'pending']).count()
+        total_plots = project.plots.count()
+        sold_plots = project.plots.filter(status='sold').count()
+        
+        expenses = Expense.objects.filter(project=project).aggregate(total=Sum('amount'))['total'] or 0
+        profit = float(total_revenue) - float(expenses)
+        
+        project_revenue.append({
+            'project': project,
+            'total_revenue': total_revenue,
+            'year_revenue': year_revenue,
+            'month_revenue': month_revenue,
+            'total_bookings': total_bookings,
+            'active_bookings': active_bookings,
+            'total_plots': total_plots,
+            'sold_plots': sold_plots,
+            'expenses': expenses,
+            'profit': profit,
+        })
+    
+    # Overall stats
+    total_revenue = Payment.objects.filter(status='verified').aggregate(total=Sum('amount'))['total'] or 0
+    total_expenses = Expense.objects.aggregate(total=Sum('amount'))['total'] or 0
+    year_revenue = Payment.objects.filter(status='verified', payment_date__gte=year_start).aggregate(total=Sum('amount'))['total'] or 0
+    month_revenue = Payment.objects.filter(status='verified', payment_date__gte=month_start).aggregate(total=Sum('amount'))['total'] or 0
+    
+    # Monthly revenue trend for chart
+    six_months_ago = today - timedelta(days=180)
+    monthly_data = (
+        Payment.objects.filter(status='verified', payment_date__gte=six_months_ago)
+        .annotate(month=TruncMonth('payment_date'))
+        .values('month')
+        .annotate(total=Sum('amount'))
+        .order_by('month')
+    )
+    monthly_chart_data = [{'label': entry['month'].strftime('%b %Y'), 'amount': float(entry['total'])} for entry in monthly_data]
+    
+    # Payment method breakdown
+    method_data = (
+        Payment.objects.filter(status='verified')
+        .values('payment_method')
+        .annotate(total=Sum('amount'))
+        .order_by('-total')
+    )
+    method_labels = dict(Payment.METHOD_CHOICES)
+    payment_method_data = [{'method': method_labels.get(m['payment_method'], m['payment_method']), 'total': float(m['total'])} for m in method_data]
+    
+    # Collection rate
+    total_installment_amount = Installment.objects.aggregate(total=Sum('amount'))['total'] or 1
+    total_paid_amount = Installment.objects.aggregate(total=Sum('paid_amount'))['total'] or 0
+    collection_rate = round((float(total_paid_amount) / float(total_installment_amount)) * 100, 1)
+    
+    context = {
+        'project_revenue': project_revenue,
+        'total_revenue': total_revenue,
+        'total_expenses': total_expenses,
+        'year_revenue': year_revenue,
+        'month_revenue': month_revenue,
+        'net_profit': float(total_revenue) - float(total_expenses),
+        'monthly_chart_data': monthly_chart_data,
+        'payment_method_data': payment_method_data,
+        'collection_rate': min(collection_rate, 100),
+    }
+    return render(request, 'financial_reports.html', context)
+
+
 # ─── CUSTOMERS ───────────────────────────────────────────────────────────────────
 
 @login_required
@@ -347,14 +438,20 @@ def customers_view(request):
 
 @login_required
 def customer_create_view(request):
-    from customers.forms import CustomerForm
+    from customers.forms import CustomerForm, CustomerNomineeForm
     
     if request.method == 'POST':
         form = CustomerForm(request.POST, request.FILES)
+        nominee_form = CustomerNomineeForm(request.POST)
         if form.is_valid():
-            customer = form.save(commit=False)
-            customer.created_by = request.user
-            customer.save()
+            with transaction.atomic():
+                customer = form.save(commit=False)
+                customer.created_by = request.user
+                customer.save()
+                if nominee_form.is_valid() and nominee_form.cleaned_data.get('nominee_name'):
+                    nominee = nominee_form.save(commit=False)
+                    nominee.customer = customer
+                    nominee.save()
             AuditLog.objects.create(
                 user=request.user, action='create', model_name='Customer',
                 object_id=customer.customer_id,
@@ -364,8 +461,13 @@ def customer_create_view(request):
             return redirect('customers')
     else:
         form = CustomerForm()
+        nominee_form = CustomerNomineeForm()
     
-    return render(request, 'customer_form.html', {'form': form, 'title': 'Add New Customer'})
+    return render(request, 'customer_form.html', {
+        'form': form,
+        'nominee_form': nominee_form,
+        'title': 'Add New Customer',
+    })
 
 
 @login_required
@@ -397,13 +499,22 @@ def customer_profile_create_view(request):
 
 @login_required
 def customer_edit_view(request, pk):
-    from customers.forms import CustomerForm
+    from customers.forms import CustomerForm, CustomerNomineeForm
     
     customer = get_object_or_404(Customer, pk=pk)
+    nominee_instance = getattr(customer, 'nominee', None)
     if request.method == 'POST':
         form = CustomerForm(request.POST, request.FILES, instance=customer)
+        nominee_form = CustomerNomineeForm(request.POST, instance=nominee_instance)
         if form.is_valid():
-            form.save()
+            with transaction.atomic():
+                form.save()
+                if nominee_form.is_valid() and nominee_form.cleaned_data.get('nominee_name'):
+                    nominee = nominee_form.save(commit=False)
+                    nominee.customer = customer
+                    nominee.save()
+                elif nominee_instance and not nominee_form.cleaned_data.get('nominee_name'):
+                    nominee_instance.delete()
             AuditLog.objects.create(
                 user=request.user, action='update', model_name='Customer',
                 object_id=customer.customer_id,
@@ -413,8 +524,14 @@ def customer_edit_view(request, pk):
             return redirect('customers')
     else:
         form = CustomerForm(instance=customer)
+        nominee_form = CustomerNomineeForm(instance=nominee_instance)
     
-    return render(request, 'customer_form.html', {'form': form, 'title': f'Edit Customer {customer.customer_id}', 'customer': customer})
+    return render(request, 'customer_form.html', {
+        'form': form,
+        'nominee_form': nominee_form,
+        'title': f'Edit Customer {customer.customer_id}',
+        'customer': customer,
+    })
 
 
 @login_required
@@ -444,11 +561,13 @@ def customer_detail_view(request, pk):
         .select_related('booking', 'booking__plot')
         .order_by('-payment_date', '-created_at')
     )
+    nominee = getattr(customer, 'nominee', None)
     context = {
         'customer': customer,
         'bookings': bookings,
         'payments': payments,
         'latest_payment': payments.first(),
+        'nominee': nominee,
     }
     return render(request, 'customer_detail.html', context)
 
@@ -633,6 +752,7 @@ def bookings_view(request):
 @login_required
 def booking_create_view(request):
     from bookings.forms import BookingForm
+    from bookings.models import InstallmentPlanTemplate
     
     customer_id = request.GET.get('customer_id')
     plot_id = request.GET.get('plot_id')
@@ -654,17 +774,84 @@ def booking_create_view(request):
             plot.status = 'booked'
             plot.save()
             
+            # Auto-generate installment plan from template if selected
+            template_id = request.POST.get('installment_template')
+            if template_id:
+                from bookings.models import InstallmentPlanTemplate, InstallmentPlan
+                try:
+                    template = InstallmentPlanTemplate.objects.get(pk=template_id, project=booking.plot.project)
+                    plan = InstallmentPlan.objects.create(
+                        booking=booking,
+                        template=template,
+                        total_installments=template.total_installments,
+                        installment_amount=(booking.total_amount - (booking.total_amount * template.down_payment_percentage / 100)) / template.total_installments,
+                        down_payment_amount=booking.total_amount * template.down_payment_percentage / 100,
+                        start_date=booking.booking_date,
+                        frequency=template.frequency,
+                        late_fee_per_day=template.late_fee_per_day,
+                        grace_period_days=template.grace_period_days,
+                    )
+                    plan.auto_generate()
+                    messages.success(request, f'Installment plan generated: {template.total_installments} {template.frequency} installments.')
+                except InstallmentPlanTemplate.DoesNotExist:
+                    pass
+            
             AuditLog.objects.create(
                 user=request.user, action='create', model_name='Booking',
                 object_id=booking.booking_id,
                 description=f'Created booking {booking.booking_id} for {booking.customer.full_name}'
             )
+
+            # AUTO-SEND BOOKING NOTIFICATION
+            try:
+                from notifications.services import NotificationService
+                NotificationService.send_booking_notification(booking)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f'Booking notification failed: {e}')
+
             messages.success(request, f'Booking {booking.booking_id} created successfully!')
             return redirect('bookings')
     else:
         form = BookingForm(initial=initial)
     
-    return render(request, 'booking_form.html', {'form': form, 'title': 'Create New Booking'})
+    projects = Project.objects.exclude(status='inactive')
+    templates = InstallmentPlanTemplate.objects.filter(project__in=projects, is_active=True).select_related('project')
+    
+    return render(request, 'booking_form.html', {
+        'form': form, 
+        'title': 'Create New Booking',
+        'plan_templates': templates,
+        'projects': projects,
+    })
+
+
+@login_required
+def plan_templates_api_view(request):
+    """JSON endpoint: return installment plan templates for a given project."""
+    from bookings.models import InstallmentPlanTemplate
+    project_id = request.GET.get('project_id') or request.GET.get('plot_id')
+    templates = InstallmentPlanTemplate.objects.filter(is_active=True)
+    if project_id:
+        try:
+            from properties.models import Plot
+            plot = Plot.objects.filter(pk=project_id).first()
+            if plot:
+                templates = templates.filter(project=plot.project)
+            else:
+                templates = templates.filter(project_id=project_id)
+        except (ValueError, TypeError):
+            templates = templates.filter(project_id=project_id)
+    data = [{
+        'id': t.id,
+        'name': t.name,
+        'total_installments': t.total_installments,
+        'frequency': t.frequency,
+        'down_payment_percentage': float(t.down_payment_percentage),
+        'late_fee_per_day': float(t.late_fee_per_day),
+        'grace_period_days': t.grace_period_days,
+    } for t in templates]
+    return JsonResponse({'templates': data})
 
 
 @login_required
@@ -726,6 +913,65 @@ def booking_delete_view(request, pk):
         return redirect('bookings')
     
     return render(request, 'confirm_delete.html', {'object': booking, 'title': 'Delete Booking', 'cancel_url': 'bookings'})
+
+
+@login_required
+@management_or_above
+def booking_confirm_view(request, pk):
+    """Confirm a pending booking status"""
+    booking = get_object_or_404(Booking, pk=pk)
+    
+    # Only allow confirming pending bookings
+    if booking.status != 'pending':
+        messages.error(request, f'Only pending bookings can be confirmed. Current status: {booking.get_status_display()}')
+        return redirect('booking_detail', pk=pk)
+    
+    if request.method == 'POST':
+        booking.status = 'confirmed'
+        booking.save()
+        AuditLog.objects.create(
+            user=request.user, action='update', model_name='Booking',
+            object_id=booking.booking_id,
+            description=f'Confirmed booking {booking.booking_id}'
+        )
+
+        # AUTO-SEND BOOKING APPROVAL NOTIFICATION
+        try:
+            from notifications.services import NotificationService
+            customer = booking.customer
+            msg = (
+                f"Dear {customer.full_name},\n\n"
+                f"Your booking {booking.booking_id} has been CONFIRMED.\n\n"
+                f"Plot: {booking.plot.plot_number}\n"
+                f"Project: {booking.plot.project.name}\n"
+                f"Total Amount: Rs. {booking.total_amount:,.0f}\n\n"
+                f"Please proceed with the down payment as per your payment plan.\n\n"
+                f"Samana Builders & Developers"
+            )
+            channels = ['email']
+            if customer.phone:
+                channels.append('whatsapp')
+            for ch in channels:
+                contact = customer.email if ch == 'email' else customer.phone
+                if contact:
+                    NotificationService.send_notification(
+                        recipient_name=customer.full_name,
+                        recipient_contact=contact,
+                        channel=ch,
+                        notification_type='booking_approval',
+                        subject=f'Booking Approved - {booking.booking_id}',
+                        message=msg,
+                        customer_id=customer.customer_id,
+                        booking_id=booking.booking_id,
+                    )
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f'Booking approval notification failed: {e}')
+
+        messages.success(request, f'Booking {booking.booking_id} confirmed successfully!')
+        return redirect('booking_detail', pk=pk)
+    
+    return render(request, 'booking_confirm.html', {'booking': booking})
 
 
 # ─── BOOKING TRANSFER ──────────────────────────────────────────────────────────
@@ -858,6 +1104,7 @@ def payments_view(request):
 def payment_create_view(request):
     from payments.forms import PaymentForm
     from payments.models import Receipt, PaymentAttachment
+    from django.db import transaction
     
     booking_id = request.GET.get('booking_id')
     pre_filled_booking = None
@@ -873,36 +1120,79 @@ def payment_create_view(request):
             payment.status = 'verified'
             payment.verified_by = request.user
             payment.verified_at = timezone.now()
-            payment.save()
 
-            # Update installment if linked
+            # ── VALIDATION: installment must belong to this booking ──────────
             if payment.installment:
-                installment = payment.installment
-                installment.paid_amount += payment.amount
-                if installment.paid_amount >= installment.amount:
-                    installment.status = 'paid'
-                    installment.paid_date = payment.payment_date
-                else:
-                    installment.status = 'partial'
-                installment.save()
+                if payment.installment.plan.booking_id != payment.booking_id:
+                    form.add_error('installment', 'Selected installment does not belong to this booking.')
+                    return render(request, 'payment_form.html', {
+                        'form': form, 'title': 'Record New Payment',
+                        'projects': Project.objects.exclude(status='inactive'),
+                        'plots': Plot.objects.all(),
+                        'bookings': Booking.objects.filter(status__in=['pending', 'confirmed', 'active']).select_related('customer', 'plot', 'plot__project'),
+                        'pre_filled_booking': pre_filled_booking,
+                    })
 
-            # Update booking advance
-            booking = payment.booking
-            booking.advance_paid += payment.amount
-            if booking.remaining_balance <= 0:
-                booking.status = 'completed'
-            booking.save()
+            # ── DUPLICATE CHECK: same booking + amount + date within 60s ─────
+            recent_cutoff = timezone.now() - timedelta(seconds=60)
+            duplicate = Payment.objects.filter(
+                booking=payment.booking,
+                amount=payment.amount,
+                payment_date=payment.payment_date,
+                payment_method=payment.payment_method,
+                created_at__gte=recent_cutoff,
+            ).exists()
+            if duplicate:
+                messages.error(request, 'Possible duplicate payment detected. This payment was already recorded. Please check the payment list.')
+                return redirect('payments')
 
-            # Auto-generate receipt
-            receipt = Receipt.objects.create(
-                payment=payment,
-                receipt_date=payment.payment_date,
-                generated_by=request.user,
-            )
-            payment.receipt_generated = True
-            payment.save(update_fields=['receipt_generated'])
+            # ── ATOMIC TRANSACTION: all-or-nothing ──────────────────────────
+            with transaction.atomic():
+                payment.save()
+
+                # Update installment if linked
+                if payment.installment:
+                    installment = payment.installment
+                    installment_total = installment.amount + installment.late_fee
+                    remaining_before = installment_total - installment.paid_amount
+                    
+                    # Track overpayment
+                    overpayment = 0
+                    if payment.amount > remaining_before:
+                        overpayment = payment.amount - remaining_before
+                        payment.unallocated_amount = overpayment
+                        payment.save(update_fields=['unallocated_amount'])
+                        installment.paid_amount = installment_total
+                    else:
+                        installment.paid_amount += payment.amount
+                    
+                    if installment.paid_amount >= installment_total:
+                        installment.status = 'paid'
+                        installment.paid_date = payment.payment_date
+                    elif installment.paid_amount > 0:
+                        installment.status = 'partial'
+                    installment.save()
+
+                # Update booking advance (capped at total_amount)
+                booking = payment.booking
+                new_advance = booking.advance_paid + payment.amount
+                if new_advance > booking.total_amount:
+                    new_advance = booking.total_amount
+                booking.advance_paid = new_advance
+                if booking.remaining_balance <= 0:
+                    booking.status = 'completed'
+                booking.save()
+
+                # Auto-generate receipt
+                receipt = Receipt.objects.create(
+                    payment=payment,
+                    receipt_date=payment.payment_date,
+                    generated_by=request.user,
+                )
+                payment.receipt_generated = True
+                payment.save(update_fields=['receipt_generated'])
             
-            # Handle file attachments with method-appropriate type
+            # Handle file attachments (outside transaction - non-critical)
             method_type_map = {
                 'cash': 'receipt_image',
                 'cheque': 'cheque_image',
@@ -927,6 +1217,16 @@ def payment_create_view(request):
                 object_id=payment.payment_id,
                 description=f'Created payment {payment.payment_id} for booking {payment.booking.booking_id}'
             )
+
+            # AUTO-SEND NOTIFICATIONS
+            try:
+                from notifications.services import NotificationService
+                NotificationService.send_payment_confirmation(payment)
+                NotificationService.send_receipt_notification(receipt)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).warning(f'Notification send failed: {e}')
+
             messages.success(request, f'Payment {payment.payment_id} recorded successfully! Receipt {receipt.receipt_number} generated.')
             return redirect('payments')
     else:
@@ -1023,6 +1323,60 @@ def receipt_detail_view(request, pk):
         'booking': booking,
         'amount_words': amount_words,
     })
+
+
+@login_required
+@payments_access
+def receipt_pdf_view(request, pk):
+    from payments.models import Receipt
+    from payments.pdf_utils import generate_receipt_pdf
+
+    receipt = get_object_or_404(Receipt, pk=pk)
+
+    pdf_content = generate_receipt_pdf(receipt)
+    if pdf_content:
+        response = HttpResponse(pdf_content, content_type='application/pdf')
+        filename = f"receipt_{receipt.receipt_number.replace('/', '-')}.pdf"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+    messages.error(request, 'Failed to generate PDF. Please try again.')
+    return redirect('receipt_detail', pk=pk)
+
+
+@login_required
+@payments_access
+def invoice_pdf_view(request, pk):
+    from payments.pdf_utils import generate_invoice_pdf
+
+    booking = get_object_or_404(Booking, pk=pk)
+    pdf_content = generate_invoice_pdf(booking)
+
+    if pdf_content:
+        response = HttpResponse(pdf_content, content_type='application/pdf')
+        filename = f"invoice_{booking.booking_id}.pdf"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+    messages.error(request, 'Failed to generate invoice PDF.')
+    return redirect('booking_detail', pk=pk)
+
+
+@login_required
+def customer_profile_pdf_view(request, pk):
+    from payments.pdf_utils import generate_customer_profile_pdf
+
+    customer = get_object_or_404(Customer, pk=pk)
+    pdf_content = generate_customer_profile_pdf(customer)
+
+    if pdf_content:
+        response = HttpResponse(pdf_content, content_type='application/pdf')
+        filename = f"customer_profile_{customer.customer_id}.pdf"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        return response
+
+    messages.error(request, 'Failed to generate customer profile PDF.')
+    return redirect('customer_detail', pk=pk)
 
 
 # ─── USERS (admin/super_admin only; management read-only) ──────────────────────────
