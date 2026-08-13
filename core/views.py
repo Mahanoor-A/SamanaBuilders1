@@ -109,6 +109,18 @@ def dashboard_view(request):
     for item in monthly_revenue_data:
         item['pct'] = round((item['amount'] / max_amount) * 100, 1)
     
+    # Revenue by payment type
+    type_data = (
+        verified_payments_qs.values('payment_type')
+        .annotate(total=Sum('amount'))
+        .order_by('-total')
+    )
+    type_labels = dict(Payment.PAYMENT_TYPE_CHOICES)
+    payment_type_data = [
+        {'type': type_labels.get(t['payment_type'], t['payment_type']), 'total': float(t['total'])}
+        for t in type_data
+    ]
+    
     # Booking stats
     pending_bookings = Booking.objects.filter(status='pending').count()
     active_bookings = Booking.objects.filter(status='active').count()
@@ -255,6 +267,7 @@ def dashboard_view(request):
         'monthly_revenue_data': monthly_revenue_data,
         'booking_status_data': booking_status_data,
         'payment_method_data': payment_method_data,
+        'payment_type_data': payment_type_data,
         'plots_by_project_data': plots_by_project_data,
         'installment_status_data': installment_status_data,
         'plot_status_data': plot_status_data,
