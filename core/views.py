@@ -148,6 +148,46 @@ def dashboard_view(request):
             'rate': rate
         })
 
+    # Project-wise revenue
+    project_revenue = (
+        verified_payments_qs
+        .values('booking__plot__project__name')
+        .annotate(revenue=Sum('amount'), count=Count('id'))
+        .order_by('-revenue')
+    )
+    project_revenue_data = [
+        {
+            'project': p['booking__plot__project__name'] or 'Unknown',
+            'revenue': float(p['revenue']),
+            'count': p['count']
+        }
+        for p in project_revenue
+    ]
+    
+    # Top defaulters (customers with overdue installments)
+    overdue_installments_qs = Installment.objects.filter(
+        status='overdue'
+    ).select_related('plan__booking__customer')
+    
+    defaulter_map = {}
+    for inst in overdue_installments_qs:
+        customer = inst.plan.booking.customer
+        if customer.pk not in defaulter_map:
+            defaulter_map[customer.pk] = {
+                'name': customer.full_name,
+                'customer_id': customer.customer_id,
+                'overdue_count': 0,
+                'overdue_amount': 0,
+            }
+        defaulter_map[customer.pk]['overdue_count'] += 1
+        defaulter_map[customer.pk]['overdue_amount'] += float(inst.amount + inst.late_fee - inst.paid_amount)
+    
+    top_defaulters_data = sorted(
+        defaulter_map.values(),
+        key=lambda x: x['overdue_amount'],
+        reverse=True
+    )[:10]
+
     # Booking stats
     pending_bookings = Booking.objects.filter(status='pending').count()
     active_bookings = Booking.objects.filter(status='active').count()
@@ -301,6 +341,8 @@ def dashboard_view(request):
         'plot_status_data': plot_status_data,
         'booking_source_data': booking_source_data,
         'payment_status_data': payment_status_data,
+        'project_revenue_data': project_revenue_data,
+        'top_defaulters_data': top_defaulters_data,
         
         # Recent records
         'recent_bookings': Booking.objects.select_related('customer', 'plot').order_by('-created_at')[:5],
