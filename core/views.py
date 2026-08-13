@@ -120,7 +120,34 @@ def dashboard_view(request):
         {'type': type_labels.get(t['payment_type'], t['payment_type']), 'total': float(t['total'])}
         for t in type_data
     ]
-    
+
+    # Collection rate trend (last 12 months)
+    collection_trend = []
+    for i in range(11, -1, -1):
+        target_date = today - timedelta(days=30 * i)
+        m_start = target_date.replace(day=1)
+        if m_start.month == 12:
+            m_end = m_start.replace(year=m_start.year + 1, month=1, day=1)
+        else:
+            m_end = m_start.replace(month=m_start.month + 1, day=1)
+
+        month_total = Installment.objects.filter(
+            due_date__gte=m_start, due_date__lt=m_end
+        ).aggregate(total=Sum('amount'))['total'] or 0
+
+        month_paid = Installment.objects.filter(
+            due_date__gte=m_start, due_date__lt=m_end
+        ).aggregate(total=Sum('paid_amount'))['total'] or 0
+
+        rate = round((month_paid / month_total) * 100, 1) if month_total > 0 else 0
+        if rate > 100:
+            rate = 100
+
+        collection_trend.append({
+            'label': m_start.strftime('%b %Y'),
+            'rate': rate
+        })
+
     # Booking stats
     pending_bookings = Booking.objects.filter(status='pending').count()
     active_bookings = Booking.objects.filter(status='active').count()
@@ -268,6 +295,7 @@ def dashboard_view(request):
         'booking_status_data': booking_status_data,
         'payment_method_data': payment_method_data,
         'payment_type_data': payment_type_data,
+        'collection_trend': collection_trend,
         'plots_by_project_data': plots_by_project_data,
         'installment_status_data': installment_status_data,
         'plot_status_data': plot_status_data,
