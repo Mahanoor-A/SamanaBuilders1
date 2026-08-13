@@ -224,6 +224,68 @@
             </div>
         </div>
 
+        <!-- Project-wise Revenue & Top Defaulters -->
+        <div class="charts-grid-2col">
+            {% if can_view_payments and project_revenue_data %}
+            <div class="card animate-fade-up stagger-6">
+                <div class="card-header">
+                    <h3>🏗️ Project-wise Revenue</h3>
+                </div>
+                <div class="table-container">
+                    <table class="sortable">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Revenue (Rs.)</th>
+                                <th>Payments</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in project_revenue_data %}
+                            <tr>
+                                <td><strong>{{ p.project }}</strong></td>
+                                <td style="font-weight:600;">Rs. {{ p.revenue|floatformat:0 }}</td>
+                                <td>{{ p.count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if can_view_payments and top_defaulters_data %}
+            <div class="card animate-fade-up stagger-7">
+                <div class="card-header">
+                    <h3>⚠️ Top Defaulters</h3>
+                </div>
+                <div class="table-container">
+                    <table class="sortable">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Overdue</th>
+                                <th>Amount (Rs.)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for d in top_defaulters_data %}
+                            <tr>
+                                <td>
+                                    <strong>{{ d.name }}</strong>
+                                    <br><span style="font-size:12px; color:var(--text-secondary);">{{ d.customer_id }}</span>
+                                </td>
+                                <td>{{ d.overdue_count }} installments</td>
+                                <td style="font-weight:600; color:var(--danger);">Rs. {{ d.overdue_amount|floatformat:0 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
         <!-- Recent Bookings -->
         <div class="card animate-fade-up stagger-6">
             <div class="card-header">
