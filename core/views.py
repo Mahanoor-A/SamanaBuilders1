@@ -1152,6 +1152,12 @@ def payments_view(request):
         payments = payments.filter(status=status_filter)
     if method_filter:
         payments = payments.filter(payment_method=method_filter)
+    type_filter = request.GET.get('type', '')
+    if type_filter:
+        if type_filter == 'other':
+            payments = payments.exclude(payment_type__in=['down_payment', 'installment', 'full_payment', 'late_fee'])
+        else:
+            payments = payments.filter(payment_type=type_filter)
     if customer_id:
         payments = payments.filter(booking__customer_id=customer_id)
     if search:
@@ -1169,15 +1175,27 @@ def payments_view(request):
     total_amount = payments.aggregate(total=Sum('amount'))['total'] or 0
     month_amount = payments.filter(payment_date__gte=month_start).aggregate(total=Sum('amount'))['total'] or 0
 
+    all_payments = Payment.objects.all()
+    type_counts = {
+        'all': all_payments.count(),
+        'down_payment': all_payments.filter(payment_type='down_payment').count(),
+        'installment': all_payments.filter(payment_type='installment').count(),
+        'full_payment': all_payments.filter(payment_type='full_payment').count(),
+        'late_fee': all_payments.filter(payment_type='late_fee').count(),
+        'other': all_payments.exclude(payment_type__in=['down_payment', 'installment', 'full_payment', 'late_fee']).count(),
+    }
+
     context = {
         'payments': payments,
         'status_filter': status_filter,
         'method_filter': method_filter,
+        'type_filter': type_filter,
         'search': search,
         'customer_filter': Customer.objects.filter(pk=customer_id).first() if customer_id else None,
         'total_count': payments.count(),
         'total_amount': total_amount,
         'month_amount': month_amount,
+        'type_counts': type_counts,
     }
     return render(request, 'payments.html', context)
 

@@ -42,6 +42,36 @@
             </div>
         </div>
 
+        <!-- Payment Type Tabs -->
+        <div class="card animate-fade-up stagger-2" style="padding:16px 20px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <a href="{% url 'payments' %}{% if search %}?search={{ search }}{% endif %}" 
+                   class="btn btn-sm {% if not type_filter %}btn-primary{% else %}btn-ghost{% endif %}">
+                    All <span class="badge badge-info" style="margin-left:4px;">{{ type_counts.all }}</span>
+                </a>
+                <a href="{% url 'payments' %}?type=down_payment{% if search %}&search={{ search }}{% endif %}" 
+                   class="btn btn-sm {% if type_filter == 'down_payment' %}btn-primary{% else %}btn-ghost{% endif %}">
+                    Down Payments <span class="badge badge-info" style="margin-left:4px;">{{ type_counts.down_payment }}</span>
+                </a>
+                <a href="{% url 'payments' %}?type=installment{% if search %}&search={{ search }}{% endif %}" 
+                   class="btn btn-sm {% if type_filter == 'installment' %}btn-primary{% else %}btn-ghost{% endif %}">
+                    Installments <span class="badge badge-info" style="margin-left:4px;">{{ type_counts.installment }}</span>
+                </a>
+                <a href="{% url 'payments' %}?type=full_payment{% if search %}&search={{ search }}{% endif %}" 
+                   class="btn btn-sm {% if type_filter == 'full_payment' %}btn-primary{% else %}btn-ghost{% endif %}">
+                    Full Payments <span class="badge badge-info" style="margin-left:4px;">{{ type_counts.full_payment }}</span>
+                </a>
+                <a href="{% url 'payments' %}?type=late_fee{% if search %}&search={{ search }}{% endif %}" 
+                   class="btn btn-sm {% if type_filter == 'late_fee' %}btn-primary{% else %}btn-ghost{% endif %}">
+                    Late Fees <span class="badge badge-info" style="margin-left:4px;">{{ type_counts.late_fee }}</span>
+                </a>
+                <a href="{% url 'payments' %}?type=other{% if search %}&search={{ search }}{% endif %}" 
+                   class="btn btn-sm {% if type_filter == 'other' %}btn-primary{% else %}btn-ghost{% endif %}">
+                    Other <span class="badge badge-info" style="margin-left:4px;">{{ type_counts.other }}</span>
+                </a>
+            </div>
+        </div>
+
         <!-- Filters -->
         <div class="card animate-fade-up stagger-2">
             <form method="get">
@@ -65,6 +95,9 @@
                         <option value="raast" {% if method_filter == 'raast' %}selected{% endif %}>Raast</option>
                         <option value="online" {% if method_filter == 'online' %}selected{% endif %}>Online</option>
                     </select>
+                    {% if type_filter %}
+                    <input type="hidden" name="type" value="{{ type_filter }}">
+                    {% endif %}
                     <button type="submit" class="btn btn-primary btn-sm" style="height:42px; padding:0 20px; white-space:nowrap;">Filter</button>
                     {% if status_filter or search or method_filter or customer_filter %}
                     <a href="{% url 'payments' %}" class="btn btn-secondary btn-sm" style="height:42px; padding:0 16px; white-space:nowrap;">Clear</a>
