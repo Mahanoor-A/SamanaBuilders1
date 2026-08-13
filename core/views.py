@@ -81,28 +81,30 @@ def dashboard_view(request):
     
     verified_payments_qs = Payment.objects.filter(status='verified')
     
-    # Revenue = simple sum of all verified payments
-    total_revenue = verified_payments_qs.aggregate(total=Sum('amount'))['total'] or 0
+    # Revenue = total advance_paid across all bookings (single source of truth)
+    # This captures both recorded payments AND any historical advances
+    total_revenue = Booking.objects.aggregate(total=Sum('advance_paid'))['total'] or 0
     
-    # Monthly revenue
-    monthly_revenue = verified_payments_qs.filter(
-        payment_date__gte=month_start
-    ).aggregate(total=Sum('amount'))['total'] or 0
+    # Monthly revenue = advance_paid from bookings made this month + verified payments this month not yet in advance_paid
+    monthly_advance = Booking.objects.filter(
+        booking_date__gte=month_start
+    ).aggregate(total=Sum('advance_paid'))['total'] or 0
+    monthly_revenue = monthly_advance
     
-    # Monthly revenue trend (last 12 months)
+    # Monthly revenue trend (last 12 months) — use advance_paid by booking month
     twelve_months_ago = today - timedelta(days=365)
     
-    payment_monthly = (
-        verified_payments_qs.filter(payment_date__gte=twelve_months_ago)
-        .annotate(month=TruncMonth('payment_date'))
+    monthly_revenue_data_raw = (
+        Booking.objects.filter(booking_date__gte=twelve_months_ago)
+        .annotate(month=TruncMonth('booking_date'))
         .values('month')
-        .annotate(total=Sum('amount'))
+        .annotate(total=Sum('advance_paid'))
         .order_by('month')
     )
     
     monthly_revenue_data = [
         {'label': entry['month'].strftime('%b %Y'), 'amount': float(entry['total'])}
-        for entry in payment_monthly
+        for entry in monthly_revenue_data_raw
     ]
     
     max_amount = max([item['amount'] for item in monthly_revenue_data]) if monthly_revenue_data else 1
