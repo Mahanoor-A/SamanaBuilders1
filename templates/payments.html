@@ -144,7 +144,11 @@
                             <td><a href="{% url 'booking_detail' payment.booking.pk %}" style="font-weight:600;">{{ payment.booking.booking_id }}</a></td>
                             <td><a href="{% url 'customer_detail' payment.booking.customer.pk %}" style="font-weight:500;">{{ payment.booking.customer.full_name }}</a></td>
                             <td style="font-weight:600;">Rs. {{ payment.amount|floatformat:0 }}</td>
-                            <td><span class="badge badge-secondary">{{ payment.get_payment_type_display }}</span></td>
+                            <td>
+                                <span class="badge {% if payment.payment_type == 'down_payment' %}badge-success{% elif payment.payment_type == 'installment' %}badge-info{% elif payment.payment_type == 'full_payment' %}badge-primary{% elif payment.payment_type == 'late_fee' %}badge-danger{% else %}badge-secondary{% endif %}">
+                                    {{ payment.get_payment_type_display }}
+                                </span>
+                            </td>
                             <td>{{ payment.get_payment_method_display }}</td>
                             <td>{{ payment.payment_date|date:"d M Y" }}</td>
                             <td>
