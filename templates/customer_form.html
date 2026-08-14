@@ -216,8 +216,53 @@
                 </div>
             </div>
 
-            <!-- Notes -->
+            <!-- Nominee Information -->
             <div class="card animate-fade-up stagger-3">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border);">
+                    <div style="width:48px; height:48px; border-radius:12px; background:var(--stat-blue-bg); display:flex; align-items:center; justify-content:center; font-size:24px;">👥</div>
+                    <div>
+                        <h3 style="font-size:16px; font-weight:600; color:var(--text-primary);">Nominee Information</h3>
+                        <p style="font-size:13px; color:var(--text-secondary);">Nominee details for legal and succession purposes</p>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="floating-group">
+                        {{ nominee_form.nominee_name }}
+                        <label for="{{ nominee_form.nominee_name.id_for_label }}">Nominee Name</label>
+                        {% if nominee_form.nominee_name.errors %}
+                        <div class="form-error">{% for error in nominee_form.nominee_name.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="floating-group">
+                        {{ nominee_form.relationship }}
+                        <label for="{{ nominee_form.relationship.id_for_label }}">Relationship</label>
+                        {% if nominee_form.relationship.errors %}
+                        <div class="form-error">{% for error in nominee_form.relationship.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="floating-group fmt-field">
+                        {{ nominee_form.nominee_cnic }}
+                        <label for="{{ nominee_form.nominee_cnic.id_for_label }}">Nominee CNIC</label>
+                        {% if nominee_form.nominee_cnic.errors %}
+                        <div class="form-error">{% for error in nominee_form.nominee_cnic.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                    <div class="floating-group fmt-field">
+                        {{ nominee_form.nominee_phone }}
+                        <label for="{{ nominee_form.nominee_phone.id_for_label }}">Nominee Phone</label>
+                        {% if nominee_form.nominee_phone.errors %}
+                        <div class="form-error">{% for error in nominee_form.nominee_phone.errors %}{{ error }}{% endfor %}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="card animate-fade-up stagger-4">
                 <div style="display:flex; align-items:center; gap:12px; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border);">
                     <div style="width:48px; height:48px; border-radius:12px; background:var(--stat-purple-bg); display:flex; align-items:center; justify-content:center; font-size:24px;">📝</div>
                     <div>
@@ -236,7 +281,7 @@
             </div>
 
             <!-- Submit -->
-            <div class="card animate-fade-up stagger-4" style="border:none; background:transparent; box-shadow:none; padding:0;">
+            <div class="card animate-fade-up stagger-5" style="border:none; background:transparent; box-shadow:none; padding:0;">
                 <div class="btn-group" style="justify-content:flex-end;">
                     <a href="{% url 'customers' %}" class="btn btn-secondary">Cancel</a>
                     <button type="submit" class="btn btn-primary">

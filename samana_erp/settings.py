@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'bookings',
     'payments',
     'expenses',
+    'notifications',
 ]
 
 MIDDLEWARE = [
@@ -153,3 +154,25 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
 }
+
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development - logs to console
+# For production, use:
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'your-app-password'
+
+DEFAULT_FROM_EMAIL = 'Samana Builders <noreply@samanabuilders.com>'
+
+# WhatsApp Configuration
+WHATSAPP_PHONE_NUMBER = '+923001234567'  # Company WhatsApp number
+WHATSAPP_API_URL = 'https://graph.facebook.com/v17.0/YOUR_PHONE_ID/messages'
+WHATSAPP_API_TOKEN = ''  # Add your WhatsApp Business API token
+
+# SMS Configuration (Twilio)
+TWILIO_ACCOUNT_SID = ''
+TWILIO_AUTH_TOKEN = ''
+TWILIO_PHONE_NUMBER = ''

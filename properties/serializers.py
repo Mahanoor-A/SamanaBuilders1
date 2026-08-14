@@ -91,5 +91,5 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = ['id', 'name', 'description', 'location', 'total_plots',
                   'status', 'status_display', 'available_plots', 'booked_plots', 'sold_plots',
-                  'phases', 'created_at', 'updated_at']
+                  'latitude', 'longitude', 'phases', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']

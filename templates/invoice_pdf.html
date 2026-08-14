@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { size: A4; margin: 15mm; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #1e293b; }
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 3px solid #1e40af; padding-bottom: 15px; }
+        .company-name { font-size: 24px; font-weight: 800; color: #1e40af; }
+        .invoice-title { font-size: 20px; font-weight: 700; margin-top: 10px; color: #1e293b; letter-spacing: 2px; }
+        .meta-table { width: 100%; margin-bottom: 15px; }
+        .meta-table td { padding: 4px 8px; font-size: 11px; }
+        .meta-label { color: #64748b; width: 140px; }
+        .meta-value { color: #1e293b; font-weight: 600; }
+        .section-title { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin: 15px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #e2e8f0; }
+        .info-table { width: 100%; border-collapse: collapse; }
+        .info-table td { padding: 5px 8px; font-size: 11px; border-bottom: 1px solid #f1f5f9; }
+        .info-label { color: #64748b; width: 150px; }
+        .info-value { color: #1e293b; font-weight: 600; }
+        .installment-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .installment-table th { background: #f8fafc; padding: 8px; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; text-align: left; border-bottom: 2px solid #e2e8f0; }
+        .installment-table td { padding: 8px; font-size: 11px; border-bottom: 1px solid #f1f5f9; }
+        .notice { text-align: center; font-size: 9px; color: #94a3b8; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-name">Samana Builders & Developers</div>
+        <div class="invoice-title">BANK INVOICE</div>
+    </div>
+
+    <table class="meta-table">
+        <tr><td class="meta-label">Booking Reference</td><td class="meta-value">{{ booking.booking_id }}</td><td class="meta-label">Invoice Date</td><td class="meta-value">{% now "d F Y" %}</td></tr>
+        <tr><td class="meta-label">Customer</td><td class="meta-value">{{ customer.full_name }}</td><td class="meta-label">CNIC</td><td class="meta-value">{{ customer.cnic }}</td></tr>
+    </table>
+
+    <div class="section-title">Property Details</div>
+    <table class="info-table">
+        <tr><td class="info-label">Project</td><td class="info-value">{{ project.name }}</td></tr>
+        <tr><td class="info-label">Plot Number</td><td class="info-value">{{ plot.plot_number }}</td></tr>
+        <tr><td class="info-label">Plot Size</td><td class="info-value">{{ plot.size_marla }} Marla</td></tr>
+        <tr><td class="info-label">Total Price</td><td class="info-value" style="font-size:14px; color:#1e40af;">Rs. {{ booking.total_amount|floatformat:0 }}</td></tr>
+        <tr><td class="info-label">Advance Paid</td><td class="info-value">Rs. {{ booking.advance_paid|floatformat:0 }}</td></tr>
+        <tr><td class="info-label">Remaining Balance</td><td class="info-value" style="color:#dc2626;">Rs. {{ booking.remaining_balance|floatformat:0 }}</td></tr>
+    </table>
+
+    {% if installment_plan %}
+    <div class="section-title">Payment Schedule</div>
+    <table class="installment-table">
+        <thead><tr><th>#</th><th>Due Date</th><th>Amount (PKR)</th><th>Status</th></tr></thead>
+        <tbody>
+            {% for inst in installment_plan.installments.all %}
+            <tr>
+                <td>{{ inst.installment_number }}</td>
+                <td>{{ inst.due_date|date:"d M Y" }}</td>
+                <td style="text-align:right;">Rs. {{ inst.amount|floatformat:0 }}</td>
+                <td>{{ inst.get_status_display }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    <div class="notice">
+        This is a system-generated invoice from Samana Builders & Developers.<br>
+        Office No. 207, 2nd Floor, Shayan Iconic Tower | Karachi, Pakistan | info@samanabuilders.com
+    </div>
+</body>
+</html>

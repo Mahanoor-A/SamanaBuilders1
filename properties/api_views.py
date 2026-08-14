@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
+from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from django.db import models as db_models
 from .models import Project, ProjectPhase, Plot, PriceHistory, PlotFeature
 from .serializers import (
@@ -140,3 +141,26 @@ class PriceHistoryViewSet(viewsets.ReadOnlyModelViewSet):
         if plot_id:
             qs = qs.filter(plot_id=plot_id)
         return qs
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def plots_list_api(request):
+    """Public endpoint for homepage project locations."""
+    from .models import Plot
+    from .serializers import PlotSerializer
+
+    plots = Plot.objects.select_related('project', 'phase')[:20]
+    serializer = PlotSerializer(plots, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def projects_locations_api(request):
+    """Public endpoint listing projects that have map coordinates."""
+    from .serializers import ProjectSerializer
+
+    projects = Project.objects.exclude(latitude__isnull=True).exclude(longitude__isnull=True)
+    serializer = ProjectSerializer(projects, many=True)
+    return Response(serializer.data)

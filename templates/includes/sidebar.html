@@ -14,12 +14,18 @@
             {% if can_view_expenses %}
             <li class="nav-item"><a href="{% url 'expenses' %}" class="nav-link{% if url_name == 'expenses' or url_name == 'expense_create' or url_name == 'expense_edit' or url_name == 'expense_delete' %} active{% endif %}"><span class="nav-icon">🧾</span> Expenses</a></li>
             {% endif %}
+            {% if can_view_expenses %}
+            <li class="nav-item"><a href="{% url 'financial_reports' %}" class="nav-link{% if url_name == 'financial_reports' %} active{% endif %}"><span class="nav-icon">📊</span> Financial Reports</a></li>
+            {% endif %}
         </ul>
         <div class="nav-divider"></div>
         <div class="nav-section">Administration</div>
         <ul class="nav-menu">
             {% if can_view_users %}
             <li class="nav-item"><a href="{% url 'users' %}" class="nav-link{% if url_name == 'users' or url_name == 'user_create' or url_name == 'user_edit' or url_name == 'user_role_update' %} active{% endif %}"><span class="nav-icon">👤</span> Manage Users</a></li>
+            {% endif %}
+            {% if can_audit %}
+            <li class="nav-item"><a href="{% url 'notifications' %}" class="nav-link{% if url_name == 'notifications' or url_name == 'send_notification' %} active{% endif %}"><span class="nav-icon">🔔</span> Notifications</a></li>
             {% endif %}
             {% if can_backup %}
             <li class="nav-item"><a href="{% url 'backup' %}" class="nav-link{% if url_name == 'backup' %} active{% endif %}"><span class="nav-icon">💾</span> DB Backup</a></li>

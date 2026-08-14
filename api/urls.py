@@ -7,7 +7,7 @@ from customers.api_views import (
 )
 from properties.api_views import (
     ProjectViewSet, ProjectPhaseViewSet, PlotViewSet,
-    PlotFeatureViewSet, PriceHistoryViewSet
+    PlotFeatureViewSet, PriceHistoryViewSet, plots_list_api, projects_locations_api
 )
 from bookings.api_views import (
     BookingViewSet, InstallmentPlanViewSet, InstallmentViewSet,
@@ -52,6 +52,10 @@ router.register(r'refunds', RefundViewSet)
 router.register(r'payment-allocations', PaymentAllocationViewSet)
 
 urlpatterns = [
+    # Public homepage endpoints (must come before the router's {pk} detail routes)
+    path('plots/list/', plots_list_api, name='plots_list'),
+    path('projects/locations/', projects_locations_api, name='projects_locations'),
+
     path('', include(router.urls)),
 
     # Auth

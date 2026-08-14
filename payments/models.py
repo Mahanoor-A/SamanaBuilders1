@@ -66,12 +66,14 @@ class Payment(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.payment_id:
-            last_payment = Payment.objects.order_by('-id').first()
-            if last_payment:
-                last_num = int(last_payment.payment_id.split('-')[1])
-                self.payment_id = f'PAY-{str(last_num + 1).zfill(5)}'
-            else:
-                self.payment_id = 'PAY-00001'
+            from django.db import transaction
+            with transaction.atomic():
+                last_payment = Payment.objects.select_for_update().order_by('-id').first()
+                if last_payment:
+                    last_num = int(last_payment.payment_id.split('-')[1])
+                    self.payment_id = f'PAY-{str(last_num + 1).zfill(5)}'
+                else:
+                    self.payment_id = 'PAY-00001'
         super().save(*args, **kwargs)
     
     def __str__(self):
@@ -136,12 +138,14 @@ class Receipt(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.receipt_id:
-            last_receipt = Receipt.objects.order_by('-id').first()
-            if last_receipt:
-                last_num = int(last_receipt.receipt_id.split('-')[1])
-                self.receipt_id = f'RCP-{str(last_num + 1).zfill(5)}'
-            else:
-                self.receipt_id = 'RCP-00001'
+            from django.db import transaction
+            with transaction.atomic():
+                last_receipt = Receipt.objects.select_for_update().order_by('-id').first()
+                if last_receipt:
+                    last_num = int(last_receipt.receipt_id.split('-')[1])
+                    self.receipt_id = f'RCP-{str(last_num + 1).zfill(5)}'
+                else:
+                    self.receipt_id = 'RCP-00001'
 
         if not self.receipt_date:
             if self.payment and self.payment.payment_date:
@@ -152,6 +156,7 @@ class Receipt(models.Model):
 
         if not self.receipt_number:
             from datetime import date
+            from django.db import transaction
             ref_date = self.receipt_date or date.today()
             if ref_date.month >= 7:
                 fy_start = ref_date.year
@@ -161,14 +166,15 @@ class Receipt(models.Model):
                 fy_end = ref_date.year
             fy_short = f'{str(fy_start)[2:]}-{str(fy_end)[2:]}'
             prefix = f'RCP-FY{fy_short}/'
-            last = Receipt.objects.filter(receipt_number__startswith=prefix).order_by('-receipt_number').first()
-            if last:
-                try:
-                    next_num = int(last.receipt_number.rsplit('/', 1)[1]) + 1
-                except (ValueError, IndexError):
+            with transaction.atomic():
+                last = Receipt.objects.select_for_update().filter(receipt_number__startswith=prefix).order_by('-receipt_number').first()
+                if last:
+                    try:
+                        next_num = int(last.receipt_number.rsplit('/', 1)[1]) + 1
+                    except (ValueError, IndexError):
+                        next_num = 1
+                else:
                     next_num = 1
-            else:
-                next_num = 1
             self.receipt_number = f'{prefix}{str(next_num).zfill(5)}'
 
         super().save(*args, **kwargs)

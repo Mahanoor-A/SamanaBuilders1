@@ -1888,13 +1888,54 @@ def lead_submit_view(request):
         messages.error(request, 'Please provide at least your name or email.')
         return redirect('corporate_home')
 
+    # Create Lead record
     Lead.objects.create(name=name, email=email, phone=phone, source=source)
+
+    # Also create a Customer inquiry record in ERP Customer Management
+    # Split name into first_name and last_name
+    name_parts = name.split(' ', 1)
+    first_name = name_parts[0] if name_parts else ''
+    last_name = name_parts[1] if len(name_parts) > 1 else ''
+
+    from customers.models import Customer
+    from django.contrib.auth.models import User
+
+    # Generate customer ID
+    last_customer = Customer.objects.order_by('-id').first()
+    if last_customer:
+        last_num = int(last_customer.customer_id.split('-')[1])
+        customer_id = f'CUS-{str(last_num + 1).zfill(5)}'
+    else:
+        customer_id = 'CUS-00001'
+
+    # Get or create a user account for the lead
+    user, user_created = User.objects.get_or_create(
+        username=email or phone or f'lead_{source}_{last_num}',
+        defaults={'email': email or ''}
+    )
+
+    customer = Customer.objects.create(
+        customer_id=customer_id,
+        user=user,
+        first_name=first_name,
+        last_name=last_name,
+        email=email or '',
+        phone=phone or '',
+        is_active=True,
+        created_by=user if user_created else None,
+    )
+
+    # Link the lead to the customer by updating the lead if needed
+    # (Lead model doesn't have customer FK, so we just create both records)
+
     if request.user.is_authenticated:
+        from core.models import AuditLog
         AuditLog.objects.create(
             user=request.user, action='create', model_name='Lead',
-            description=f'{source} lead received from website'
+            description=f'{source} lead received from website, customer {customer.customer_id} created'
         )
-    messages.success(request, 'Thank you! Our team will get in touch with you soon.')
+
+    messages.success(request, f'Thank you! We have created customer inquiry {customer.customer_id} and our team will get in touch with you soon.')
     return redirect('corporate_home')
 
 

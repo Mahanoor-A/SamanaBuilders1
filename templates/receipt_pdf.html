@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { size: A4; margin: 15mm; }
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 12px; color: #1e293b; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 3px solid #1e40af; padding-bottom: 15px; }
+        .company-name { font-size: 22px; font-weight: 800; color: #1e40af; }
+        .company-tagline { font-size: 11px; color: #64748b; }
+        .receipt-title { font-size: 20px; font-weight: 800; color: #1e40af; text-align: right; letter-spacing: 2px; }
+        .receipt-number { font-size: 12px; color: #64748b; text-align: right; font-family: monospace; }
+        .meta-table { width: 100%; margin-bottom: 15px; }
+        .meta-table td { padding: 4px 8px; font-size: 11px; }
+        .meta-label { color: #64748b; width: 120px; }
+        .meta-value { color: #1e293b; font-weight: 600; }
+        .section-title { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin: 12px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #e2e8f0; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        .info-table td { padding: 5px 8px; font-size: 11px; border-bottom: 1px solid #f1f5f9; }
+        .info-label { color: #64748b; width: 130px; }
+        .info-value { color: #1e293b; font-weight: 600; }
+        .payment-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        .payment-table th { background: #f8fafc; padding: 8px; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; text-align: left; border-bottom: 2px solid #e2e8f0; }
+        .payment-table td { padding: 8px; font-size: 11px; border-bottom: 1px solid #f1f5f9; }
+        .payment-table tfoot td { background: #f8fafc; border-top: 2px solid #e2e8f0; font-weight: 700; }
+        .amount-words { font-size: 12px; font-weight: 600; color: #1e40af; font-style: italic; padding: 8px; background: #f0f5ff; border-radius: 4px; text-align: center; margin: 10px 0; }
+        .footer { margin-top: 30px; padding-top: 15px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; }
+        .signature { width: 180px; text-align: center; }
+        .signature-line { border-top: 1px solid #1e293b; margin-bottom: 5px; margin-top: 40px; }
+        .signature-label { font-size: 10px; font-weight: 600; }
+        .notice { text-align: center; font-size: 9px; color: #94a3b8; margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <div class="company-name">Samana Builders & Developers</div>
+            <div class="company-tagline">Excellence in Real Estate</div>
+        </div>
+        <div>
+            <div class="receipt-title">OFFICIAL RECEIPT</div>
+            <div class="receipt-number">{{ receipt.receipt_number }}</div>
+        </div>
+    </div>
+
+    <table class="meta-table">
+        <tr>
+            <td class="meta-label">Receipt No.</td><td class="meta-value">{{ receipt.receipt_number }}</td>
+            <td class="meta-label">Date</td><td class="meta-value">{{ receipt.receipt_date|date:"d F Y" }}</td>
+        </tr>
+        <tr>
+            <td class="meta-label">Payment Ref</td><td class="meta-value">{{ payment.payment_id }}</td>
+            <td class="meta-label">Status</td><td class="meta-value">{{ payment.get_status_display }}</td>
+        </tr>
+    </table>
+
+    <div class="section-title">Customer & Property Details</div>
+    <table class="info-table">
+        <tr><td class="info-label">Customer Name</td><td class="info-value">{{ booking.customer.full_name }}</td><td class="info-label">Booking No.</td><td class="info-value">{{ booking.booking_id }}</td></tr>
+        <tr><td class="info-label">Phone</td><td class="info-value">{{ booking.customer.phone }}</td><td class="info-label">Plot No.</td><td class="info-value">{{ booking.plot.plot_number }}</td></tr>
+        <tr><td class="info-label">CNIC</td><td class="info-value">{{ booking.customer.cnic }}</td><td class="info-label">Project</td><td class="info-value">{{ booking.plot.project.name }}</td></tr>
+    </table>
+
+    <div class="section-title">Payment Details</div>
+    <table class="payment-table">
+        <thead><tr><th>Description</th><th>Type</th><th>Method</th><th style="text-align:right;">Amount (PKR)</th></tr></thead>
+        <tbody>
+            <tr>
+                <td>Payment against Booking {{ booking.booking_id }}</td>
+                <td>{{ payment.get_payment_type_display }}</td>
+                <td>{{ payment.get_payment_method_display }}</td>
+                <td style="text-align:right; font-weight:700;">Rs. {{ payment.amount|floatformat:0 }}</td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr><td colspan="3" style="text-align:right;">Total Amount</td><td style="text-align:right; font-size:14px;">Rs. {{ payment.amount|floatformat:0 }}</td></tr>
+        </tfoot>
+    </table>
+
+    <div class="amount-words">{{ amount_words }}</div>
+
+    <div class="footer">
+        <div class="signature"><div class="signature-line"></div><div class="signature-label">Authorized Signatory</div></div>
+        <div class="signature"><div class="signature-line"></div><div class="signature-label">Receiver's Signature</div></div>
+    </div>
+
+    <div class="notice">
+        Office No. 207, 2nd Floor, Shayan Iconic Tower | Karachi, Pakistan<br>
+        info@samanabuilders.com
+    </div>
+</body>
+</html>

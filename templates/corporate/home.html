@@ -1,6 +1,6 @@
 {% extends "corporate_base.html" %}
 
-{% block title %}Samana Builders &amp; Developers | Building Trust, Building the Life You Deserve{% endblock %}
+{% block title %}Samana Builders & Developers | Building Trust, Building the Life You Deserve{% endblock %}
 
 {% block content %}
 
@@ -40,6 +40,55 @@
     <a href="#launches" class="hero-chevron" aria-label="Scroll to latest launches">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
     </a>
+  </section>
+
+  <!-- ================= GALLERY ================= -->
+  <section class="gallery" id="gallery">
+    <div class="container">
+      <div class="section-heading">
+        <span class="section-eyebrow">Image Gallery</span>
+        <h2 class="section-title">Our Projects in Pictures</h2>
+      </div>
+
+      <div class="gallery-grid">
+        <div class="gallery-item">
+          <div class="gallery-img">
+            <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80" alt="Samana Green Valley" loading="lazy" />
+          </div>
+          <div class="gallery-caption">Samana Green Valley</div>
+        </div>
+        <div class="gallery-item">
+          <div class="gallery-img">
+            <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80" alt="Samana Sky Residences" loading="lazy" />
+          </div>
+          <div class="gallery-caption">Samana Sky Residences</div>
+        </div>
+        <div class="gallery-item">
+          <div class="gallery-img">
+            <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80" alt="Samana Gold City" loading="lazy" />
+          </div>
+          <div class="gallery-caption">Samana Gold City</div>
+        </div>
+        <div class="gallery-item">
+          <div class="gallery-img">
+            <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80" alt="Samana Projects" loading="lazy" />
+          </div>
+          <div class="gallery-caption">Luxury Villas</div>
+        </div>
+        <div class="gallery-item">
+          <div class="gallery-img">
+            <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80" alt="Samana Projects" loading="lazy" />
+          </div>
+          <div class="gallery-caption">Luxury Apartments</div>
+        </div>
+        <div class="gallery-item">
+          <div class="gallery-img">
+            <img src="https://images.unsplash.com/photo-1449844908441-8829872d2607?w=800&q=80" alt="Samana Projects" loading="lazy" />
+          </div>
+          <div class="gallery-caption">Gated Communities</div>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- ================= LATEST LAUNCHES ================= -->
@@ -371,6 +420,65 @@
       </div>
     </div>
   </section>
+
+<!-- ================= GOOGLE MAPS ================= -->
+  <section class="google-maps" id="google-maps">
+    <div class="container">
+      <div class="section-heading">
+        <span class="section-eyebrow">Project Locations</span>
+        <h2 class="section-title">Where We Develop</h2>
+      </div>
+
+      <div class="maps-container" id="maps-container">
+        <!-- Maps will be populated by JavaScript -->
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // ---------- Dynamic Google Maps ----------
+    document.addEventListener('DOMContentLoaded', function () {
+      fetch('/api/projects/locations/')
+        .then(response => response.json())
+        .then(projects => {
+          const container = document.getElementById('maps-container');
+          if (!projects || projects.length === 0) {
+            container.innerHTML = '<p class="maps-empty">Project location maps coming soon.</p>';
+            return;
+          }
+
+          projects.forEach(project => {
+            const lat = project.latitude;
+            const lng = project.longitude;
+            if (!lat || !lng) return;
+
+            const mapCard = document.createElement('div');
+            mapCard.className = 'map-card';
+
+            const mapIframe = document.createElement('iframe');
+            mapIframe.src = `https://www.google.com/maps?q=${lat},${lng}&z=13&output=embed`;
+            mapIframe.title = project.name;
+            mapIframe.style.border = '0';
+            mapIframe.width = '100%';
+            mapIframe.height = '380px';
+            mapIframe.loading = 'lazy';
+            mapIframe.referrerpolicy = 'no-referrer-when-downgrade';
+
+            const mapCaption = document.createElement('div');
+            mapCaption.className = 'map-caption';
+            mapCaption.textContent = project.name;
+
+            mapCard.appendChild(mapIframe);
+            mapCard.appendChild(mapCaption);
+            container.appendChild(mapCard);
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching project locations:', error);
+          document.getElementById('maps-container').innerHTML = '<p class="maps-empty">Project location maps coming soon.</p>';
+        });
+    });
+  </script>
 
   <!-- ================= CONTACT ================= -->
   <section class="contact" id="contact">

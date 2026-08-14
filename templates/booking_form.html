@@ -1,2 +1,142 @@
-{% extends 'base_form.html' %}
+{% extends 'base.html' %}
+{% load static %}
 {% block title %}{{ title }} - Samana Builders ERP{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+    <div class="top-bar">
+        <button class="hamburger" onclick="toggleSidebar()">&#9776;</button>
+        <span class="top-bar-title">{{ title }}</span>
+        <div class="top-bar-actions"></div>
+    </div>
+
+    {% include 'includes/sidebar.html' %}
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>{{ title }}</h1>
+            <div class="page-actions">
+                <button class="btn btn-secondary btn-sm" onclick="history.back()">&#8592; Back</button>
+            </div>
+        </div>
+
+        {% if form.errors %}
+        <div class="alert alert-error animate-slide-right">
+            <span>&#9888;&#65039;</span>
+            <span>Please correct the errors below.</span>
+        </div>
+        {% endif %}
+
+        <div class="card animate-fade-up">
+            <form method="post" novalidate>
+                {% csrf_token %}
+
+                {% for field in form %}
+                {% if field.field.widget.input_type == 'checkbox' %}
+                <div class="form-check" style="margin-bottom:16px;">
+                    {{ field }}
+                    <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span style="color:var(--accent-red);">*</span>{% endif %}</label>
+                    {% if field.errors %}
+                    <div class="form-error" style="margin-left:26px;">
+                        {% for error in field.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% elif field.field.widget.input_type == 'select' or field.field.widget.input_type == 'select-multiple' %}
+                <div class="form-group">
+                    <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">{{ field.label }}{% if field.field.required %} <span style="color:var(--accent-red);">*</span>{% endif %}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                    <div class="form-error">
+                        {% for error in field.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <div class="form-hint">{{ field.help_text }}</div>
+                    {% endif %}
+                </div>
+                {% elif field.field.widget.input_type == 'file' %}
+                <div class="form-group">
+                    <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">{{ field.label }}{% if field.field.required %} <span style="color:var(--accent-red);">*</span>{% endif %}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                    <div class="form-error">
+                        {% for error in field.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="floating-group">
+                    {{ field }}
+                    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span style="color:var(--accent-red);">*</span>{% endif %}</label>
+                    {% if field.errors %}
+                    <div class="form-error">
+                        {% for error in field.errors %}{{ error }}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <div class="form-hint">{{ field.help_text }}</div>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+
+                <!-- Installment Plan Template Selector -->
+                <div class="form-group" style="margin-top:20px; padding-top:20px; border-top:1px solid var(--border);">
+                    <label style="display:block; font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:6px;">Installment Plan Template <span style="color:var(--text-secondary); font-weight:400;">(Optional)</span></label>
+                    <select name="installment_template" id="installment_template" class="form-control">
+                        <option value="">-- No Template (Manual Setup) --</option>
+                        {% for template in plan_templates %}
+                        <option value="{{ template.id }}" data-info="{{ template.total_installments }}|{{ template.frequency }}|{{ template.down_payment_percentage }}">{{ template.name }} ({{ template.total_installments }} {{ template.frequency }})</option>
+                        {% endfor %}
+                    </select>
+                    <div id="template-info" class="template-info"></div>
+                    <div class="form-hint">Select a template to auto-generate the installment plan for this booking.</div>
+                </div>
+
+                <div class="btn-group" style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border);">
+                    <button type="submit" class="btn btn-primary">
+                        <span class="spinner"></span>
+                        <span class="btn-text">{% if "Edit" in title %}Update{% else %}Create Booking{% endif %}</span>
+                    </button>
+                    <a href="javascript:history.back()" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+
+<style>
+    .floating-group { margin-bottom: 12px !important; }
+    .floating-group .form-control { height: 44px !important; padding: 14px 14px 4px !important; }
+    .floating-group textarea.form-control { height: auto !important; padding: 18px 14px 4px !important; min-height: 44px; }
+    .floating-group label { font-size: 12px !important; }
+    .form-group { margin-bottom: 12px !important; }
+    .form-group .form-control { height: 44px !important; }
+    .form-check { margin-bottom: 10px !important; }
+    .template-info { background: var(--primary-bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-top: 8px; font-size: 13px; color: var(--text-secondary); display: none; }
+    .template-info.visible { display: block; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var templateSelect = document.getElementById('installment_template');
+    var templateInfo = document.getElementById('template-info');
+    if (!templateSelect) return;
+    
+    templateSelect.addEventListener('change', function() {
+        var selected = this.options[this.selectedIndex];
+        if (selected && selected.dataset.info) {
+            var parts = selected.dataset.info.split('|');
+            templateInfo.innerHTML = '<strong>Plan Details:</strong><br>' +
+                'Installments: ' + parts[0] + ' (' + parts[1] + ')<br>' +
+                'Down Payment: ' + parts[2] + '% of total';
+            templateInfo.classList.add('visible');
+        } else {
+            templateInfo.classList.remove('visible');
+        }
+    });
+});
+</script>
+{% endblock %}

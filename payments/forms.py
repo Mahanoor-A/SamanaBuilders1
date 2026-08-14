@@ -55,6 +55,20 @@ class PaymentForm(forms.ModelForm):
                 raise forms.ValidationError('Cheque number is required for cheque payments')
             if not cleaned.get('bank_name'):
                 raise forms.ValidationError('Bank name is required for cheque payments')
+        
+        # Validate installment belongs to the selected booking
+        installment = cleaned.get('installment')
+        booking = cleaned.get('booking')
+        if installment and booking:
+            if installment.plan.booking_id != booking.pk:
+                raise forms.ValidationError('Selected installment does not belong to this booking.')
+        
+        # Validate amount doesn't exceed remaining balance
+        if booking and cleaned.get('amount'):
+            if cleaned['amount'] > booking.remaining_balance:
+                # Allow but warn - overpayment is valid for advance
+                pass
+        
         return cleaned
 
 

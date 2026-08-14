@@ -852,8 +852,11 @@
             box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
         }
         .form-control::placeholder {
-            color: var(--text-secondary);
-            opacity: 0.6;
+            color: transparent;
+            opacity: 0;
+        }
+        .form-control:focus::placeholder {
+            color: transparent;
         }
         textarea.form-control {
             resize: vertical;
@@ -867,6 +870,25 @@
             background-position: right 12px center;
             padding-right: 36px;
         }
+        select[multiple].form-control {
+            appearance: none;
+            background-image: none;
+            padding-right: 14px;
+            min-height: 120px;
+        }
+        select[multiple].form-control option {
+            padding: 8px 6px;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border: none;
+        }
+        select[multiple].form-control option:checked {
+            background: var(--primary);
+            color: white;
+        }
+        select[multiple].form-control option:hover {
+            background: var(--primary-bg);
+        }
 
         /* Floating Labels */
         .floating-group {
@@ -876,6 +898,8 @@
         .floating-group .form-control {
             padding: 18px 14px 6px;
             height: 56px;
+            position: relative;
+            z-index: 1;
         }
         .floating-group textarea.form-control {
             height: auto;
@@ -895,6 +919,11 @@
             background: var(--bg-input);
             padding: 0 4px;
             line-height: 1;
+            max-width: calc(100% - 28px);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            z-index: 2;
         }
         .floating-group textarea + label {
             top: 18px;
@@ -1441,27 +1470,40 @@
            RESPONSIVE
            ============================================================ */
         @media (max-width: 1024px) {
-            .main-content { padding: 24px 20px; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .main-content { padding: 20px 24px; }
         }
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); }
-            .sidebar.open { transform: translateX(0); animation: sidebarSlide 0.3s ease; }
-            .main-content { margin-left: 0; padding: 20px 16px; padding-top: 64px; }
+            .sidebar.active { transform: translateX(0); }
             .top-bar { display: flex; }
-            .stats-grid { grid-template-columns: 1fr; gap: 16px; }
+            .main-content { margin-left: 0; padding: 70px 16px 16px; }
             .page-header { flex-direction: column; align-items: flex-start; }
-            .page-header .page-actions { width: 100%; }
+            .page-header h1 { font-size: 22px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .detail-grid { grid-template-columns: 1fr !important; }
+            table { font-size: 12px; }
+            thead th, tbody td { padding: 10px 8px; }
+            .card { padding: 16px; }
+            .btn { padding: 10px 16px; font-size: 13px; }
+            .form-row { grid-template-columns: 1fr; }
+            .receipt { padding: 20px; }
+            .receipt-header { flex-direction: column; gap: 12px; }
+            .receipt-meta { flex-direction: column; gap: 12px; }
             .filters .form-control { min-width: 140px; }
             .theme-switcher { gap: 2px; }
             .theme-btn { width: 26px; height: 26px; }
             .modal { padding: 24px; margin: 16px; }
-            .detail-grid { grid-template-columns: 1fr 1fr; }
         }
         @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; gap: 12px; }
+            .stat-card { padding: 16px; }
+            .stat-card .stat-value { font-size: 22px; }
+            .page-header h1 { font-size: 18px; }
+            .table-container { font-size: 11px; }
+            .receipt { padding: 12px; }
+            .receipt-title { font-size: 16px; }
             .main-content { padding: 16px 12px; padding-top: 60px; }
-            .page-header h1 { font-size: 20px; }
-            .card { padding: 16px; }
             .detail-grid { grid-template-columns: 1fr; }
         }
     </style>
@@ -1545,14 +1587,14 @@
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');
             const overlay = document.querySelector('.sidebar-overlay');
-            sidebar.classList.toggle('open');
+            sidebar.classList.toggle('active');
             if (overlay) overlay.classList.toggle('active');
         }
 
         function closeSidebar() {
             const sidebar = document.querySelector('.sidebar');
             const overlay = document.querySelector('.sidebar-overlay');
-            sidebar.classList.remove('open');
+            sidebar.classList.remove('active');
             if (overlay) overlay.classList.remove('active');
         }
 
@@ -1791,5 +1833,36 @@
     </script>
     {% block extra_scripts %}{% endblock %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+    {% if whatsapp_number %}
+    <a href="https://wa.me/{{ whatsapp_number|cut:'+'|cut:'-' }}" target="_blank" class="whatsapp-float" title="Chat with us on WhatsApp">
+        <svg viewBox="0 0 32 32" width="28" height="28" fill="white"><path d="M16.004 0h-.008C7.174 0 0 7.176 0 16c0 3.5 1.132 6.744 3.058 9.374L1.054 31.25l6.118-1.98C9.82 30.316 12.812 31.5 16.004 31.5 24.83 31.5 32 24.326 32 16S24.83 0 16.004 0zm9.37 22.602c-.39 1.1-1.932 2.014-3.16 2.28-.84.18-1.936.322-5.628-1.206-4.726-1.956-7.764-6.76-7.994-7.074-.222-.314-1.864-2.484-1.864-4.738 0-2.252 1.18-3.358 1.6-3.814.39-.456.936-.57 1.248-.57.312 0 .624.002.894.016.288.014.672-.108 1.044.796.39.948 1.332 3.24 1.45 3.474.12.234.198.506.04.82-.15.312-.224.506-.446.78-.224.274-.47.612-.67.818-.224.234-.456.488-.194.956.264.47 1.172 1.932 2.514 3.13 1.726 1.54 3.18 2.018 3.65 2.242.47.224.744.188 1.02-.114.276-.302 1.172-1.366 1.484-1.84.312-.474.624-.39 1.054-.234.434.158 2.764 1.306 3.24 1.544.47.234.784.352.902.546.118.194.118 1.12-.272 2.22z"/></svg>
+    </a>
+    <style>
+    .whatsapp-float {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 60px;
+        height: 60px;
+        background: #25D366;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 16px rgba(37, 211, 102, 0.4);
+        z-index: 9998;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        text-decoration: none !important;
+    }
+    .whatsapp-float:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 24px rgba(37, 211, 102, 0.5);
+    }
+    @media (max-width: 768px) {
+        .whatsapp-float { bottom: 16px; right: 16px; width: 52px; height: 52px; }
+    }
+    </style>
+    {% endif %}
     </body>
     </html>

@@ -2,7 +2,7 @@ import re
 from django import forms
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
-from .models import Customer, CustomerLedgerEntry, format_cnic, format_phone
+from .models import Customer, CustomerLedgerEntry, CustomerNominee, format_cnic, format_phone
 
 
 def validate_cnic(value):
@@ -147,3 +147,15 @@ class CustomerLedgerEntryForm(forms.ModelForm):
         if debit == 0 and credit == 0:
             raise forms.ValidationError('Either debit or credit must be greater than 0')
         return cleaned
+
+
+class CustomerNomineeForm(forms.ModelForm):
+    class Meta:
+        model = CustomerNominee
+        fields = ['nominee_name', 'nominee_cnic', 'nominee_phone', 'relationship']
+        widgets = {
+            'nominee_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': ' '}),
+            'nominee_cnic': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '37405-0235722-4'}),
+            'nominee_phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '+92-300-1234567'}),
+            'relationship': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Father, Wife, Son'}),
+        }

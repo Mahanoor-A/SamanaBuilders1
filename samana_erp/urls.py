@@ -15,6 +15,8 @@ urlpatterns = [
     # Dashboard
     path('dashboard/', core_views.dashboard_view, name='dashboard'),
     path('dashboard/revenue-trend/', core_views.revenue_trend_view, name='revenue_trend_data'),
+    path('reports/financial/', core_views.financial_reports_view, name='financial_reports'),
+    path('api/plan-templates/', core_views.plan_templates_api_view, name='plan_templates_api'),
     
     # Customers
     path('customers/', core_views.customers_view, name='customers'),
@@ -39,6 +41,7 @@ urlpatterns = [
     path('bookings/create/', core_views.booking_create_view, name='booking_create'),
     path('bookings/<int:pk>/', core_views.booking_detail_view, name='booking_detail'),
     path('bookings/<int:pk>/edit/', core_views.booking_edit_view, name='booking_edit'),
+    path('bookings/<int:pk>/confirm/', core_views.booking_confirm_view, name='booking_confirm'),
     path('bookings/<int:pk>/delete/', core_views.booking_delete_view, name='booking_delete'),
     
     path('bookings/<int:pk>/transfer/', core_views.booking_transfer_view, name='booking_transfer'),
@@ -50,7 +53,12 @@ urlpatterns = [
     
     # Receipts
     path('receipts/<int:pk>/', core_views.receipt_detail_view, name='receipt_detail'),
-    
+    path('receipts/<int:pk>/pdf/', core_views.receipt_pdf_view, name='receipt_pdf'),
+
+    # PDF Downloads
+    path('bookings/<int:pk>/invoice/', core_views.invoice_pdf_view, name='invoice_pdf'),
+    path('customers/<int:pk>/pdf/', core_views.customer_profile_pdf_view, name='customer_profile_pdf'),
+
     # Users & Admin
     path('users/', core_views.users_view, name='users'),
     path('users/create/', core_views.user_create_view, name='user_create'),
@@ -58,6 +66,9 @@ urlpatterns = [
     path('users/<int:pk>/role/', core_views.user_role_update_view, name='user_role_update'),
     path('users/<int:pk>/toggle-active/', core_views.user_deactivate_view, name='user_deactivate'),
     path('audit-logs/', core_views.audit_logs_view, name='audit_logs'),
+
+    # Notifications
+    path('', include('notifications.urls')),
 
     # Expenses
     path('expenses/', include('expenses.urls')),

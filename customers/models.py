@@ -158,3 +158,20 @@ class ReceivableAging(models.Model):
         ('90_plus', '90+ Days'),
     ])
     computed_at = models.DateField(auto_now_add=True)
+
+
+class CustomerNominee(models.Model):
+    customer = models.OneToOneField(Customer, on_delete=models.CASCADE, related_name='nominee')
+    nominee_name = models.CharField(max_length=200)
+    nominee_cnic = models.CharField(max_length=15, blank=True)
+    nominee_phone = models.CharField(max_length=20, blank=True)
+    relationship = models.CharField(max_length=50, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Nominee for {self.customer.full_name}: {self.nominee_name}"
+
+    class Meta:
+        verbose_name = 'Customer Nominee'
+        verbose_name_plural = 'Customer Nominees'

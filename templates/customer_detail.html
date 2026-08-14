@@ -20,6 +20,7 @@
         <div class="page-header">
             <h1>Customer Details</h1>
             <div class="page-actions">
+                <a href="{% url 'customer_profile_pdf' customer.pk %}" class="btn btn-primary btn-sm">📥 Download Profile PDF</a>
                 <a href="{% url 'customer_edit' customer.pk %}" class="btn btn-secondary btn-sm">✏️ Edit</a>
                 <a href="{% url 'customers' %}" class="btn btn-secondary btn-sm">← Back</a>
             </div>
@@ -130,6 +131,33 @@
                 </div>
             </div>
         </div>
+
+        <!-- Nominee Information -->
+        {% if nominee %}
+        <div class="card animate-fade-up stagger-2">
+            <div class="card-header">
+                <h3>👥 Nominee Information</h3>
+            </div>
+            <div class="detail-grid" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+                <div class="detail-item">
+                    <div class="detail-label">Nominee Name</div>
+                    <div class="detail-value" style="font-size:15px;">{{ nominee.nominee_name }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Relationship</div>
+                    <div class="detail-value" style="font-size:15px;">{{ nominee.relationship|default:"Not specified" }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">CNIC</div>
+                    <div class="detail-value" style="font-size:15px; font-family:monospace;">{{ nominee.nominee_cnic|default:"Not provided" }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Phone</div>
+                    <div class="detail-value" style="font-size:15px;">{{ nominee.nominee_phone|default:"Not provided" }}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Financial Summary -->
         <div class="card animate-fade-up stagger-3">

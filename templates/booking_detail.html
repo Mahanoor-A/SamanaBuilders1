@@ -19,7 +19,8 @@
         <div class="page-header">
             <h1>Booking {{ booking.booking_id }}</h1>
             <div class="page-actions">
-                <a href="{% url 'booking_edit' booking.pk %}" class="btn btn-primary btn-sm">✏️ Edit Booking</a>
+                <a href="{% url 'invoice_pdf' booking.pk %}" class="btn btn-primary btn-sm">📥 Download Invoice</a>
+                <a href="{% url 'booking_edit' booking.pk %}" class="btn btn-secondary btn-sm">✏️ Edit Booking</a>
                 <a href="{% url 'bookings' %}" class="btn btn-secondary btn-sm">← Back to List</a>
             </div>
         </div>
@@ -37,9 +38,9 @@
             </div>
             <div style="display:flex; gap:8px;">
                 {% if booking.status == 'pending' %}
-                <a href="{% url 'booking_edit' booking.pk %}" class="btn btn-success btn-sm">✓ Confirm Booking</a>
+                <a href="{% url 'booking_confirm' booking.pk %}" class="btn btn-success btn-sm">✓ Confirm Booking</a>
                 {% endif %}
-                {% if booking.status != 'cancelled' and can_delete %}
+                {% if booking.status != 'cancelled' %}
                 <a href="{% url 'booking_delete' booking.pk %}" class="btn btn-danger btn-sm">✕ Cancel Booking</a>
                 {% endif %}
             </div>

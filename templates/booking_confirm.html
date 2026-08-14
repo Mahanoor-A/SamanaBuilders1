@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Confirm Booking {{ booking.booking_id }} - Samana Builders ERP{% endblock %}
+
+{% block content %}
+<div class="app-layout">
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+    <div class="top-bar">
+        <button class="hamburger" onclick="toggleSidebar()">☰</button>
+        <span class="top-bar-title">Confirm Booking</span>
+        <div class="top-bar-actions">
+        </div>
+    </div>
+
+    {% include 'includes/sidebar.html' %}
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Confirm Booking {{ booking.booking_id }}</h1>
+            <div class="page-actions">
+                <a href="{% url 'booking_detail' booking.pk %}" class="btn btn-secondary btn-sm">← Back to Booking</a>
+            </div>
+        </div>
+
+        <!-- Confirmation Card -->
+        <div class="card animate-fade-up" style="max-width:600px; margin:0 auto; text-align:center; padding:40px;">
+            <div style="font-size:64px; margin-bottom:24px;">✅</div>
+            <h2 style="font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:12px;">Confirm Booking</h2>
+            <p style="font-size:14px; color:var(--text-secondary); margin-bottom:32px; line-height:1.6;">
+                Are you sure you want to confirm this booking? This will change the booking status from Pending to Confirmed.
+            </p>
+
+            <!-- Booking Summary -->
+            <div style="background:var(--primary-bg); padding:20px; border-radius:var(--radius-md); margin-bottom:32px; text-align:left;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                    <div>
+                        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); font-weight:600; margin-bottom:4px;">Booking ID</div>
+                        <div style="font-size:15px; font-weight:600; color:var(--text-primary);">{{ booking.booking_id }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); font-weight:600; margin-bottom:4px;">Customer</div>
+                        <div style="font-size:15px; font-weight:600; color:var(--text-primary);">{{ booking.customer.full_name }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); font-weight:600; margin-bottom:4px;">Plot</div>
+                        <div style="font-size:15px; font-weight:600; color:var(--text-primary);">{{ booking.plot.plot_number }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-secondary); font-weight:600; margin-bottom:4px;">Total Amount</div>
+                        <div style="font-size:15px; font-weight:600; color:var(--primary);">Rs. {{ booking.total_amount|floatformat:0 }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <form method="post" style="display:flex; gap:12px; justify-content:center;">
+                {% csrf_token %}
+                <a href="{% url 'booking_detail' booking.pk %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-success">✓ Yes, Confirm Booking</button>
+            </form>
+        </div>
+    </main>
+</div>
+{% endblock %}
